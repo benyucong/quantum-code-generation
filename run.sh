@@ -10,4 +10,4 @@ module load scicomp-python-env/2024-01
 module load scicomp-llm-env
 module load model-huggingface/all
 
-python3 src/test_mistral.py
+python3 -u src/test.py

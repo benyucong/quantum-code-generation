@@ -1,9 +1,4 @@
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:42<00:42, 42.64s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:09<00:00, 33.15s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:09<00:00, 34.57s/it]
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:14<00:14, 14.50s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:38<00:00, 20.36s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:38<00:00, 19.48s/it]
 Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
-
-
-The sky is full of stars.
-
-The sky is full of stars.
-
-
+Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
+slurmstepd: error: *** JOB 5287419 ON gpu12 CANCELLED AT 2025-01-23T17:33:57 ***
