@@ -1,4 +1,723 @@
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:14<00:14, 14.50s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:38<00:00, 20.36s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:38<00:00, 19.48s/it]
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:42<00:42, 42.16s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:06<00:00, 31.71s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:06<00:00, 33.28s/it]
+Starting loop...
+Generating from prompt: Generate CirQ code that implements the Error Correction algorithm on 11 qubits. Here is a more detailed description of the algorithm: Shor's error correction algorithm for teleportation. It should replicate this QASM code: OPENQASM 3.0;
+include "stdgates.inc";
+bit[11] c;
+qubit[11] q;
+z q[0];
+h q[0];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10];
+cx q[0], q[3];
+cx q[0], q[6];
+cz q[0], q[3];
+cz q[0], q[6];
+h q[0];
+h q[3];
+h q[6];
+z q[0];
+z q[3];
+z q[6];
+cx q[0], q[1];
+cx q[0], q[2];
+cx q[3], q[4];
+cx q[3], q[5];
+cx q[6], q[7];
+cx q[6], q[8];
+cz q[0], q[1];
+cz q[0], q[2];
+cz q[3], q[4];
+cz q[3], q[5];
+cz q[6], q[7];
+cz q[6], q[8];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10];
+h q[9];
+cx q[9], q[10];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10];
+cx q[0], q[9];
+c[9] = measure q[9];
+h q[0];
+cx q[9], q[10];
+c[0] = measure q[0];
+cz q[0], q[10];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10];
+cx q[10], q[1];
+cx q[10], q[2];
+cx q[3], q[4];
+cx q[3], q[5];
+cx q[6], q[7];
+cx q[6], q[8];
+cz q[10], q[1];
+cz q[10], q[2];
+cz q[3], q[4];
+cz q[3], q[5];
+cz q[6], q[7];
+cz q[6], q[8];
+ccx q[1], q[2], q[10];
+ccx q[5], q[4], q[3];
+ccx q[8], q[7], q[6];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10];
+h q[10];
+ccx q[1], q[2], q[10];
+h q[10];
+h q[3];
+ccx q[5], q[4], q[3];
+h q[3];
+h q[6];
+ccx q[8], q[7], q[6];
+h q[6];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10];
+h q[10];
+h q[3];
+h q[6];
+z q[10];
+z q[3];
+z q[6];
+cx q[10], q[3];
+cx q[10], q[6];
+cz q[10], q[3];
+cz q[10], q[6];
+ccx q[3], q[6], q[10];
+h q[10];
+ccx q[3], q[6], q[10];
+h q[10];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10];
+h q[10];
+z q[10];
+c[10] = measure q[10];
+
 Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
+h q[10];
+z q[10];
+c[0] = measure q[0];
+h q[10];
+z q[10];
+c[1] = measure q[1];
+h q[10];
+z q[10];
+c[2] = measure q[2];
+h q[10];
+z q[10];
+c[3] = measure q[3];
+h q[10];
+z q[10];
+c[4] = measure q[4];
+h q[10];
+z q[10];
+c[5] = measure q[5];
+h q[10];
+z q[10];
+c[6] = measure q[6];
+h q[10];
+z q[10];
+c[7] = measure q[7];
+h q[10];
+z q[10];
+c[8] = measure q[8];
+h q[10];
+z q[10];
+c[9] = measure q[9];
+h q[10];
+z q[10];
+c[10] = measure q[10];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Generating from prompt: Generate CirQ code that implements the Search and Optimization algorithm on 11 qubits. Here is a more detailed description of the algorithm: Boolean satisfiability problem. It should replicate this QASM code: OPENQASM 3.0;
+include "stdgates.inc";
+bit[4] m;
+qubit[5] v;
+qubit[4] c;
+qubit[2] a;
+h v[1];
+h v[2];
+h v[3];
+h v[4];
+x c[0];
+x c[1];
+x c[2];
+x c[3];
+x v[4];
+ccx v[1], v[2], a[0];
+ccx v[3], a[0], a[1];
+ccx v[4], a[1], c[0];
+ccx v[3], a[0], a[1];
+ccx v[1], v[2], a[0];
+x v[2];
+x v[3];
+x v[4];
+ccx v[1], v[2], a[0];
+ccx v[3], a[0], a[1];
+ccx v[4], a[1], c[1];
+ccx v[3], a[0], a[1];
+ccx v[1], v[2], a[0];
+x v[1];
+x v[2];
+ccx v[1], v[2], a[0];
+ccx v[3], a[0], a[1];
+ccx v[4], a[1], c[2];
+ccx v[3], a[0], a[1];
+ccx v[1], v[2], a[0];
+x v[1];
+x v[2];
+ccx v[2], v[3], c[3];
+x v[2];
+x v[3];
+ccx c[0], c[1], a[0];
+ccx c[2], a[0], a[1];
+ccx c[3], a[1], v[0];
+ccx c[2], a[0], a[1];
+ccx c[0], c[1], a[0];
+x v[2];
+x v[3];
+ccx v[2], v[3], c[3];
+x v[1];
+x v[2];
+ccx v[1], v[2], a[0];
+ccx v[3], a[0], a[1];
+ccx v[4], a[1], c[2];
+ccx v[3], a[0], a[1];
+ccx v[1], v[2], a[0];
+x v[1];
+x v[2];
+ccx v[1], v[2], a[0];
+ccx v[3], a[0], a[1];
+ccx v[4], a[1], c[1];
+ccx v[3], a[0], a[1];
+ccx v[1], v[2], a[0];
+x v[2];
+x v[3];
+x v[4];
+ccx v[1], v[2], a[0];
+ccx v[3], a[0], a[1];
+ccx v[4], a[1], c[0];
+ccx v[3], a[0], a[1];
+ccx v[1], v[2], a[0];
+x v[4];
+h v[1];
+h v[2];
+h v[3];
+h v[4];
+x v[0];
+x v[1];
+x v[2];
+x v[3];
+x v[4];
+h v[0];
+ccx v[1], v[2], a[0];
+ccx v[3], a[0], a[1];
+ccx v[4], a[1], v[0];
+ccx v[3], a[0], a[1];
+ccx v[1], v[2], a[0];
+h v[0];
+x v[0];
+x v[1];
+x v[2];
+x v[3];
+x v[4];
+h v[0];
+h v[1];
+h v[2];
+h v[3];
+h v[4];
+m[0] = measure v[1];
+m[1] = measure v[2];
+m[2] = measure v[3];
+m[3] = measure v[4];
+
 Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
-slurmstepd: error: *** JOB 5287419 ON gpu12 CANCELLED AT 2025-01-23T17:33:57 ***
+m[4] = measure c[0];
+m[5] = measure c[1];
+m[6] = measure c[2];
+m[7] = measure c[3];
+m[8] = measure a[0];
+m[9] = measure a[1];
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906.00628.pdf
+
+The algorithm is described in the following paper:
+
+https://arxiv.org/pdf/1906
+Generating from prompt: Generate CirQ code that implements the Search and Optimization algorithm on 12 qubits. Here is a more detailed description of the algorithm: Counterfeit coin finding problem. It should replicate this QASM code: OPENQASM 3.0;
+include "stdgates.inc";
+bit[12] cr;
+qubit[12] qr;
+h qr[0];
+h qr[1];
+h qr[2];
+h qr[3];
+h qr[4];
+h qr[5];
+h qr[6];
+h qr[7];
+h qr[8];
+h qr[9];
+h qr[10];
+cx qr[0], qr[11];
+cx qr[1], qr[11];
+cx qr[2], qr[11];
+cx qr[3], qr[11];
+cx qr[4], qr[11];
+cx qr[5], qr[11];
+cx qr[6], qr[11];
+cx qr[7], qr[11];
+cx qr[8], qr[11];
+cx qr[9], qr[11];
+cx qr[10], qr[11];
+cr[11] = measure qr[11];
+if (cr == 0) {
+  x qr[11];
+}
+if (cr == 0) {
+  h qr[11];
+}
+if (cr == 2048) {
+  h qr[0];
+}
+if (cr == 2048) {
+  h qr[1];
+}
+if (cr == 2048) {
+  h qr[2];
+}
+if (cr == 2048) {
+  h qr[3];
+}
+if (cr == 2048) {
+  h qr[4];
+}
+if (cr == 2048) {
+  h qr[5];
+}
+if (cr == 2048) {
+  h qr[6];
+}
+if (cr == 2048) {
+  h qr[7];
+}
+if (cr == 2048) {
+  h qr[8];
+}
+if (cr == 2048) {
+  h qr[9];
+}
+if (cr == 2048) {
+  h qr[10];
+}
+barrier qr[0], qr[1], qr[2], qr[3], qr[4], qr[5], qr[6], qr[7], qr[8], qr[9], qr[10], qr[11];
+if (cr == 0) {
+  cx qr[6], qr[11];
+}
+barrier qr[0], qr[1], qr[2], qr[3], qr[4], qr[5], qr[6], qr[7], qr[8], qr[9], qr[10], qr[11];
+if (cr == 0) {
+  h qr[0];
+}
+if (cr == 0) {
+  h qr[1];
+}
+if (cr == 0) {
+  h qr[2];
+}
+if (cr == 0) {
+  h qr[3];
+}
+if (cr == 0) {
+  h qr[4];
+}
+if (cr == 0) {
+  h qr[5];
+}
+if (cr == 0) {
+  h qr[6];
+}
+if (cr == 0) {
+  h qr[7];
+}
+if (cr == 0) {
+  h qr[8];
+}
+if (cr == 0) {
+  h qr[9];
+}
+if (cr == 0) {
+  h qr[10];
+}
+cr[0] = measure qr[0];
+cr[1] = measure qr[1];
+cr[2] = measure qr[2];
+cr[3] = measure qr[3];
+cr[4] = measure qr[4];
+cr[5] = measure qr[5];
+cr[6] = measure qr[6];
+cr[7] = measure qr[7];
+cr[8] = measure qr[8];
+cr[9] = measure qr[9];
+cr[10] = measure qr[10];
+
+Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
+cr[11] = measure qr[11];
+if (cr == 0) {
+  x qr[0];
+}
+if (cr == 0) {
+  x qr[1];
+}
+if (cr == 0) {
+  x qr[2];
+}
+if (cr == 0) {
+  x qr[3];
+}
+if (cr == 0) {
+  x qr[4];
+}
+if (cr == 0) {
+  x qr[5];
+}
+if (cr == 0) {
+  x qr[6];
+}
+if (cr == 0) {
+  x qr[7];
+}
+if (cr == 0) {
+  x qr[8];
+}
+if (cr == 0) {
+  x qr[9];
+}
+if (cr == 0) {
+  x qr[10];
+}
+if (cr == 0) {
+  x qr[11];
+}
+barrier qr[0], qr[1], qr[2], qr[3], qr[4], qr[5], qr[6], qr[7], qr[8], qr[9], qr[10], qr[11];
+if (cr == 0) {
+  cx qr[0], qr[11];
+}
+barrier qr[0], qr[1], qr[2], qr[3], qr[4], qr[5], qr[6], qr[7], qr[8], qr[9], qr[10], qr[11];
+if (cr == 0) {
+  h qr[0];
+}
+if (cr == 0) {
+  h qr[1];
+}
+if (cr == 0) {
+  h qr[2];
+}
+if (cr == 0) {
+  h qr[3];
+}
+if (cr == 0) {
+  h qr[4];
+}
+if (cr == 0) {
+  h qr[5];
+}
+Generating from prompt: Generate CirQ code that implements the Quantum Arithmetic algorithm on 13 qubits. Here is a more detailed description of the algorithm: Performing 3×5 in a quantum circuit. It should replicate this QASM code: OPENQASM 3.0;
+include "stdgates.inc";
+bit[4] c;
+qubit[13] q;
+x q[0];
+x q[1];
+x q[2];
+x q[4];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10], q[11], q[12];
+ccx q[2], q[0], q[5];
+ccx q[2], q[1], q[6];
+ccx q[3], q[0], q[7];
+ccx q[3], q[1], q[8];
+ccx q[4], q[0], q[9];
+ccx q[4], q[1], q[10];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10], q[11], q[12];
+cx q[6], q[11];
+cx q[7], q[11];
+cx q[8], q[12];
+cx q[9], q[12];
+barrier q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10], q[11], q[12];
+c[0] = measure q[5];
+c[1] = measure q[11];
+c[2] = measure q[12];
+c[3] = measure q[10];
+
+Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
+slurmstepd: error: *** JOB 5287706 ON gpu44 CANCELLED AT 2025-01-23T18:11:10 DUE TO TIME LIMIT ***
