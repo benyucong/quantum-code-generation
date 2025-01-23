@@ -1,15 +1,26 @@
 import pandas as pd
 import os
-from transformers import pipeline, Pipeline
 
-os.environ['TRANSFORMERS_OFFLINE'] = '1'
-os.environ['HF_HUB_OFFLINE'] = '1'
+# from transformers import pipeline, Pipeline
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    PreTrainedTokenizer,
+    PreTrainedTokenizerFast,
+)
 
 CIRCUITS_FOLDER_PATH = "src/data/benchmark_mapping.csv"
 
-pipe = pipeline(
-    "text-generation", model="mistralai/Mixtral-8x22B-Instruct-v0.1", trust_remote_code=True, device=0
-)
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_HUB_OFFLINE"] = "1"
+
+tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
+model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
+
+
+# pipe = pipeline(
+#     "text-generation", model="mistralai/Mixtral-8x22B-Instruct-v0.1", trust_remote_code=True, device=0
+# )
 
 
 def get_mapping_table(path: str) -> pd.DataFrame:
@@ -20,7 +31,12 @@ def get_mapping_table(path: str) -> pd.DataFrame:
 df = get_mapping_table(CIRCUITS_FOLDER_PATH)
 
 
-def generate_synthetic_code(row: pd.Series, max_length: int, pipeline: Pipeline) -> str:
+def generate_synthetic_code(
+    row: pd.Series,
+    max_length_: int,
+    tokenizer_: (PreTrainedTokenizer | PreTrainedTokenizerFast),
+    model_,
+) -> str:
     """Generate synthetic code from QASM."""
 
     messages = [
@@ -30,12 +46,26 @@ def generate_synthetic_code(row: pd.Series, max_length: int, pipeline: Pipeline)
         },
     ]
 
-    print(f"Generating synthetic code for {row['Algorithm']} on {row['Qubits']} qubits")
-    synthetic_code = pipeline(messages, max_length=max_length)
-    print(synthetic_code[0]["generated_text"], "\n")
+    model_inputs = tokenizer_([messages[0]["content"]], return_tensors="pt")
+    input_length = model_inputs.input_ids.shape[1]
+
+    generated_ids = model_.generate(**model_inputs, max_new_tokens=20)
+    synthetic_code = tokenizer_.batch_decode(
+        generated_ids[:, input_length:], skip_special_tokens=True
+    )[0]
+
+    # print(f"Generating synthetic code for {row['Algorithm']} on {row['Qubits']} qubits")
+    # synthetic_code = pipeline(messages, max_length=max_length)
+    # print(synthetic_code[0]["generated_text"], "\n")
+
+    print(synthetic_code)
 
     return synthetic_code
 
 
-df["cirq"] = df.apply(lambda row: generate_synthetic_code(row, 100, pipe), axis=1)
+df["cirq"] = df.apply(
+    lambda row: generate_synthetic_code(row, 100, tokenizer, model), axis=1
+)
 
+df.to_csv("src/data/benchmark_mapping_with_cirq.csv", index=False, sep="§")
+print(df.head())
