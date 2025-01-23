@@ -26,7 +26,11 @@ def generate_synthetic_code(row: pd.Series, max_length: int, pipeline: Pipeline)
         },
     ]
 
-    return pipeline(messages, max_length=max_length)
+    print(f"Generating synthetic code for {row['Algorithm']} on {row['Qubits']} qubits")
+    synthetic_code = pipeline(messages, max_length=max_length)
+    print(synthetic_code[0]["generated_text"], "\n")
+
+    return synthetic_code
 
 
 df["cirq"] = df.apply(lambda row: generate_synthetic_code(row, 100, pipe), axis=1)

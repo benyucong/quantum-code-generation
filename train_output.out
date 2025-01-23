@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/home/jernl1/git/quantum-code-generation/src/test.py", line 6, in <module>
+    pipe = pipeline(
+           ^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/pipelines/__init__.py", line 895, in pipeline
+    framework, model = infer_framework_load_model(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/pipelines/base.py", line 286, in infer_framework_load_model
+    model = model_class.from_pretrained(model, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/models/auto/auto_factory.py", line 551, in from_pretrained
+    model_class = get_class_from_dynamic_module(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/dynamic_module_utils.py", line 502, in get_class_from_dynamic_module
+    final_module = get_cached_module_file(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/dynamic_module_utils.py", line 327, in get_cached_module_file
+    modules_needed = check_imports(resolved_module_file)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/dynamic_module_utils.py", line 182, in check_imports
+    raise ImportError(
+ImportError: This modeling file requires the following packages that were not found in your environment: flash_attn. Run `pip install flash_attn`
