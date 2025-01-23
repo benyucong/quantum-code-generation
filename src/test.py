@@ -1,10 +1,14 @@
 import pandas as pd
+import os
 from transformers import pipeline, Pipeline
+
+os.environ['TRANSFORMERS_OFFLINE'] = '1'
+os.environ['HF_HUB_OFFLINE'] = '1'
 
 CIRCUITS_FOLDER_PATH = "src/data/benchmark_mapping.csv"
 
 pipe = pipeline(
-    "text-generation", model="deepseek-ai/DeepSeek-R1", trust_remote_code=True, device=0
+    "text-generation", model="mistralai/Mixtral-8x22B-Instruct-v0.1", trust_remote_code=True, device=0
 )
 
 
@@ -34,3 +38,4 @@ def generate_synthetic_code(row: pd.Series, max_length: int, pipeline: Pipeline)
 
 
 df["cirq"] = df.apply(lambda row: generate_synthetic_code(row, 100, pipe), axis=1)
+
