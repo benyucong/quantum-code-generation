@@ -2,8 +2,8 @@ import os
 import numpy as np
 import pandas as pd
 
-TABLE_FOLDER_PATH = "/Users/linusjern/Uni/Dippa/code/local/src/data/raw_tables"
-CIRCUIT_FOLDER_PATH = "/Users/linusjern/Uni/Dippa/code/local/src/data/circuit_files"
+TABLE_FOLDER_PATH = "src/data/raw_tables"
+CIRCUIT_FOLDER_PATH = "src/data/circuit_files"
 
 
 def read_csv_files_to_numpy(folder_path):
