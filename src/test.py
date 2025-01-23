@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 
-# from transformers import pipeline, Pipeline
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -28,9 +27,6 @@ def get_mapping_table(path: str) -> pd.DataFrame:
     return pd.read_csv(path, delimiter="|")
 
 
-df = get_mapping_table(CIRCUITS_FOLDER_PATH)
-
-
 def generate_synthetic_code(
     row: pd.Series,
     max_length_: int,
@@ -39,31 +35,47 @@ def generate_synthetic_code(
 ) -> str:
     """Generate synthetic code from QASM."""
 
-    messages = f"Generate CirQ code that implements the {row['Algorithm']} algorithm on {row['Qubits']} qubits. Here is a more detailed description of the algorithm: {row['Description']}. It should replicate this QASM code: {row['QASM']}"
-    
+    messages = (
+        f"Generate CirQ code that implements the {row['Algorithm']} algorithm on "
+        f"{row['Qubits']} qubits. Here is a more detailed description of the algorithm: "
+        f"{row['Description']}. It should replicate this QASM code: {row['QASM']}"
+    )
+
     print(f"Generating from prompt: {messages}", flush=True)
 
     model_inputs = tokenizer_([messages], return_tensors="pt")
     input_length = model_inputs.input_ids.shape[1]
 
-    generated_ids = model_.generate(**model_inputs, max_new_tokens=512)
+    generated_ids = model_.generate(**model_inputs, max_new_tokens=max_length_)
     synthetic_code = tokenizer_.batch_decode(
         generated_ids[:, input_length:], skip_special_tokens=True
     )[0]
 
-    # print(f"Generating synthetic code for {row['Algorithm']} on {row['Qubits']} qubits")
-    # synthetic_code = pipeline(messages, max_length=max_length)
-    # print(synthetic_code[0]["generated_text"], "\n")
-
-    print(synthetic_code, flush=True)
+    print(f"The synthetic code generated: {synthetic_code}", flush=True)
 
     return synthetic_code
 
-print("Starting loop...", flush=True)
 
-df["cirq"] = df.apply(
-    lambda row: generate_synthetic_code(row, 100, tokenizer, model), axis=1
-)
+if __name__ == "__main__":
+    print("Reading CSV...", flush=True)
+    df = get_mapping_table(CIRCUITS_FOLDER_PATH)
+    print(f"Loaded {len(df)} rows.", flush=True)
 
-df.to_csv("src/data/benchmark_mapping_with_cirq.csv", index=False, sep="|")
-print(df.head())
+    if "cirq" not in df.columns:
+        df["cirq"] = None
+
+    print("Starting loop...", flush=True)
+    for idx, row in df.iterrows():
+        if pd.notna(row["cirq"]):
+            print(f"Row {idx} already processed. Skipping...")
+            continue
+
+        cirq_code = generate_synthetic_code(row, 2000, tokenizer, model)
+
+        df.at[idx, "cirq"] = cirq_code
+
+        # Save progress
+        df.to_csv("src/data/benchmark_mapping_with_cirq.csv", index=False, sep="|")
+        print(f"Row {idx} saved to CSV.", flush=True)
+
+    print("Processing complete!")
