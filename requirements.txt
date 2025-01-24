@@ -1,7 +1,13 @@
-numpy
-pandas
-torch
-transformers
-datasets
-accelerate
-flash_attn
+numpy>=1.21.0
+pandas>=1.3.0
+
+
+torch>=2.0.0 --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+
+transformers>=4.30.0
+datasets>=2.12.0
+accelerate>=0.20.0
+
+# xformers>=0.0.20
+
+gguf
