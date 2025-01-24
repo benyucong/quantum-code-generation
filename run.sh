@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --time=00:30:00
-#SBATCH --output=train_output.out
+#SBATCH --time=05:00:00
+#SBATCH --output=generate_output.out
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=40GB
 #SBATCH --gres=gpu:1
@@ -10,4 +10,4 @@ module load scicomp-python-env/2024-01
 module load scicomp-llm-env
 module load model-huggingface/all
 
-python3 -u src/test.py
+python3 -u src/convert_deepseek.py

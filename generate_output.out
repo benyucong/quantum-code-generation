@@ -1,0 +1,77 @@
+Traceback (most recent call last):
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/utils/_errors.py", line 304, in hf_raise_for_status
+    response.raise_for_status()
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/requests/models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://huggingface.co/unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF/resolve/main/tokenizer_config.json
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 1722, in _get_metadata_or_catch_error
+    metadata = get_hf_file_metadata(url=url, proxies=proxies, timeout=etag_timeout, headers=headers)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 1645, in get_hf_file_metadata
+    r = _request_wrapper(
+        ^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 372, in _request_wrapper
+    response = _request_wrapper(
+               ^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 396, in _request_wrapper
+    hf_raise_for_status(response)
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/utils/_errors.py", line 315, in hf_raise_for_status
+    raise EntryNotFoundError(message, response) from e
+huggingface_hub.utils._errors.EntryNotFoundError: 404 Client Error. (Request ID: Root=1-679392d5-566e42993e13a04b6bf40e43;159d07dd-fa9b-4908-a1d3-818a11fe2f73)
+
+Entry Not Found for url: https://huggingface.co/unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF/resolve/main/tokenizer_config.json.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/shareddata/dldata/huggingface-hub-cache/hub/models--unsloth--DeepSeek-R1-Distill-Llama-8B-GGUF/.no_exist/bd15a2fabc454d68c3233517675dd139a7762134'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/shareddata/dldata/huggingface-hub-cache/hub/models--unsloth--DeepSeek-R1-Distill-Llama-8B-GGUF/.no_exist'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/work/jernl1/quantum-code-generation/src/convert_deepseek.py", line 14, in <module>
+    tokenizer = AutoTokenizer.from_pretrained(model_name, gguf_file="DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/models/auto/tokenization_auto.py", line 834, in from_pretrained
+    tokenizer_config = get_tokenizer_config(pretrained_model_name_or_path, **kwargs)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/models/auto/tokenization_auto.py", line 666, in get_tokenizer_config
+    resolved_config_file = cached_file(
+                           ^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/transformers/utils/hub.py", line 402, in cached_file
+    resolved_file = hf_hub_download(
+                    ^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 1221, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 1282, in _hf_hub_download_to_cache_dir
+    (url_to_download, etag, commit_hash, expected_size, head_call_error) = _get_metadata_or_catch_error(
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 1729, in _get_metadata_or_catch_error
+    no_exist_file_path.parent.mkdir(parents=True, exist_ok=True)
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/pathlib.py", line 1120, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/pathlib.py", line 1120, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "/appl/scibuilder-mamba/aalto-rhel9/prod/software/scicomp-llm-env/2024.1/6491d53/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [Errno 13] Permission denied: '/scratch/shareddata/dldata/huggingface-hub-cache/hub/models--unsloth--DeepSeek-R1-Distill-Llama-8B-GGUF'
