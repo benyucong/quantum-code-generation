@@ -1,50 +1,70 @@
 import pandas as pd
-from llama_cpp import Llama  # Use llama-cpp-python for .gguf models
+from llama_cpp import Llama
 import os
 import time
 
-model_path = "/scratch/work/jernl1/model/DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf"
-if not os.path.exists(model_path):
-    raise FileNotFoundError(f"Model file not found at {model_path}")
 
-print(f"Model file exists: {os.path.exists(model_path)}")
-print(f"Model file size: {os.path.getsize(model_path) / (1024 * 1024):.2f} MB")
+MODEL_PATH = "/scratch/work/jernl1/model/DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf"
+CSV_PATH = "src/data/benchmark_mapping.csv"
+OUTPUT_DIR = "src/data/generated_cirq"
 
-# Load the CSV file
-csv_path = "src/data/benchmark_mapping.csv"
-df = pd.read_csv(csv_path, delimiter="|")
+def check_gpu_support():
+    """Verify if llama-cpp-python was installed with GPU support"""
+    try:
+        Llama(model_path="", n_gpu_layers=0, verbose=False)
+        return True
+    except Exception as e:
+        if "GPU support is disabled" in str(e):
+            return False
+        raise
 
-# Create output directory
-output_dir = "src/data/generated_cirq"
-os.makedirs(output_dir, exist_ok=True)
+def main():
+    print("\n=== Initializing System Checks ===", flush=True)
+    if not check_gpu_support():
+        print("ERROR: GPU acceleration not available in current installation", flush=True)
+        exit(1)
+    print("✓ Verified GPU-accelerated installation", flush=True)
 
-# Path to your local .gguf model
-model_path = "/scratch/work/jernl1/model/DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf"
+    
+    # Validate paths
+    print("\n=== Validating Resources ===", flush=True)
+    if not os.path.exists(MODEL_PATH):
+        print(f"✗ Missing model file: {MODEL_PATH}", flush=True)
+        exit(1)
+    if not os.path.exists(CSV_PATH):
+        print(f"✗ Missing dataset: {CSV_PATH}", flush=True)
+        exit(1)
+    print(f"✓ Model size: {os.path.getsize(MODEL_PATH)//(1024**2)}MB", flush=True)
+    print(f"✓ Output directory: {OUTPUT_DIR}", flush=True)
 
-# Verify the model file
-if not os.path.exists(model_path):
-    raise FileNotFoundError(f"Model file not found at {model_path}")
+    # Prepare data
+    print("\n=== Preparing Dataset ===", flush=True)
+    try:
+        df = pd.read_csv(CSV_PATH, delimiter="|")
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        print(f"Loaded {len(df)} benchmark circuits", flush=True)
+    except Exception as e:
+        print(f"Failed to initialize dataset: {str(e)}", flush=True)
+        exit(1)
 
-print(f"Model file exists: {os.path.exists(model_path)}")
-print(f"Model file size: {os.path.getsize(model_path) / (1024 * 1024):.2f} MB")
+    # Initialize model
+    print("\n=== Loading AI Model ===", flush=True)
+    try:
+        llm = Llama(
+            model_path=MODEL_PATH,
+            n_gpu_layers=-1,
+            n_threads=4,
+            n_ctx=4000,
+            seed=42,
+            verbose=False
+        )
+        print("✓ Model loaded successfully", flush=True)
+    except Exception as e:
+        print(f"Model initialization failed: {str(e)}", flush=True)
+        exit(1)
 
-# Load the model using llama-cpp-python
-try:
-    llm = Llama(
-        model_path=model_path,
-        n_gpu_layers=-1,  # Use all available GPU layers
-        n_threads=4,      # Adjust based on your CPU cores
-        n_ctx=4000,        # Context length
-        seed=42,          # For reproducibility
-    )
-    print("Model loaded successfully!")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    exit(1)
-
-# Define the prompt template
-prompt_template = """
-Convert the following QASM code to Cirq code:
+    # Generation template
+    prompt_template = """Convert the following QASM code to Cirq code:
 QASM Code:
 {}
 
@@ -52,37 +72,64 @@ Description:
 {}
 
 Number of Qubits:
-{}
-"""
+{}"""
 
-# Iterate over the rows in the DataFrame
-for index, row in df.iterrows():
-    start = time.time()
-    qasm_code = row["QASM"]
-    description = row["Description"]
-    num_qubits = row["Qubits"]
+    # Processing loop
+    print("\n=== Starting Conversions ===", flush=True)
+    total_start = time.time()
+    processed = 0
+     
+    for index, row in df.iterrows():
+        try:
+            iter_start = time.time()
+            print(f"\nProcessing {index+1}/{len(df)}: {row['Algorithm']}", flush=True)
+            print(f"Qubits: {row['Qubits']}, Desc: {row['Description'][:40]}...", flush=True)
 
-    # Format the prompt
-    prompt = prompt_template.format(qasm_code, description, num_qubits)
-    print(f"Generating Cirq code for {row['Algorithm']}", flush=True)
+            prompt = prompt_template.format(
+                row["QASM"],
+                row["Description"],
+                row["Qubits"]
+            )
 
-    # Generate the output using the model
-    output = llm(
-        prompt,
-        max_tokens=3000,  # Adjust based on the desired output length
-        stop=["QASM Code:", "Description:", "Number of Qubits:"],  # Stop sequences
-        temperature=0.6,  # Adjust for creativity (0 = deterministic, 1 = creative)
-        top_p=0.9,        # Adjust for diversity
-    )
+            gen_start = time.time()
+            result = llm(
+                prompt,
+                max_tokens=10000,
+                stop=["QASM Code:", "Description:", "Number of Qubits:"],
+                temperature=0.6,
+                top_p=0.9
+            )
+            
+            code = result["choices"][0]["text"]
+            gen_time = time.time() - gen_start
 
-    # Extract the generated Cirq code
-    generated_cirq_code = output["choices"][0]["text"]
+            base_name = f"{row['Algorithm']}_n{row['Qubits']}"
+            output_path = os.path.join(OUTPUT_DIR, f"{base_name}.py")
+            
+            counter = 1
+            while os.path.exists(output_path):
+                output_path = os.path.join(OUTPUT_DIR, f"{base_name}_{counter}.py")
+                counter += 1
 
-    # Save the generated code to a file
-    output_file = os.path.join(output_dir, f"generated_cirq_{index}.py")
-    with open(output_file, "w") as f:
-        f.write(generated_cirq_code)
+            with open(output_path, "w") as f:
+                f.write(f"# Generated from: {row['Algorithm']}\n")
+                f.write(f"# Qubits: {row['Qubits']}\n")
+                f.write(code)
+            
+            print(f"✓ Saved to {os.path.basename(output_path)} ({gen_time:.1f}s)", flush=True)
+            processed += 1
 
-    # Calculate time taken
-    time_taken = time.time() - start
-    print(f"Generated Cirq code saved to {output_file}. Took {time_taken:.2f} seconds.", flush=True)
+            if processed == 1:
+                break
+
+        except Exception as e:
+            print(f"⚠️ Failed to process {row['Algorithm']}: {str(e)}", flush=True)
+
+    total_time = time.time() - total_start
+    print("\n=== Completion Report ===", flush=True)
+    print(f"Successfully processed: {processed}/{len(df)} circuits", flush=True)
+    print(f"Total time: {total_time//60:.0f}m {total_time%60:.0f}s", flush=True)
+    print(f"Average time per circuit: {total_time/len(df):.1f}s", flush=True)
+
+if __name__ == "__main__":
+    main()
