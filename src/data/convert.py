@@ -7,7 +7,7 @@ CIRCUIT_FOLDER_PATH = "src/data/circuit_files"
 
 
 def read_csv_files_to_numpy(folder_path):
-    csv_files = [f for f in os.listdir(folder_path) if f.endswith(".csv") and "large" not in f]
+    csv_files = [f for f in os.listdir(folder_path) if f.endswith(".csv") and "large" not in f and "medium" not in f]
     df_full = pd.DataFrame([])
 
     for file in csv_files:

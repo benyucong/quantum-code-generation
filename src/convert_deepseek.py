@@ -10,9 +10,9 @@ df = pd.read_csv(csv_path, delimiter="|")
 output_dir = "src/data/generated_cirq"
 os.makedirs(output_dir, exist_ok=True)
 
-model_name = "/scratch/work/jernl1/model/DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf"
-tokenizer = AutoTokenizer.from_pretrained(model_name, gguf_file="DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf", local_files_only=True)
-model = AutoModelForCausalLM.from_pretrained(model_name, gguf_file="DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf", local_files_only=True)
+model_name = "unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF"
+tokenizer = AutoTokenizer.from_pretrained(model_name, gguf_file="DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf")
+model = AutoModelForCausalLM.from_pretrained(model_name, gguf_file="DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf")
 
 if torch.cuda.is_available():
     device = torch.device("cuda")

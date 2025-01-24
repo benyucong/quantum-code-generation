@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --time=05:00:00
-#SBATCH --output=generate_output.out
+#SBATCH --time=04:00:00
+#SBATCH --output=out_h100.out
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=40GB
 #SBATCH --gres=gpu:1
@@ -9,5 +9,8 @@
 module load scicomp-python-env/2024-01
 module load scicomp-llm-env
 module load model-huggingface/all
+module load gcc cuda cmake openmpi
 
-python3 -u src/convert_deepseek.py
+source /scratch/work/jernl1/quantum-code-generation/.venv/bin/activate
+
+python3 -u src/convert_deepseek_llamacpp.py
