@@ -76,7 +76,7 @@ def main():
         llm = Llama(
             model_path=MODEL_PATH,
             n_gpu_layers=-1,
-            n_ctx=4000,
+            n_ctx=12000,
             seed=42,
         )
         print("✓ Model loaded successfully", flush=True)
@@ -118,7 +118,7 @@ Only output the code part. Use modern and syntatically correct CirQ code. Make s
             gen_start = time.time()
             result = llm(
                 prompt,
-                max_tokens=10000,
+                max_tokens=12000,
                 stop=["QASM Code:", "Description:", "Number of Qubits:"],
             )
             
