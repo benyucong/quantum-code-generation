@@ -1,0 +1,26 @@
+
+=== Initializing System Checks ===
+llama_new_context_with_model: n_ctx_per_seq (512) < n_ctx_train (131072) -- the full capacity of the model will not be utilized
+✓ Verified GPU-accelerated installation
+
+=== Validating Resources ===
+✓ Model size: 8145MB
+✓ Output directory: src/data/generated_cirq
+
+=== Preparing Dataset ===
+Loaded 41 benchmark circuits
+
+=== Loading AI Model ===
+llama_new_context_with_model: n_ctx_per_seq (4000) < n_ctx_train (131072) -- the full capacity of the model will not be utilized
+✓ Model loaded successfully
+
+=== Starting Conversions ===
+
+Processing 1/41: Hidden Subgroup
+Qubits: 2, Desc: Deutsch algorithm with 2 qubits for f(x)...
+✓ Saved to Hidden Subgroup_n2.py (963.8s)
+
+=== Completion Report ===
+Successfully processed: 1/41 circuits
+Total time: 16m 4s
+Average time per circuit: 23.5s

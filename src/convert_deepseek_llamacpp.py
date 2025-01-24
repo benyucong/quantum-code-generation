@@ -2,6 +2,7 @@ import pandas as pd
 from llama_cpp import Llama
 import os
 import time
+import argparse
 
 
 MODEL_PATH = "/scratch/work/jernl1/model/DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf"
@@ -11,7 +12,7 @@ OUTPUT_DIR = "src/data/generated_cirq"
 def check_gpu_support():
     """Verify if llama-cpp-python was installed with GPU support"""
     try:
-        Llama(model_path="", n_gpu_layers=0, verbose=False)
+        Llama(model_path=MODEL_PATH, n_gpu_layers=0, verbose=False)
         return True
     except Exception as e:
         if "GPU support is disabled" in str(e):
@@ -19,6 +20,15 @@ def check_gpu_support():
         raise
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--total-parts', type=int, default=1, 
+                      help='Total number of partitions')
+    parser.add_argument('--current-part', type=int, default=0,
+                      help='Current partition index (0-based)')
+    args = parser.parse_args()
+    print(f"\n=== Processing partition {args.current_part+1}/{args.total_parts} ===", flush=True)
+
+
     print("\n=== Initializing System Checks ===", flush=True)
     if not check_gpu_support():
         print("ERROR: GPU acceleration not available in current installation", flush=True)
@@ -43,6 +53,14 @@ def main():
         df = pd.read_csv(CSV_PATH, delimiter="|")
         os.makedirs(OUTPUT_DIR, exist_ok=True)
         print(f"Loaded {len(df)} benchmark circuits", flush=True)
+        
+        # Calculate partition bounds
+        total_rows = len(df)
+        part_size = total_rows // args.total_parts
+        start_idx = args.current_part * part_size
+        end_idx = (args.current_part + 1) * part_size if args.current_part != args.total_parts - 1 else total_rows
+        print(f"Processing rows {start_idx}-{end_idx-1} ({end_idx-start_idx} rows)", flush=True)
+
     except Exception as e:
         print(f"Failed to initialize dataset: {str(e)}", flush=True)
         exit(1)
@@ -53,10 +71,8 @@ def main():
         llm = Llama(
             model_path=MODEL_PATH,
             n_gpu_layers=-1,
-            n_threads=4,
             n_ctx=4000,
             seed=42,
-            verbose=False
         )
         print("✓ Model loaded successfully", flush=True)
     except Exception as e:
@@ -72,6 +88,8 @@ Description:
 {}
 
 Number of Qubits:
+
+Only output the code part. Use modern and syntatically correct CirQ code. Make sure it will compile.
 {}"""
 
     # Processing loop
@@ -79,10 +97,11 @@ Number of Qubits:
     total_start = time.time()
     processed = 0
      
-    for index, row in df.iterrows():
+    for index, row in df.iloc[start_idx:end_idx].iterrows():
         try:
             iter_start = time.time()
-            print(f"\nProcessing {index+1}/{len(df)}: {row['Algorithm']}", flush=True)
+            print(f"\nProcessing global index {index} ({index-start_idx+1}/{end_idx-start_idx} in partition)", flush=True)
+            print(f"Algorithm: {row['Algorithm']}", flush=True)
             print(f"Qubits: {row['Qubits']}, Desc: {row['Description'][:40]}...", flush=True)
 
             prompt = prompt_template.format(
@@ -96,12 +115,12 @@ Number of Qubits:
                 prompt,
                 max_tokens=10000,
                 stop=["QASM Code:", "Description:", "Number of Qubits:"],
-                temperature=0.6,
-                top_p=0.9
             )
             
             code = result["choices"][0]["text"]
             gen_time = time.time() - gen_start
+
+            print(result)
 
             base_name = f"{row['Algorithm']}_n{row['Qubits']}"
             output_path = os.path.join(OUTPUT_DIR, f"{base_name}.py")
@@ -118,9 +137,6 @@ Number of Qubits:
             
             print(f"✓ Saved to {os.path.basename(output_path)} ({gen_time:.1f}s)", flush=True)
             processed += 1
-
-            if processed == 1:
-                break
 
         except Exception as e:
             print(f"⚠️ Failed to process {row['Algorithm']}: {str(e)}", flush=True)
