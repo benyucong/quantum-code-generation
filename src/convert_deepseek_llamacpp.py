@@ -59,6 +59,11 @@ def main():
         part_size = total_rows // args.total_parts
         start_idx = args.current_part * part_size
         end_idx = (args.current_part + 1) * part_size if args.current_part != args.total_parts - 1 else total_rows
+        
+        if start_idx >= total_rows:
+            print("No rows to process in this partition", flush=True)
+            exit(0)
+        
         print(f"Processing rows {start_idx}-{end_idx-1} ({end_idx-start_idx} rows)", flush=True)
 
     except Exception as e:
