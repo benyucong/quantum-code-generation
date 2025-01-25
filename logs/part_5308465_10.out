@@ -1,0 +1,28 @@
+
+=== Processing partition 11/10 ===
+
+=== Initializing System Checks ===
+✓ Verified GPU-accelerated installation
+
+=== Validating Resources ===
+✓ Model size: 8145MB
+✓ Output directory: src/data/generated_cirq
+
+=== Preparing Dataset ===
+Loaded 41 benchmark circuits
+Processing rows 40-43 (4 rows)
+
+=== Loading AI Model ===
+✓ Model loaded successfully
+
+=== Starting Conversions ===
+
+Processing global index 40 (1/4 in partition)
+Algorithm: Linear Equation
+Qubits: 10, Desc: Using HHL algorithm to solve linear syst...
+⚠️ Failed to process Linear Equation: Requested tokens (2115528) exceed context window of 12000
+
+=== Completion Report ===
+Successfully processed: 0/41 circuits
+Total time: 0m 1s
+Average time per circuit: 0.0s
