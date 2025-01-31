@@ -2,12 +2,16 @@ import os
 import numpy as np
 import pandas as pd
 
-TABLE_FOLDER_PATH = "src/data/raw_tables"
+TABLE_FOLDER_PATH = "src/data/qasm_bench"
 CIRCUIT_FOLDER_PATH = "src/data/circuit_files"
 
 
 def read_csv_files_to_numpy(folder_path):
-    csv_files = [f for f in os.listdir(folder_path) if f.endswith(".csv") and "large" not in f and "medium" not in f]
+    csv_files = [
+        f
+        for f in os.listdir(folder_path)
+        if f.endswith(".csv") and "large" not in f and "medium" not in f
+    ]
     df_full = pd.DataFrame([])
 
     for file in csv_files:
@@ -31,6 +35,7 @@ def get_qasm_content(row, folder_path):
     with open(full_path, "r") as f:
         return f.read()
 
+
 df = read_csv_files_to_numpy(TABLE_FOLDER_PATH)
 
 df.drop(
@@ -48,4 +53,3 @@ df["Qubits"] = df["Qubits"].str.strip().astype(int)
 df["QASM"] = df.apply(lambda row: get_qasm_content(row, CIRCUIT_FOLDER_PATH), axis=1)
 
 df.to_csv("src/data/benchmark_mapping.csv", index=False, sep="|")
-

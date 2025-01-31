@@ -17,6 +17,6 @@ source /scratch/work/jernl1/quantum-code-generation/.venv/bin/activate
 
 mkdir -p logs
 
-python3 -u src/convert_deepseek_llamacpp.py \
+python3 -u src/synthetic_data_generation.py \
     --total-parts 10 \
     --current-part $SLURM_ARRAY_TASK_ID
