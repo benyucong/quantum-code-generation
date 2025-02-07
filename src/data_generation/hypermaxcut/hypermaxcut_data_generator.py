@@ -1,7 +1,9 @@
 import random
-from src.data_generation.data_generator import DataGenerator
 from typing import Tuple, Set
-from src.data_generation.hypermaxcut.hypergraph import HyperGraph
+
+from data_generation.data_generator import DataGenerator
+from data_generation.hypermaxcut.hypergraph import HyperGraph
+from data_generation.hypermaxcut.hypermaxcutsolver import HyperMaxCutSolver
 
 
 class HyperMaxCutDataGenerator(DataGenerator):
@@ -12,6 +14,10 @@ class HyperMaxCutDataGenerator(DataGenerator):
     def generate_data(self):
         # First, we generate the hypergraphs
         hypergraphs = self.__generate_hypergraphs()
+
+        for hypergraph in hypergraphs:
+            solver = HyperMaxCutSolver(self.n_qubits, self.layers, hypergraph)
+            print(solver.solve_vqe())
 
     def __generate_hypergraphs(self) -> Set[HyperGraph]:
         hypergraphs: Set[HyperGraph] = set()
