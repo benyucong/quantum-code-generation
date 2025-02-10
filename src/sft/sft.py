@@ -19,7 +19,6 @@ class TrainingConfig:
     model_name: str = field(default="Qwen/Qwen2.5-3B-Instruct")
     block_size: int = field(default=512)
     wandb_project: Optional[str] = field(default="quantum-circuit-generation")
-    wandb_entity: Optional[str] = field(default="linusjern")
     train_file_path: Optional[str] = field(
         default="linuzj/hypergraph-max-cut-quantum_tokenized"
     )
@@ -27,7 +26,6 @@ class TrainingConfig:
 
     def __post_init__(self):
         os.environ["WANDB_PROJECT"] = self.wandb_project
-        os.environ["WANDB_ENTITY"] = self.wandb_entity
 
 
 def train():
