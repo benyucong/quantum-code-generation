@@ -69,7 +69,7 @@ def tokenize_examples_for_sft(
     if "train" in dataset:
         dataset = dataset["train"]
 
-    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-32B-Instruct")
+    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-3B-Instruct")
 
     process_example_map = partial(process_example, tokenizer=tokenizer)
     dataset = dataset.map(
