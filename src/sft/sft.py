@@ -49,7 +49,8 @@ def train():
     # ----- Setup Instruction Templates -----
     instruction_template = "<|im_start|>user"
     response_template = "<|im_start|>assistant"
-    tokenizer.pad_token = "<|fim_pad_token|>"
+    special_tokens_dict = {"pad_token": "<|fim_pad_token|>"}
+    tokenizer.add_special_tokens(special_tokens_dict)
 
     # Only compute loss over assistant responses
     # Verified that it precisely starts where the thinking tokens start and ends with the first pad token

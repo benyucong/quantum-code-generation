@@ -4,8 +4,8 @@
 #SBATCH --error=../../logs/sft_%A_%a.err
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=40GB
-#SBATCH --gres=gpu:1
-#SBATCH --partition=gpu-debug
+#SBATCH --gres=gpu:a100:1
+##SBATCH --partition=gpu-debug
 
 module purge
 module load gcc cuda cmake openmpi
