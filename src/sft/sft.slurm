@@ -14,6 +14,8 @@ module load scicomp-llm-env
 
 source ../../.venv/bin/activate
 
+export WANDB_API_KEY=$(cat ~/.wandb_api_key)
+
 pip install -r ../../requirements.txt
 
 python3 -u sft.py \

@@ -1,31 +1,30 @@
 import os
+import trl
+import warnings
+import logging
+import transformers
+from datasets import load_dataset, concatenate_datasets, DatasetDict
 from dataclasses import dataclass, field, asdict
 from typing import Optional
-import trl
 
-import warnings
-
+# ----- Config Logging and Warnings -----
 warnings.filterwarnings("ignore", category=FutureWarning)
-
-import logging
-
+transformers.logging.set_verbosity_info()
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
-from datasets import load_dataset, concatenate_datasets, DatasetDict
-import transformers
-
 
 @dataclass
 class TrainingConfig:
     model_name: str = field(default="Qwen/Qwen2.5-3B-Instruct")
-    block_size: int = field(default=1024)
+    block_size: int = field(default=512)
     wandb_project: Optional[str] = field(default="quantum-circuit-generation")
     wandb_entity: Optional[str] = field(default="linusjern")
     train_file_path: Optional[str] = field(
         default="linuzj/hypergraph-max-cut-quantum_tokenized"
     )
     dagger: bool = field(default=False)
+    report_to: List[str] = field(default_factory=lambda: ["wandb"])
 
     def __post_init__(self):
         os.environ["WANDB_PROJECT"] = self.wandb_project
@@ -72,6 +71,7 @@ def train():
         eval_dataset=dataset["test"] if "test" in dataset else dataset["train"],
         args=args,
         data_collator=collator,
+        args.report_to = ["wandb"]
     )
 
     # ----- Train Model -----
