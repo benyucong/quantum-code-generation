@@ -3,7 +3,7 @@ import json
 import re
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Dict, Any, List
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 
 
 def preprocess(text):
@@ -101,6 +101,11 @@ def main():
 
     # Make Huggingface Dataset
     dataset = Dataset.from_list(records)
+    split_dataset = dataset.train_test_split(test_size=0.15, shuffle=True, seed=42)
+
+    dataset_dict = DatasetDict(
+        {"train": split_dataset["train"], "test": split_dataset["test"]}
+    )
 
     # Upload
     repo_id = "linuzj/hypergraph-max-cut-quantum"
@@ -108,7 +113,7 @@ def main():
     try:
         # If you have set your HF token via the CLI or environment variable,
         # you can simply call push_to_hub without a token parameter.
-        dataset.push_to_hub(repo_id)
+        dataset_dict.push_to_hub(repo_id)
         print("Upload successful!")
     except Exception as e:
         print("Error uploading dataset:", e)

@@ -19,7 +19,7 @@ import transformers
 @dataclass
 class TrainingConfig:
     model_name: str = field(default="Qwen/Qwen2.5-3B-Instruct")
-    block_size: int = field(default=4096)
+    block_size: int = field(default=1024)
     wandb_project: Optional[str] = field(default="quantum-circuit-generation")
     wandb_entity: Optional[str] = field(default="linusjern")
     train_file_path: Optional[str] = field(
@@ -37,7 +37,7 @@ def train():
     config, args = parser.parse_args_into_dataclasses()
 
     log_config = {**asdict(config), **asdict(args)}
-    logging.info(f"Training config: {log_config}")
+    logging.info("Training config: %s", log_config)
 
     # ----- Load Model, Data and Tokenizer -----
     model = transformers.AutoModelForCausalLM.from_pretrained(config.model_name)
