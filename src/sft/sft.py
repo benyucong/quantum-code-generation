@@ -19,7 +19,7 @@ import transformers
 @dataclass
 class TrainingConfig:
     model_name: str = field(default="Qwen/Qwen2.5-3B-Instruct")
-    block_size: int = field(default=32768)
+    block_size: int = field(default=4096)
     wandb_project: Optional[str] = field(default="quantum-circuit-generation")
     wandb_entity: Optional[str] = field(default="linusjern")
     train_file_path: Optional[str] = field(
