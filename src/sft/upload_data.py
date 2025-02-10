@@ -101,6 +101,12 @@ def main():
 
     # Make Huggingface Dataset
     dataset = Dataset.from_list(records)
+    split_dataset = dataset.train_test_split(test_size=0.15, shuffle=True, seed=42)
+
+    dataset_dict = DatasetDict({
+        "train": split_dataset["train"],
+        "test": split_dataset["test"]
+    })
 
     # Upload
     repo_id = "linuzj/hypergraph-max-cut-quantum"
