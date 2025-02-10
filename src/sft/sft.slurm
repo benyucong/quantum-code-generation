@@ -14,4 +14,5 @@ module load scicomp-llm-env
 
 source ../../.venv/bin/activate
 
-python3 -u train/sft.py
+python3 -u train/sft.py \
+    --output_dir="data"
