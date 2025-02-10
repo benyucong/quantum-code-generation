@@ -14,5 +14,7 @@ module load scicomp-llm-env
 
 source ../../.venv/bin/activate
 
+pip install --no-index -r ../../requirements.txt
+
 python3 -u sft.py \
     --output_dir="data"
