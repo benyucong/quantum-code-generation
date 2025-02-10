@@ -35,23 +35,22 @@ def process_hypergraph_example(example: Dict) -> Dict:
     )
 
 
-def process_example(
-    example: Dict,
-    tokenizer,
-):
-    question, answer, circuit_with_params, circuit_with_symbols = (
-        process_hypergraph_example(example).values()
-    )
+def process_example(example: Dict, tokenizer):
+    hypergraph_data = process_hypergraph_example(example)
+    question = hypergraph_data["question"]
+    answer = hypergraph_data["answer"]
+
+    if "Answer:" not in answer:
+        answer = "Answer: " + answer
+
     prompt = QUERY_TEMPLATE_NOANSWER.format(Question=question)
-    answer = "Answer: " + answer if "Answer:" not in answer else answer
+
     text = tokenizer.apply_chat_template(
         [
             {"role": "user", "content": prompt},
             {
                 "role": "assistant",
-                "content": "<|im_start|>think\n"
-                + "\n<|im_start|>answer\n"
-                + answer.strip(),
+                "content": "<|im_start|>think\n\n<|im_start|>answer\n" + answer.strip(),
             },
         ],
         tokenize=False,
@@ -60,23 +59,28 @@ def process_example(
 
 
 def tokenize_examples_for_sft(
-    upload_data_path: str,
-    download_data_path: str,
-    num_proc: int,
+    upload_data_path: str, download_data_path: str, num_proc: int
 ):
     dataset = load_dataset(download_data_path, download_mode="force_redownload")
-
-    if "train" in dataset:
-        dataset = dataset["train"]
-
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-3B-Instruct")
-
     process_example_map = partial(process_example, tokenizer=tokenizer)
-    dataset = dataset.map(
-        process_example_map,
-        num_proc=num_proc,
-        desc="Tokenizing SFT data",
-    )
+
+    # If the dataset is a DatasetDict with splits (e.g., "train" and "test"),
+    # process each split separately.
+    if isinstance(dataset, dict) and "train" in dataset:
+        for split in dataset.keys():
+            dataset[split] = dataset[split].map(
+                process_example_map,
+                num_proc=num_proc,
+                desc=f"Tokenizing SFT data for {split} split",
+            )
+    else:
+        dataset = dataset.map(
+            process_example_map,
+            num_proc=num_proc,
+            desc="Tokenizing SFT data",
+        )
+
     dataset.push_to_hub(upload_data_path)
 
 

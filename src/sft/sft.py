@@ -37,7 +37,7 @@ def train():
     config, args = parser.parse_args_into_dataclasses()
 
     log_config = {**asdict(config), **asdict(args)}
-    logging.info(f"Training config: {log_config}")
+    logging.info("Training config: %s", log_config)
 
     # ----- Load Model, Data and Tokenizer -----
     model = transformers.AutoModelForCausalLM.from_pretrained(config.model_name)

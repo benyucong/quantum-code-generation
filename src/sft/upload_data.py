@@ -3,7 +3,7 @@ import json
 import re
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Dict, Any, List
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 
 
 def preprocess(text):
@@ -114,7 +114,7 @@ def main():
     try:
         # If you have set your HF token via the CLI or environment variable,
         # you can simply call push_to_hub without a token parameter.
-        dataset.push_to_hub(repo_id)
+        dataset_dict.push_to_hub(repo_id)
         print("Upload successful!")
     except Exception as e:
         print("Error uploading dataset:", e)
