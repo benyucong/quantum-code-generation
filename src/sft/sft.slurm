@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --time=00:30:00
+#SBATCH --time=03:00:00
 #SBATCH --output=../../logs/sft_%A_%a.out
 #SBATCH --error=../../logs/sft_%A_%a.err
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=40GB
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=50GB
 #SBATCH --gres=gpu:a100:1
 ##SBATCH --partition=gpu-debug
 

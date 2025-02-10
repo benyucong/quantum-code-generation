@@ -5,7 +5,7 @@ import logging
 import transformers
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 from dataclasses import dataclass, field, asdict
-from typing import Optional
+from typing import Optional, List
 
 # ----- Config Logging and Warnings -----
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -24,7 +24,6 @@ class TrainingConfig:
         default="linuzj/hypergraph-max-cut-quantum_tokenized"
     )
     dagger: bool = field(default=False)
-    report_to: List[str] = field(default_factory=lambda: ["wandb"])
 
     def __post_init__(self):
         os.environ["WANDB_PROJECT"] = self.wandb_project
@@ -34,6 +33,7 @@ class TrainingConfig:
 def train():
     parser = transformers.HfArgumentParser((TrainingConfig, trl.SFTConfig))
     config, args = parser.parse_args_into_dataclasses()
+    args.report_to = ["wandb"]
 
     log_config = {**asdict(config), **asdict(args)}
     logging.info("Training config: %s", log_config)
@@ -70,8 +70,7 @@ def train():
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"] if "test" in dataset else dataset["train"],
         args=args,
-        data_collator=collator,
-        args.report_to = ["wandb"]
+        data_collator=collator
     )
 
     # ----- Train Model -----
