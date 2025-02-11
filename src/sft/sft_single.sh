@@ -27,4 +27,5 @@ python3 -u sft.py \
     --output_dir="data/checkpoints/${uid}" \
     --num_train_epochs=${epochs} \
     --bf16=True \
-    --block_size=${block_size}
+    --block_size=${block_size} \
+    --save_only_model=True

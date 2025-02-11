@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=50GB
 #SBATCH --gpus=2
-#SBATCH --partition=gpu-h100-80g
+#SBATCH --partition=gpu-a100-80g
 ##SBATCH --partition=gpu-debug
 
 module purge
@@ -29,8 +29,9 @@ block_size=512
 
 torchrun --nnodes=1 \
          --nproc_per_node=$SLURM_NTASKS_PER_NODE \
-         python3 -u sft.py \
+         sft.py \
          --output_dir="data/checkpoints/${uid}" \
          --num_train_epochs=${epochs} \
          --bf16=True \
-         --block_size=${block_size}
+         --block_size=${block_size} \
+         --save_only_model=True
