@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=sft_quantum_circuit_gen_singlegpu
-#SBATCH --time=03:00:00
+#SBATCH --time=01:00:00
 #SBATCH --output=../../logs/sft_%A_%a.out
 #SBATCH --error=../../logs/sft_%A_%a.err
 #SBATCH --cpus-per-task=8
@@ -22,10 +22,14 @@ pip install -r ../../requirements.txt
 uid="$(date +%Y%m%d_%H%M%S)"
 epochs=5
 block_size=256
+save_strategy="epoch"
+save_steps=3
 
 python3 -u sft.py \
     --output_dir="data/checkpoints/${uid}" \
     --num_train_epochs=${epochs} \
     --bf16=True \
     --block_size=${block_size} \
+    --save_strategy=${save_strategy} \
+    --save_steps=${save_steps} \
     --save_only_model=True
