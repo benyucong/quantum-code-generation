@@ -24,7 +24,7 @@ def process_hypergraph_example(example: Dict) -> Dict:
     circuit_with_params = example["circuit_with_params"]
     circuit_with_symbols = example["circuit_with_symbols"]
 
-    question = f"Generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} layers to solve the hypergraph max-cut problem using VQE with the following hypergraph: {hypergraph}."
+    question = f"You are a highly intelligent AI assistant specializing in quantum circtuits. Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} layers to solve the hypergraph max-cut problem using VQE with the following hypergraph: {hypergraph}. Analyse the problem and understand what's being asked, then evaluate each proposed step in the problem solving process. Then ensure that the final answer is correct and in valid QASM 3.0 code."
     answer = circuit_with_params
 
     return dict(
