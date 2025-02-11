@@ -50,7 +50,7 @@ def process_example(example: Dict, tokenizer):
             {"role": "user", "content": prompt},
             {
                 "role": "assistant",
-                "content": "<|im_start|>think\n\n<|im_start|>answer\n" + answer.strip(),
+                "content": "\n<|im_start|>answer\n" + answer.strip(),
             },
         ],
         tokenize=False,
