@@ -6,6 +6,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=50GB
 #SBATCH --gres=gpu:a100:1
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-user=linus.jern@aalto.fi
 ##SBATCH --partition=gpu-debug
 
 module purge
