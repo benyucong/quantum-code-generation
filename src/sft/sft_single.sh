@@ -20,10 +20,9 @@ export WANDB_API_KEY=$(cat .wandb_api_key)
 pip install -r ../../requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
-epochs=5
-block_size=256
-save_strategy="epoch"
-save_steps=3
+epochs=10
+block_size=260
+save_steps=2000
 
 python3 -u sft.py \
     --output_dir="data/checkpoints/${uid}" \

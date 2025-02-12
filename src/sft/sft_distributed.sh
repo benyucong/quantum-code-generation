@@ -2,10 +2,10 @@
 #SBATCH --job-name=sft_quantum_circuit_gen_multigpu
 #SBATCH --time=01:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=2
+#SBATCH --ntasks-per-node=3
 #SBATCH --output=../../logs/sft_%A_%a.out
 #SBATCH --error=../../logs/sft_%A_%a.err
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=3
 #SBATCH --mem=50GB
 #SBATCH --gpus=3
 #SBATCH --partition=gpu-a100-80g
@@ -24,10 +24,10 @@ pip install -r ../../requirements.txt
 
 
 uid="$(date +%Y%m%d_%H%M%S)"
-epochs=10
-block_size=800
-save_strategy="epoch"
-save_steps=10
+epochs=40
+block_size=512
+save_strategy='steps'
+save_steps=6000
 
 torchrun --nnodes=1 \
         --nproc_per_node=$SLURM_NTASKS_PER_NODE \
@@ -38,4 +38,6 @@ torchrun --nnodes=1 \
         --block_size=${block_size} \
         --save_strategy=${save_strategy} \
         --save_steps=${save_steps} \
-        --save_only_model=True
+        --save_only_model=True \
+        --fsdp="full_shard auto_wrap" \
+        --fsdp_config="fsdp_config_qwen.json"
