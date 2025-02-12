@@ -9,6 +9,8 @@
 #SBATCH --mem=50GB
 #SBATCH --gpus=3
 #SBATCH --partition=gpu-a100-80g
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-user=linus.jern@aalto.fi
 ##SBATCH --partition=gpu-debug
 
 module purge
