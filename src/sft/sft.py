@@ -22,7 +22,6 @@ class TrainingConfig:
     train_file_path: Optional[str] = field(
         default="linuzj/hypergraph-max-cut-quantum_tokenized"
     )
-    save_steps: int = field(default=4000)
     dagger: bool = field(default=False)
 
     def __post_init__(self):
