@@ -32,7 +32,7 @@ outputs = model.generate(**inputs, max_length=10000)
 generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 e = time.time()
 
-loc_ans = s.rfind("Answer: ")
+loc_ans = generated_text.rfind("Answer: ")
 
 generated_circuit = generated_text[loc_ans:]
 
