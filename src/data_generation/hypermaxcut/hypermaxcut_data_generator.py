@@ -1,23 +1,107 @@
+from dataclasses import dataclass
 import random
-from typing import Tuple, Set
+from typing import Tuple, Set, List
 
-from data_generation.data_generator import DataGenerator
-from data_generation.hypermaxcut.hypergraph import HyperGraph
-from data_generation.hypermaxcut.hypermaxcutsolver import HyperMaxCutSolver
+from ..data_generator import (
+    DataGenerator,
+    OptimizationProblem,
+    ExactSolution,
+    QuantumSolution,
+)
+from ..ansatz import AnsatzCircuit6
+from .hypergraph import HyperGraph
+from .hypermaxcut_solver import HyperMaxCutSolver
+import json
+import os
+
+
+@dataclass
+class HyperMaxCutOptimizationProblem(OptimizationProblem):
+    hypergraph: HyperGraph = None
 
 
 class HyperMaxCutDataGenerator(DataGenerator):
     def __init__(self):
-        super().__init__("Hyper MaxCut")
+        super().__init__("hypermaxcut")
         self.node_range = (4, 10)
 
     def generate_data(self):
         # First, we generate the hypergraphs
         hypergraphs = self.__generate_hypergraphs()
 
+        ansatz = AnsatzCircuit6(num_qubits=self.n_qubits, layers=self.layers)
+
+        solutions = []
         for hypergraph in hypergraphs:
             solver = HyperMaxCutSolver(self.n_qubits, self.layers, hypergraph)
-            print(solver.solve_vqe())
+
+            (
+                smallest_eigenvalues,
+                smallest_eigenvectors,
+                smallest_bitstrings,
+                first_excited_energy,
+                first_excited_state,
+            ) = solver.solve_exact()
+
+            exact_solution = ExactSolution(
+                smallest_eigenvalues=float(smallest_eigenvalues[0]),
+                number_of_smallest_eigenvalues=len(smallest_eigenvalues),
+                first_excited_energy=float(first_excited_energy),
+            )
+
+            # Solve using VQE
+            (
+                vqe_states,
+                vqe_expectation_value,
+                vqe_params,
+                vqe_total_steps,
+                vqe_probs,
+            ) = solver.solve_vqe(ansatz=ansatz)
+            # Solve using QAOA
+            (
+                qaoa_states,
+                qaoa_expectation_value,
+                qaoa_params,
+                qaoa_total_steps,
+                qaoa_probs,
+            ) = solver.solve_qaoa()
+
+            vqe_optimization_problem = HyperMaxCutOptimizationProblem(
+                hypergraph=hypergraph,
+                number_of_layers=self.layers,
+                number_of_qubits=self.n_qubits,
+                cost_hamiltonian=solver.get_cost_hamiltonian(),
+                exact_solution=exact_solution,
+                vqe_solution=QuantumSolution(
+                    states=vqe_states,
+                    expectation_value=vqe_expectation_value,
+                    params=vqe_params,
+                    bitstrings=smallest_bitstrings,
+                    total_optimization_steps=vqe_total_steps,
+                    probabilities=vqe_probs,
+                ),
+            )
+
+            qaoa_optimization_problem = HyperMaxCutOptimizationProblem(
+                hypergraph=hypergraph,
+                number_of_layers=self.layers,
+                number_of_qubits=self.n_qubits,
+                cost_hamiltonian=solver.get_cost_hamiltonian(),
+                exact_solution=exact_solution,
+                qaoa_solution=QuantumSolution(
+                    states=qaoa_states,
+                    expectation_value=qaoa_expectation_value,
+                    params=qaoa_params,
+                    bitstrings=smallest_bitstrings,
+                    total_optimization_steps=qaoa_total_steps,
+                    probabilities=qaoa_probs,
+                ),
+            )
+
+            solutions.append(vqe_optimization_problem)
+            solutions.append(qaoa_optimization_problem)
+
+        self._save_data(solutions)
 
     def __generate_hypergraphs(self) -> Set[HyperGraph]:
         hypergraphs: Set[HyperGraph] = set()
@@ -57,3 +141,12 @@ class HyperMaxCutDataGenerator(DataGenerator):
                 hyperedges.append(hyperedge)
 
         return HyperGraph(nodes, hyperedges)
+
+    def _save_data(self, solutions: List[OptimizationProblem]):
+        for i, solution in enumerate(solutions):
+            unique_path = os.path.join(
+                self.output_path,
+                f"{self.description}_{self.n_qubits}_{self.layers}_{i}.json",
+            )
+            with open(unique_path, "w", encoding="utf-8") as file:
+                json.dump(solution, file, indent=4)

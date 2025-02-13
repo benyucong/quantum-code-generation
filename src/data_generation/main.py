@@ -1,17 +1,25 @@
 import argparse
-from .data_generator import DataGenerator
+
 from .hypermaxcut.hypermaxcut_data_generator import (
     HyperMaxCutDataGenerator,
 )
 
+from .data_generator import DataGenerator
 
-def main(problem: DataGenerator, min_qubits: int, max_qubits: int, layers: int):
+
+def main(
+    problem: DataGenerator,
+    min_qubits: int,
+    max_qubits: int,
+    layers: int,
+    output_path: str,
+):
     print(f"Minimum qubits: {min_qubits}")
     print(f"Maximum qubits: {max_qubits}")
     print(f"Number of layers: {layers}")
 
     for n_qubits in range(min_qubits, max_qubits + 1):
-        problem.initialize(n_qubits, layers)
+        problem.initialize(n_qubits, layers, output_path)
         problem.generate_data()
 
 
@@ -29,6 +37,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--layers", type=int, required=True, help="Number of layers to be used"
     )
+    parser.add_argument(
+        "--output_path", type=str, required=False, help="Output path for the data"
+    )
 
     args = parser.parse_args()
 
@@ -39,4 +50,4 @@ if __name__ == "__main__":
     else:
         raise ValueError("No problem specified")
 
-    main(problem, args.min_qubits, args.max_qubits, args.layers)
+    main(problem, args.min_qubits, args.max_qubits, args.layers, args.output_path)
