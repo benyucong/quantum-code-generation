@@ -17,7 +17,7 @@ logging.basicConfig(
 @dataclass
 class TrainingConfig:
     model_name: str = field(default="Qwen/Qwen2.5-3B-Instruct")
-    block_size: int = field(default=512)
+    block_size: int = field(default=8192)
     wandb_project: Optional[str] = field(default="quantum-circuit-generation")
     train_file_path: Optional[str] = field(
         default="linuzj/hypergraph-max-cut-quantum_tokenized"

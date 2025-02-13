@@ -5,7 +5,8 @@
 #SBATCH --error=../logs/run_%A_%a.err
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=20GB
-#SBATCH --gres=gpu:1
+#SBATCH --gpus=1
+#SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
 ##SBATCH --partition=gpu-debug
@@ -21,4 +22,5 @@ pip install -r ../requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
-python3 -u run_model.py
+python3 -u run_model.py \
+    --uid=${uid}

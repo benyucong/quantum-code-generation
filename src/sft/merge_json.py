@@ -74,10 +74,8 @@ def main():
     json_files = find_json_files(args.directory, exclude_files)
     print(f"Found {len(json_files)} JSON files.")
 
-    # Merge the contents
     merged_data = merge_json_files(json_files)
 
-    # Write the merged content to the output file.
     try:
         with open(args.output, "w", encoding="utf-8") as f_out:
             json.dump(merged_data, f_out, indent=4)
