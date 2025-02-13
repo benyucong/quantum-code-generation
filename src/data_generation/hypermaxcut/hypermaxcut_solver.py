@@ -9,7 +9,7 @@ from qiskit import QuantumCircuit, qasm3
 from qiskit.circuit import Parameter
 from pennylane_qiskit import AerDevice
 
-from ..solver import VQESolver
+from ..solver import Solver
 from .hypergraph import HyperGraph
 from ..ansatz import Ansatz
 
@@ -107,13 +107,13 @@ def basis_vector_to_bitstring(basis_vector):
     return bitstring
 
 
-class HyperMaxCutSolver(VQESolver):
-    def __init__(self, n_qubits: int, n_layers: int, hypergraph: HyperGraph, p=1.0):
+class HyperMaxCutSolver(Solver):
+    def __init__(self, n_qubits: int, n_layers: int, hypergraph: HyperGraph, p=1):
         super().__init__(n_qubits=n_qubits, layers=n_layers)
         self.hypergraph = hypergraph
 
         # Construct the Hamiltonian
-        self.coeffifiencts, self.pauli_strings = self.construct_hamiltonian()
+        self.coeffifiencts, self.observables = self.construct_hamiltonian()
         self.qaoa_circuit, self.qaoa_probs_circuit = self._create_QAOA_circuits()
 
         self.p = p
@@ -124,14 +124,14 @@ class HyperMaxCutSolver(VQESolver):
     def construct_hamiltonian(self):
         coeffs = []
         observables = []
-        for edge in self.hypergraph.hyperedges:
+        for edge in self.hypergraph.edges:
             coeffs, observables = self._sum_term_in_cost_hamiltonian(edge)
             coeffs.extend(coeffs)
             observables.extend(observables)
         return coeffs, observables
 
     def get_cost_hamiltonian(self):
-        return qml.ops.op_math.LinearCombination(self.coeffs, self.observables)
+        return qml.ops.op_math.LinearCombination(self.coeffifiencts, self.observables)
 
     def solve_exact(self):
         cost_matrix = self.get_cost_hamiltonian().matrix(
@@ -201,8 +201,8 @@ class HyperMaxCutSolver(VQESolver):
             states_probs,
         )
 
-    def solve_with_vqe(self, ansatz: Ansatz):
-        circuit = ansatz.get_circuit()
+    def solve_vqe(self, ansatz: Ansatz):
+        circuit = ansatz.get_circuit_funtion()
         single_qubit_params_shape, two_qubit_params_shape = ansatz.get_params_shape()
         dev = qml.device("lightning.qubit", wires=self.n_qubits)
         cost_hamiltonian = self.get_cost_hamiltonian()

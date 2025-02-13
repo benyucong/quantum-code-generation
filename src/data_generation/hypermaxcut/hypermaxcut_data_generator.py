@@ -8,17 +8,16 @@ from ..data_generator import (
     ExactSolution,
     QuantumSolution,
 )
+from ..ansatz import AnsatzCircuit6
 from .hypergraph import HyperGraph
-from .hypermaxcutsolver import HyperMaxCutSolver
+from .hypermaxcut_solver import HyperMaxCutSolver
 import json
 import os
 
 
 @dataclass
 class HyperMaxCutOptimizationProblem(OptimizationProblem):
-    hypergraph: HyperGraph
-    exact_solution: ExactSolution
-    quantum_solution: QuantumSolution
+    hypergraph: HyperGraph = None
 
 
 class HyperMaxCutDataGenerator(DataGenerator):
@@ -30,51 +29,72 @@ class HyperMaxCutDataGenerator(DataGenerator):
         # First, we generate the hypergraphs
         hypergraphs = self.__generate_hypergraphs()
 
+        ansatz = AnsatzCircuit6(num_qubits=self.n_qubits, layers=self.layers)
+
         solutions = []
         for hypergraph in hypergraphs:
             solver = HyperMaxCutSolver(self.n_qubits, self.layers, hypergraph)
 
-            exact_solution = solver.solve_exact()
+            (
+                smallest_eigenvalues,
+                smallest_eigenvectors,
+                smallest_bitstrings,
+                first_excited_energy,
+                first_excited_state,
+            ) = solver.solve_exact()
+
+            exact_solution = ExactSolution(
+                smallest_eigenvalues=float(smallest_eigenvalues[0]),
+                number_of_smallest_eigenvalues=len(smallest_eigenvalues),
+                first_excited_energy=float(first_excited_energy),
+            )
 
             # Solve using VQE
-            vqe_solution = solver.solve_vqe()
+            (
+                vqe_states,
+                vqe_expectation_value,
+                vqe_params,
+                vqe_total_steps,
+                vqe_probs,
+            ) = solver.solve_vqe(ansatz=ansatz)
+            # Solve using QAOA
+            (
+                qaoa_states,
+                qaoa_expectation_value,
+                qaoa_params,
+                qaoa_total_steps,
+                qaoa_probs,
+            ) = solver.solve_qaoa()
+
             vqe_optimization_problem = HyperMaxCutOptimizationProblem(
                 hypergraph=hypergraph,
-                exact_solution=ExactSolution(
-                    smallest_eigenvalues=exact_solution["smallest_eigenvalues"],
-                    number_of_smallest_eigenvalues=exact_solution[
-                        "number_of_smallest_eigenvalues"
-                    ],
-                    first_excited_energy=exact_solution["first_excited_energy"],
-                ),
-                quantum_solution=QuantumSolution(
-                    states=vqe_solution["states"],
-                    expectation_value=vqe_solution["expectation_value"],
-                    params=vqe_solution["params"],
-                    bitstrings=vqe_solution["bitstrings"],
-                    total_optimization_steps=vqe_solution["total_optimization_steps"],
-                    probabilities=vqe_solution["probabilities"],
+                number_of_layers=self.layers,
+                number_of_qubits=self.n_qubits,
+                cost_hamiltonian=solver.get_cost_hamiltonian(),
+                exact_solution=exact_solution,
+                vqe_solution=QuantumSolution(
+                    states=vqe_states,
+                    expectation_value=vqe_expectation_value,
+                    params=vqe_params,
+                    bitstrings=smallest_bitstrings,
+                    total_optimization_steps=vqe_total_steps,
+                    probabilities=vqe_probs,
                 ),
             )
 
-            # Solve using QAOA
-            qaoa_solution = solver.solve_qaoa()
             qaoa_optimization_problem = HyperMaxCutOptimizationProblem(
                 hypergraph=hypergraph,
-                exact_solution=ExactSolution(
-                    smallest_eigenvalues=exact_solution["smallest_eigenvalues"],
-                    number_of_smallest_eigenvalues=exact_solution[
-                        "number_of_smallest_eigenvalues"
-                    ],
-                    first_excited_energy=exact_solution["first_excited_energy"],
-                ),
-                quantum_solution=QuantumSolution(
-                    states=qaoa_solution["states"],
-                    expectation_value=qaoa_solution["expectation_value"],
-                    params=qaoa_solution["params"],
-                    bitstrings=qaoa_solution["bitstrings"],
-                    total_optimization_steps=qaoa_solution["total_optimization_steps"],
-                    probabilities=qaoa_solution["probabilities"],
+                number_of_layers=self.layers,
+                number_of_qubits=self.n_qubits,
+                cost_hamiltonian=solver.get_cost_hamiltonian(),
+                exact_solution=exact_solution,
+                qaoa_solution=QuantumSolution(
+                    states=qaoa_states,
+                    expectation_value=qaoa_expectation_value,
+                    params=qaoa_params,
+                    bitstrings=smallest_bitstrings,
+                    total_optimization_steps=qaoa_total_steps,
+                    probabilities=qaoa_probs,
                 ),
             )
 
