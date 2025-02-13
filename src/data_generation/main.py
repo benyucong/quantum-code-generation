@@ -1,8 +1,10 @@
 import argparse
-from .data_generator import DataGenerator
-from .hypermaxcut.hypermaxcut_data_generator import (
+
+from data_generation.hypermaxcut.hypermaxcut_data_generator import (
     HyperMaxCutDataGenerator,
 )
+
+from .data_generator import DataGenerator
 
 
 def main(

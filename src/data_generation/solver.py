@@ -1,7 +1,7 @@
 from .ansatz import Ansatz
 
 
-class VQESolver:
+class Solver:
     def __init__(self, n_qubits: int, layers: int):
         self.n_qubits = n_qubits
         self.layers = layers
@@ -9,7 +9,7 @@ class VQESolver:
     def construct_hamiltonian(self):
         pass
 
-    def solve_exactly(self):
+    def solve_exact(self):
         pass
 
     def solve_vqe(self, ansatz: Ansatz):

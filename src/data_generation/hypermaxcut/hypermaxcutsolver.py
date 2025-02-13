@@ -9,9 +9,9 @@ from qiskit import QuantumCircuit, qasm3
 from qiskit.circuit import Parameter
 from pennylane_qiskit import AerDevice
 
-from .data_generation.vqe_solver import VQESolver
-from .data_generation.hypermaxcut.hypergraph import HyperGraph
-from .ansatz import Ansatz
+from ..solver import VQESolver
+from .hypergraph import HyperGraph
+from ..ansatz import Ansatz
 
 
 def replace_h_rz_h_with_rx(
@@ -133,7 +133,7 @@ class HyperMaxCutSolver(VQESolver):
     def get_cost_hamiltonian(self):
         return qml.ops.op_math.LinearCombination(self.coeffs, self.observables)
 
-    def solve_exactly(self):
+    def solve_exact(self):
         cost_matrix = self.get_cost_hamiltonian().matrix(
             wire_order=range(self.n_qubits)
         )

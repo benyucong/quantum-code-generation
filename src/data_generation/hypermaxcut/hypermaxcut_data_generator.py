@@ -1,12 +1,24 @@
+from dataclasses import dataclass
 import random
 from typing import Tuple, Set, List
 
-from data_generation.data_generator import DataGenerator
-from data_generation.hypermaxcut.hypergraph import HyperGraph
-from data_generation.hypermaxcut.hypermaxcutsolver import HyperMaxCutSolver
-from data_generator import OptimizationProblem, ExactSolution, QuantumSolution
+from ..data_generator import (
+    DataGenerator,
+    OptimizationProblem,
+    ExactSolution,
+    QuantumSolution,
+)
+from .hypergraph import HyperGraph
+from .hypermaxcutsolver import HyperMaxCutSolver
 import json
 import os
+
+
+@dataclass
+class HyperMaxCutOptimizationProblem(OptimizationProblem):
+    hypergraph: HyperGraph
+    exact_solution: ExactSolution
+    quantum_solution: QuantumSolution
 
 
 class HyperMaxCutDataGenerator(DataGenerator):
@@ -26,7 +38,7 @@ class HyperMaxCutDataGenerator(DataGenerator):
 
             # Solve using VQE
             vqe_solution = solver.solve_vqe()
-            vqe_optimization_problem = OptimizationProblem(
+            vqe_optimization_problem = HyperMaxCutOptimizationProblem(
                 hypergraph=hypergraph,
                 exact_solution=ExactSolution(
                     smallest_eigenvalues=exact_solution["smallest_eigenvalues"],
@@ -47,7 +59,7 @@ class HyperMaxCutDataGenerator(DataGenerator):
 
             # Solve using QAOA
             qaoa_solution = solver.solve_qaoa()
-            qaoa_optimization_problem = OptimizationProblem(
+            qaoa_optimization_problem = HyperMaxCutOptimizationProblem(
                 hypergraph=hypergraph,
                 exact_solution=ExactSolution(
                     smallest_eigenvalues=exact_solution["smallest_eigenvalues"],
