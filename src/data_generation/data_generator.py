@@ -1,5 +1,8 @@
+import dataclasses
 from dataclasses import dataclass
 from typing import List, Dict, Any
+from pennylane import numpy as np
+import json
 
 
 @dataclass
@@ -30,6 +33,15 @@ class OptimizationProblem:
     vqe_solution: QuantumSolution = None
     circuit_with_params: str = None
     circuit_with_symbols: str = None
+
+
+class DataclassJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if dataclasses.is_dataclass(obj):
+            return dataclasses.asdict(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 
 
 class DataGenerator:

@@ -77,6 +77,24 @@ class HyperGraph:
         """
         return set(self.edges)
 
+    def get_n_nodes(self):
+        """
+        Returns the number of nodes in the hypergraph.
+
+        Returns:
+            int: The number of nodes.
+        """
+        return len(self.nodes)
+
+    def get_n_edges(self):
+        """
+        Returns the number of edges in the hypergraph.
+
+        Returns:
+            int: The number of edges.
+        """
+        return len(self.edges)
+
     def get_signature(self):
         """
         Compute a deterministic, hash-based signature for the HyperGraph.

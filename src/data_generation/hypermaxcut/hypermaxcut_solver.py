@@ -108,8 +108,9 @@ def basis_vector_to_bitstring(basis_vector):
 
 
 class HyperMaxCutSolver(Solver):
-    def __init__(self, n_qubits: int, n_layers: int, hypergraph: HyperGraph, p=1):
-        super().__init__(n_qubits=n_qubits, layers=n_layers)
+    def __init__(self, n_layers: int, hypergraph: HyperGraph, p=1):
+        super().__init__(n_qubits=hypergraph.get_n_nodes(), layers=n_layers)
+
         self.hypergraph = hypergraph
 
         # Construct the Hamiltonian
@@ -143,6 +144,7 @@ class HyperMaxCutSolver(Solver):
             first_excited_energy,
             first_excited_state,
         ) = smallest_eigenpairs(cost_matrix)
+
         self.smallest_bitstrings = [
             basis_vector_to_bitstring(v) for v in self.smallest_eigenvectors
         ]
@@ -202,8 +204,10 @@ class HyperMaxCutSolver(Solver):
         )
 
     def solve_vqe(self, ansatz: Ansatz):
-        circuit = ansatz.get_circuit_funtion()
-        single_qubit_params_shape, two_qubit_params_shape = ansatz.get_params_shape()
+        circuit = ansatz.get_circuit_function()
+        single_qubit_params_shape, two_qubit_params_shape = (
+            ansatz.get_parameter_shapes()
+        )
         dev = qml.device("lightning.qubit", wires=self.n_qubits)
         cost_hamiltonian = self.get_cost_hamiltonian()
 
@@ -350,6 +354,15 @@ class HyperMaxCutSolver(Solver):
         )
         return qasm3.dumps(qiskit_circuit)
 
+    def get_qasm_circuits(self, params, symbolic_params=True):
+        qaoa_qiskit_circuit = self.pennylane_to_qiskit(
+            self.qaoa_circuit, params, symbolic_params
+        )
+        vqe_qiskit_circuit = self.pennylane_to_qiskit(
+            self.vqe_circuit, params, symbolic_params
+        )
+        return qasm3.dumps(qaoa_qiskit_circuit), qasm3.dumps(vqe_qiskit_circuit)
+
     def _create_QAOA_circuits(self):
         """
         Creates and compiles Quantum Approximate Optimization Algorithm (QAOA) circuits.
@@ -402,15 +415,6 @@ class HyperMaxCutSolver(Solver):
         )
 
         return qaoa_circuit, qaoa_probs_circuit
-
-    def get_qasm_circuits(self, params, symbolic_params=True):
-        qaoa_qiskit_circuit = self.pennylane_to_qiskit(
-            self.qaoa_circuit, params, symbolic_params
-        )
-        vqe_qiskit_circuit = self.pennylane_to_qiskit(
-            self.vqe_circuit, params, symbolic_params
-        )
-        return qasm3.dumps(qaoa_qiskit_circuit), qasm3.dumps(vqe_qiskit_circuit)
 
     def _sum_term_in_cost_hamiltonian(self, edge):
         n_nodes = len(edge)
