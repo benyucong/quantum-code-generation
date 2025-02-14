@@ -1,9 +1,22 @@
 import dataclasses
+import json
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from enum import Enum
+from typing import Any, List
+
 from pennylane import numpy as np
 from pennylane.ops.op_math import LinearCombination
-import json
+
+
+class OptimizationProblemType(Enum):
+    """
+    Enum class representing different types of optimization problems.
+
+    Attributes:
+        HYPERGRAPH_CUT (str): Represents the hypergraph cut optimization problem type.
+    """
+
+    HYPERGRAPH_CUT = "hypergraph_cut"
 
 
 @dataclass
@@ -25,6 +38,8 @@ class QuantumSolution:
 
 @dataclass
 class OptimizationProblem:
+    problem_type: OptimizationProblemType
+    signature: str
     cost_hamiltonian: str
     number_of_qubits: int
     number_of_layers: int
@@ -37,6 +52,18 @@ class OptimizationProblem:
 
 
 class DataclassJSONEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for encoding dataclass objects, numpy arrays, and LinearCombination objects.
+
+    This encoder extends the default `json.JSONEncoder` to handle additional types:
+    - Dataclass objects are converted to dictionaries using `dataclasses.asdict`.
+    - Numpy arrays are converted to lists using `tolist`.
+    - LinearCombination objects are converted to strings using `str`.
+
+    Methods:
+        default(obj): Overrides the default method to provide custom serialization for specific types.
+    """
+
     def default(self, obj):
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)

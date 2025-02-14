@@ -9,3 +9,4 @@ __pycache__/
 logs/
 src/sft/data/
 src/sft/wandb/
+src/data_generation/out/

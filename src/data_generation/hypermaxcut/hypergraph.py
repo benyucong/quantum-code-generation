@@ -129,3 +129,13 @@ class HyperGraph:
         Restore the HyperGraph's state from unpickling.
         """
         self.__dict__.update(state)
+
+    def to_dict(self):
+        """
+        Convert the HyperGraph to a JSON-serializable dictionary.
+        Sets are converted to sorted lists.
+        """
+        return {
+            "nodes": sorted(list(self.nodes)),
+            "edges": [sorted(list(edge)) for edge in self.edges],
+        }

@@ -10,17 +10,36 @@ from ..data_generator import (
     DataclassJSONEncoder,
     OptimizationProblem,
     ExactSolution,
+    OptimizationProblemType,
     QuantumSolution,
 )
 from ..ansatz import Ansatz
 from .hypergraph import HyperGraph
 from .hypermaxcut_solver import HyperMaxCutSolver
+from pennylane import numpy as np
 import json
 import os
 
 
+def int_to_bitstring(int_sample: int, n_qubits: int) -> str:
+    """
+    Converts an integer to a bitstring of a specified length.
+
+    Args:
+        int_sample (int): The integer to be converted to a bitstring.
+        n_qubits (int): The length of the resulting bitstring.
+
+    Returns:
+        str: The bitstring representation of the integer, padded with leading zeros to match the specified length.
+    """
+    bits = np.array([int(i) for i in format(int_sample, f"0{n_qubits}b")])
+    return "".join([str(i) for i in bits])
+
+
 # --- Helper function to process one hypergraph ---
-def process_hypergraph(hypergraph: HyperGraph, layers: int):
+def process_hypergraph(
+    hypergraph: HyperGraph, layers: int
+) -> List[OptimizationProblem]:
     """
     Given a hypergraph and a number of layers, solve the problem using
     exact, VQE, and QAOA methods, and return a list containing two optimization
@@ -59,6 +78,9 @@ def process_hypergraph(hypergraph: HyperGraph, layers: int):
         vqe_total_steps,
         vqe_probs,
     ) = solver.solve_vqe(ansatz=ansatz)
+    vqe_bitstrings = [
+        int_to_bitstring(state, hypergraph.get_n_nodes()) for state in vqe_states
+    ]
 
     # Solve using QAOA.
     (
@@ -68,34 +90,58 @@ def process_hypergraph(hypergraph: HyperGraph, layers: int):
         qaoa_total_steps,
         qaoa_probs,
     ) = solver.solve_qaoa()
+    qaoa_bitstrings = [
+        int_to_bitstring(state, hypergraph.get_n_nodes()) for state in qaoa_states
+    ]
+
+    qaoa_circuit_with_params = solver.qaoa_circuit_to_qasm(
+        qaoa_params, symbolic_params=False
+    )
+    qaoa_circuit_with_symbols = solver.qaoa_circuit_to_qasm(
+        qaoa_params, symbolic_params=True
+    )
+    vqe_circuit_with_params = solver.vqe_circuit_to_qasm(
+        vqe_params, symbolic_params=False
+    )
+    vqe_circuit_with_symbols = solver.vqe_circuit_to_qasm(
+        vqe_params, symbolic_params=True
+    )
 
     vqe_optimization_problem = HyperMaxCutOptimizationProblem(
-        hypergraph=hypergraph,
+        problem_type=OptimizationProblemType.HYPERGRAPH_CUT,
+        signature=hypergraph.get_signature(),
+        hypergraph=hypergraph.to_dict(),
         number_of_layers=layers,
         number_of_qubits=hypergraph.get_n_nodes(),
         cost_hamiltonian=solver.get_cost_hamiltonian(),
         exact_solution=exact_solution,
+        circuit_with_params=vqe_circuit_with_params,
+        circuit_with_symbols=vqe_circuit_with_symbols,
         vqe_solution=QuantumSolution(
             states=vqe_states,
             expectation_value=vqe_expectation_value,
             params=vqe_params,
-            bitstrings=smallest_bitstrings,
+            bitstrings=vqe_bitstrings,
             total_optimization_steps=vqe_total_steps,
             probabilities=vqe_probs,
         ),
     )
 
     qaoa_optimization_problem = HyperMaxCutOptimizationProblem(
-        hypergraph=hypergraph,
+        problem_type=OptimizationProblemType.HYPERGRAPH_CUT,
+        signature=hypergraph.get_signature(),
+        hypergraph=hypergraph.to_dict(),
         number_of_layers=layers,
         number_of_qubits=hypergraph.get_n_nodes(),
         cost_hamiltonian=solver.get_cost_hamiltonian(),
         exact_solution=exact_solution,
+        circuit_with_params=qaoa_circuit_with_params,
+        circuit_with_symbols=qaoa_circuit_with_symbols,
         qaoa_solution=QuantumSolution(
             states=qaoa_states,
             expectation_value=qaoa_expectation_value,
             params=qaoa_params,
-            bitstrings=smallest_bitstrings,
+            bitstrings=qaoa_bitstrings,
             total_optimization_steps=qaoa_total_steps,
             probabilities=qaoa_probs,
         ),
@@ -116,6 +162,29 @@ class HyperMaxCutOptimizationProblem(OptimizationProblem):
 
 
 class HyperMaxCutDataGenerator(DataGenerator):
+    """
+    A data generator for the HyperMaxCut problem.
+
+    This class generates random hypergraphs and processes them to generate solutions
+    for the HyperMaxCut problem. The generated data is then saved to disk.
+
+    Attributes:
+        node_range (tuple): A tuple specifying the range of nodes in the hypergraphs.
+
+    Methods:
+        generate_data():
+            Generates hypergraphs, processes them, and saves the solutions.
+
+        __generate_hypergraphs() -> Set[HyperGraph]:
+            Generates a set of random hypergraphs based on the specified node range.
+
+        __generate_random_hypergraph(num_nodes: int, num_hyperedges: int, max_edge_size: int) -> HyperGraph:
+            Generates a single random hypergraph with the specified number of nodes, hyperedges, and maximum edge size.
+
+        _save_data(solutions: List[OptimizationProblem]):
+            Saves the generated solutions to disk.
+    """
+
     def __init__(self):
         super().__init__("hypermaxcut")
         self.node_range = (5, 10)
@@ -184,7 +253,7 @@ class HyperMaxCutDataGenerator(DataGenerator):
         for i, solution in enumerate(solutions):
             unique_path = os.path.join(
                 self.output_path,
-                f"{self.description}_{self.n_qubits}_{self.layers}_{i}.json",
+                f"{self.description}_{solution.signature}_{self.n_qubits}_{self.layers}_{i}.json",
             )
             with open(unique_path, "w", encoding="utf-8") as file:
                 json.dump(solution, file, cls=DataclassJSONEncoder, indent=4)
