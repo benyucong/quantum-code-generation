@@ -2,6 +2,7 @@ import dataclasses
 from dataclasses import dataclass
 from typing import List, Dict, Any
 from pennylane import numpy as np
+from pennylane.ops.op_math import LinearCombination
 import json
 
 
@@ -41,6 +42,8 @@ class DataclassJSONEncoder(json.JSONEncoder):
             return dataclasses.asdict(obj)
         if isinstance(obj, np.ndarray):
             return obj.tolist()
+        if isinstance(obj, LinearCombination):
+            return str(obj)
         return super().default(obj)
 
 
