@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ansatz=5
+ansatz=13
 layers=1
 output_dir="src/data_generation/out/"
 

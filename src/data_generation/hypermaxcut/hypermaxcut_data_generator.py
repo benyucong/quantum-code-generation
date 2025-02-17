@@ -90,6 +90,7 @@ def process_hypergraph(
         vqe_total_steps,
         vqe_probs,
     ) = solver.solve_vqe(ansatz=ansatz)
+    qaoa_params = vqe_params.to_list()
     vqe_bitstrings = [
         int_to_bitstring(state, hypergraph.get_n_nodes()) for state in vqe_states
     ]
@@ -102,6 +103,7 @@ def process_hypergraph(
         qaoa_total_steps,
         qaoa_probs,
     ) = solver.solve_qaoa()
+    qaoa_params = qaoa_params.to_list()
     qaoa_bitstrings = [
         int_to_bitstring(state, hypergraph.get_n_nodes()) for state in qaoa_states
     ]
@@ -250,8 +252,7 @@ class HyperMaxCutDataGenerator(DataGenerator):
             else:
                 filtered_hypergraphs.append(hg)
 
-        all_solutions = []
-
+        print(f"Strating the processing of {len(filtered_hypergraphs)} hypergraphs")
         with concurrent.futures.ProcessPoolExecutor() as executor:
             futures = [
                 executor.submit(

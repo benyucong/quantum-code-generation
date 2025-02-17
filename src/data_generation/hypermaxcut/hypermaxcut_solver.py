@@ -349,14 +349,16 @@ class HyperMaxCutSolver(Solver):
         return new_qc
 
     def qaoa_circuit_to_qasm(self, params, symbolic_params=True):
+        rounded_params = round_params(params, decimals=4)
         qiskit_circuit = self.pennylane_to_qiskit(
-            self.qaoa_circuit, params, symbolic_params
+            self.qaoa_circuit, rounded_params, symbolic_params
         )
         return qasm3.dumps(qiskit_circuit)
 
     def vqe_circuit_to_qasm(self, params, symbolic_params=True):
+        rounded_params = round_params(params, decimals=4)
         qiskit_circuit = self.pennylane_to_qiskit(
-            self.vqe_circuit, params, symbolic_params
+            self.vqe_circuit, rounded_params, symbolic_params
         )
         return qasm3.dumps(qiskit_circuit)
 
@@ -437,3 +439,7 @@ class HyperMaxCutSolver(Solver):
                     observables.append(qml.prod(*[qml.PauliZ(i) for i in subset]))
 
         return coeffs, observables
+
+
+def round_params(params, decimals=4):
+    return tuple(np.round(np.array(p, dtype=float), decimals=decimals) for p in params)
