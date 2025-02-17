@@ -8,19 +8,12 @@ from .data_generator import DataGenerator
 
 
 def main(
-    problem: DataGenerator,
-    min_qubits: int,
-    max_qubits: int,
+    data_problem: DataGenerator,
     layers: int,
-    output_path: str,
 ):
-    print(f"Minimum qubits: {min_qubits}")
-    print(f"Maximum qubits: {max_qubits}")
     print(f"Number of layers: {layers}")
 
-    for n_qubits in range(min_qubits, max_qubits + 1):
-        problem.initialize(n_qubits, layers, output_path)
-        problem.generate_data()
+    data_problem.generate_data()
 
 
 if __name__ == "__main__":
@@ -29,16 +22,16 @@ if __name__ == "__main__":
         "--hypermaxcut", action="store_true", help="Generate Hyper MaxCut data"
     )
     parser.add_argument(
-        "--min_qubits", type=int, required=True, help="Minimum number of qubits"
-    )
-    parser.add_argument(
-        "--max_qubits", type=int, required=True, help="Maximum number of qubits"
-    )
-    parser.add_argument(
         "--layers", type=int, required=True, help="Number of layers to be used"
     )
     parser.add_argument(
         "--output_path", type=str, required=False, help="Output path for the data"
+    )
+    parser.add_argument(
+        "--ansatz_template",
+        type=int,
+        required=False,
+        help="Choose one of the available Ansatz templates for VQE",
     )
 
     args = parser.parse_args()
@@ -46,8 +39,12 @@ if __name__ == "__main__":
     # Determine what problem to generate data for
     problem = None
     if args.hypermaxcut:
-        problem = HyperMaxCutDataGenerator()
+        problem = HyperMaxCutDataGenerator(
+            layers=args.layers,
+            ansatz_template=args.ansatz_template,
+            output_path=args.output_path,
+        )
     else:
         raise ValueError("No problem specified")
 
-    main(problem, args.min_qubits, args.max_qubits, args.layers, args.output_path)
+    main(problem, args.layers)

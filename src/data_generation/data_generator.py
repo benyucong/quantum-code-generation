@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import dataclasses
 import json
 from dataclasses import dataclass
@@ -8,7 +9,7 @@ from pennylane import numpy as np
 from pennylane.ops.op_math import LinearCombination
 
 
-class OptimizationProblemType(Enum):
+class OptimizationProblemType(str, Enum):
     """
     Enum class representing different types of optimization problems.
 
@@ -17,6 +18,19 @@ class OptimizationProblemType(Enum):
     """
 
     HYPERGRAPH_CUT = "hypergraph_cut"
+
+
+class OptimizationType(str, Enum):
+    """
+    Enum class representing different types of optimization algorithms.
+
+    Attributes:
+        VQE (str): Variational Quantum Eigensolver.
+        QAOA (str): Quantum Approximate Optimization Algorithm.
+    """
+
+    VQE = "vqe"
+    QAOA = "qaoa"
 
 
 @dataclass
@@ -39,6 +53,7 @@ class QuantumSolution:
 @dataclass
 class OptimizationProblem:
     problem_type: OptimizationProblemType
+    optimization_type: OptimizationType
     signature: str
     cost_hamiltonian: str
     number_of_qubits: int
@@ -74,16 +89,18 @@ class DataclassJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-class DataGenerator:
+class DataGenerator(ABC):
     def __init__(self, description=None):
         self.description = description
-        self.n_qubits = None
-        self.layers = None
 
-    def initialize(self, n_qubits: int, layers: int, output_path: str):
-        self.n_qubits = n_qubits
-        self.layers = layers
-        self.output_path = output_path
-
+    @abstractmethod
     def generate_data(self):
-        pass
+        """
+        Generates data for the application.
+
+        This method is a placeholder and currently does not implement any functionality.
+        Future implementations should include the logic for data generation.
+
+        Returns:
+            None
+        """

@@ -1,4 +1,5 @@
 import itertools
+from typing import Optional
 import scipy
 import pennylane as qml
 from pennylane import numpy as np
@@ -108,14 +109,17 @@ def basis_vector_to_bitstring(basis_vector):
 
 
 class HyperMaxCutSolver(Solver):
-    def __init__(self, n_layers: int, hypergraph: HyperGraph, p=1):
+    def __init__(
+        self, n_layers: int, hypergraph: HyperGraph, adaptive_optimizer=False, p=1
+    ):
         super().__init__(n_qubits=hypergraph.get_n_nodes(), layers=n_layers)
 
         self.hypergraph = hypergraph
+        self.adaptive_optimizer = adaptive_optimizer
 
         # Construct the Hamiltonian
         self.coeffifiencts, self.observables = self.construct_hamiltonian()
-        self.qaoa_circuit, self.qaoa_probs_circuit = self._create_QAOA_circuits()
+        self.qaoa_circuit, self.qaoa_probs_circuit = self._create_qaoa_circuits()
 
         self.p = p
 
@@ -158,17 +162,18 @@ class HyperMaxCutSolver(Solver):
 
     def solve_qaoa(self):
         opt = qml.AdagradOptimizer(stepsize=0.5)
-        # opt = qml.QNGOptimizer()
+
         params = self.init_params.copy()
-        probs = self.qaoa_probs_circuit(params)
+        probs = self.qaoa_probs_circuit(*params)
+
         total_steps = 0
         attempts = 0
         while True:
             steps = 10
             for _ in range(steps):
-                params = opt.step(self.qaoa_circuit, params)
+                params = opt.step(self.qaoa_circuit, *params)
             total_steps += steps
-            probs = self.qaoa_probs_circuit(params)
+            probs = self.qaoa_probs_circuit(*params)
             # smallest_eigenvalue_now = self.qaoa_circuit(params)
             most_probable_state = np.argsort(probs)[-1]
             most_probable_state = int_to_bitstring(most_probable_state, self.n_qubits)
@@ -192,9 +197,10 @@ class HyperMaxCutSolver(Solver):
                 break
 
         # probs = self.qaoa_probs_circuit(params)
-        smallest_eigenvalue = self.qaoa_circuit(params)
+        smallest_eigenvalue = self.qaoa_circuit(*params)
         two_most_probable_states = np.argsort(probs)[-2:]
         states_probs = [probs[i] for i in two_most_probable_states]
+
         return (
             two_most_probable_states,
             smallest_eigenvalue,
@@ -203,8 +209,8 @@ class HyperMaxCutSolver(Solver):
             states_probs,
         )
 
-    def solve_vqe(self, ansatz: Ansatz):
-        circuit = ansatz.get_circuit_function()
+    def solve_vqe(self, ansatz: Optional[Ansatz]):
+        circuit = ansatz.get_circuit()
         single_qubit_params_shape, two_qubit_params_shape = (
             ansatz.get_parameter_shapes()
         )
@@ -363,7 +369,7 @@ class HyperMaxCutSolver(Solver):
         )
         return qasm3.dumps(qaoa_qiskit_circuit), qasm3.dumps(vqe_qiskit_circuit)
 
-    def _create_QAOA_circuits(self):
+    def _create_qaoa_circuits(self):
         """
         Creates and compiles Quantum Approximate Optimization Algorithm (QAOA) circuits.
 
@@ -386,17 +392,19 @@ class HyperMaxCutSolver(Solver):
             qml.qaoa.mixer_layer(alpha, mixer_hamiltonian)
 
         @qml.qnode(dev)
-        def qaoa_circuit(params):
+        def qaoa_circuit(*params):
+            gamma, alpha = params
             for wire in range(self.n_qubits):
                 qml.Hadamard(wires=wire)
-            qml.layer(qaoa_layer, self.p, params[0], params[1])
+            qml.layer(qaoa_layer, self.p, gamma, alpha)
             return qml.expval(cost_hamiltonian)
 
         @qml.qnode(dev)
-        def qaoa_probs_circuit(params):
+        def qaoa_probs_circuit(*params):
+            gamma, alpha = params
             for wire in range(self.n_qubits):
                 qml.Hadamard(wires=wire)
-            qml.layer(qaoa_layer, self.p, params[0], params[1])
+            qml.layer(qaoa_layer, self.p, gamma, alpha)
             return qml.probs()
 
         # Compile the QAOA circuit to some specific gate set

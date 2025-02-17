@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import random
 import time
 import json
-from typing import Tuple, Set, List
+from typing import Optional, Tuple, Set, List
 import concurrent.futures
 
 from ..data_generator import (
@@ -11,9 +11,10 @@ from ..data_generator import (
     OptimizationProblem,
     ExactSolution,
     OptimizationProblemType,
+    OptimizationType,
     QuantumSolution,
 )
-from ..ansatz import Ansatz
+from ..ansatz import get_ansatz
 from .hypergraph import HyperGraph
 from .hypermaxcut_solver import HyperMaxCutSolver
 from pennylane import numpy as np
@@ -38,7 +39,10 @@ def int_to_bitstring(int_sample: int, n_qubits: int) -> str:
 
 # --- Helper function to process one hypergraph ---
 def process_hypergraph(
-    hypergraph: HyperGraph, layers: int
+    hypergraph: HyperGraph,
+    layers: int,
+    ansatz_template: Optional[int],
+    adaptive_optimizer=False,
 ) -> List[OptimizationProblem]:
     """
     Given a hypergraph and a number of layers, solve the problem using
@@ -51,9 +55,17 @@ def process_hypergraph(
         f"{len(hypergraph.edges)} edges. Start time: {start_time:.2f}"
     )
 
-    solver = HyperMaxCutSolver(layers, hypergraph)
+    solver = HyperMaxCutSolver(
+        n_layers=layers, hypergraph=hypergraph, adaptive_optimizer=adaptive_optimizer
+    )
 
-    ansatz = Ansatz(hypergraph.get_n_nodes(), layers)
+    ansatz = None
+    if not adaptive_optimizer:
+        ansatz = get_ansatz(
+            ansatz_type=ansatz_template,
+            num_qubits=hypergraph.get_n_nodes(),
+            layers=layers,
+        )
 
     # Solve exactly.
     (
@@ -109,6 +121,7 @@ def process_hypergraph(
 
     vqe_optimization_problem = HyperMaxCutOptimizationProblem(
         problem_type=OptimizationProblemType.HYPERGRAPH_CUT,
+        optimization_type=OptimizationType.VQE,
         signature=hypergraph.get_signature(),
         hypergraph=hypergraph.to_dict(),
         number_of_layers=layers,
@@ -129,6 +142,7 @@ def process_hypergraph(
 
     qaoa_optimization_problem = HyperMaxCutOptimizationProblem(
         problem_type=OptimizationProblemType.HYPERGRAPH_CUT,
+        optimization_type=OptimizationType.QAOA,
         signature=hypergraph.get_signature(),
         hypergraph=hypergraph.to_dict(),
         number_of_layers=layers,
@@ -185,35 +199,85 @@ class HyperMaxCutDataGenerator(DataGenerator):
             Saves the generated solutions to disk.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        layers: int,
+        ansatz_template: Optional[int],
+        output_path: str,
+    ):
         super().__init__("hypermaxcut")
-        self.node_range = (5, 10)
+        self.node_range = (4, 9)
+
+        self.layers = layers
+        self.output_path = output_path
+
+        self.ansatz_template = ansatz_template
+        if ansatz_template:
+            self.adaptive_optimizer = False
+        else:
+            self.adaptive_optimizer = True
+
+    def _get_existing_signatures(self) -> Set[str]:
+        """
+        Returns a set of hypergraph signatures already saved in the output directory.
+        Assumes the filename format is:
+            {self.description}_{optimization_type}_{n_qubits}_{layers}_{signature}.json
+        """
+        existing_signatures = set()
+        if not os.path.exists(self.output_path):
+            return existing_signatures
+
+        for filename in os.listdir(self.output_path):
+            if filename.endswith(".json") and filename.startswith(self.description):
+                # The signature is assumed to be the last part before ".json"
+                parts = filename.split("_")
+                # Remove the .json extension from the last part.
+                signature_part = parts[-1].replace(".json", "")
+                existing_signatures.add(signature_part)
+        return existing_signatures
 
     def generate_data(self):
         # First, we generate the hypergraphs
         hypergraphs = self.__generate_hypergraphs()
+
+        # Filter out hypergraphs whose signature already exists.
+        existing_signatures = self._get_existing_signatures()
+        filtered_hypergraphs = []
+        for hg in hypergraphs:
+            sig = hg.get_signature()
+            if sig in existing_signatures:
+                print(f"Skipping hypergraph with signature {sig} (already processed).")
+            else:
+                filtered_hypergraphs.append(hg)
+
         all_solutions = []
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             futures = [
-                executor.submit(process_hypergraph, hg, self.layers)
+                executor.submit(
+                    process_hypergraph,
+                    hg,
+                    self.layers,
+                    self.ansatz_template,
+                    self.adaptive_optimizer,
+                )
                 for hg in hypergraphs
             ]
 
             for future in concurrent.futures.as_completed(futures):
                 try:
                     solutions = future.result()
-                    all_solutions.extend(solutions)
+                    # Each hypergraph processing returns a list of solutions,
+                    # so save them one by one.
+                    for solution in solutions:
+                        self._save_solution(solution)
                 except Exception as exc:
                     print(f"A hypergraph processing failed with exception: {exc}")
-
-        # Save all solutions.
-        self._save_data(all_solutions)
 
     def __generate_hypergraphs(self) -> Set[HyperGraph]:
         hypergraphs: Set[HyperGraph] = set()
 
-        for n_nodes in range(self.node_range[1], self.node_range[1] + 1):
+        for n_nodes in range(self.node_range[0], self.node_range[1] + 1):
             # The maximum amount of hyperedges
             max_hyperedges = n_nodes * (n_nodes - 1) // 2
 
@@ -249,11 +313,18 @@ class HyperMaxCutDataGenerator(DataGenerator):
 
         return HyperGraph(nodes, hyperedges)
 
-    def _save_data(self, solutions: List[OptimizationProblem]):
-        for i, solution in enumerate(solutions):
-            unique_path = os.path.join(
-                self.output_path,
-                f"{self.description}_{solution.signature}_{self.n_qubits}_{self.layers}_{i}.json",
-            )
-            with open(unique_path, "w", encoding="utf-8") as file:
-                json.dump(solution, file, cls=DataclassJSONEncoder, indent=4)
+    def _save_solution(self, solution: OptimizationProblem):
+        """
+        Saves a single optimization problem solution to disk.
+        The filename format is:
+            {self.description}_{optimization_type}_{n_qubits}_{layers}_{signature}.json
+        """
+        filename = (
+            f"{self.description}_{solution.optimization_type}_"
+            f"{solution.number_of_qubits}_{self.layers}_{solution.signature}.json"
+        )
+
+        unique_path = os.path.join(self.output_path, filename)
+
+        with open(unique_path, "w", encoding="utf-8") as file:
+            json.dump(solution, file, cls=DataclassJSONEncoder, indent=4)
