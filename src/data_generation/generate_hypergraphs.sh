@@ -2,9 +2,9 @@
 
 ansatz=13
 layers=1
-output_dir="src/data_generation/out/"
+output_dir="out/"
 
-python3 -m src.data_generation.main \
+python3 -m src.main \
     --hypermaxcut \
     --layers ${layers} \
     --ansatz_template ${ansatz} \

@@ -10,9 +10,9 @@ from qiskit import QuantumCircuit, qasm3
 from qiskit.circuit import Parameter
 from pennylane_qiskit import AerDevice
 
-from ..solver import Solver
-from .hypergraph import HyperGraph
-from ..ansatz import Ansatz
+from src.solver import Solver
+from src.hypermaxcut.hypergraph import HyperGraph
+from src.ansatz import Ansatz
 
 
 def replace_h_rz_h_with_rx(

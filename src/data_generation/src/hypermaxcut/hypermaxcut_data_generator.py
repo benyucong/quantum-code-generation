@@ -5,7 +5,7 @@ import json
 from typing import Optional, Tuple, Set, List
 import concurrent.futures
 
-from ..data_generator import (
+from src.data_generator import (
     DataGenerator,
     DataclassJSONEncoder,
     OptimizationProblem,
@@ -14,9 +14,10 @@ from ..data_generator import (
     OptimizationType,
     QuantumSolution,
 )
-from ..ansatz import get_ansatz
-from .hypergraph import HyperGraph
-from .hypermaxcut_solver import HyperMaxCutSolver
+from src.ansatz import get_ansatz
+from src.hypermaxcut.hypergraph import HyperGraph
+from src.hypermaxcut.hypermaxcut_solver import HyperMaxCutSolver
+
 from pennylane import numpy as np
 import json
 import os
@@ -208,7 +209,7 @@ class HyperMaxCutDataGenerator(DataGenerator):
         output_path: str,
     ):
         super().__init__("hypermaxcut")
-        self.node_range = (4, 9)
+        self.node_range = (4, 6)
 
         self.layers = layers
         self.output_path = output_path

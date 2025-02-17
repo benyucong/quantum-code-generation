@@ -1,6 +1,6 @@
 import argparse
 
-from .hypermaxcut.hypermaxcut_data_generator import (
+from src.hypermaxcut.hypermaxcut_data_generator import (
     HyperMaxCutDataGenerator,
 )
 
