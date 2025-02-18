@@ -62,7 +62,7 @@ def tokenize_examples_for_sft(
 ):
     dataset = load_dataset(download_data_path, download_mode="force_redownload")
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-3B-Instruct")
-    process_example_map = partial(process_example, tokenizer=tokenizer)
+    process_example_map = staticmethod(partial(process_example, tokenizer=tokenizer))
 
     # If the dataset is a DatasetDict with splits (e.g., "train" and "test"),
     # process each split separately.

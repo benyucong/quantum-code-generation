@@ -1,26 +1,24 @@
-from dataclasses import dataclass
+import concurrent.futures
+import json
+import os
 import random
 import time
-import json
-from typing import Optional, Tuple, Set, List
-import concurrent.futures
+from dataclasses import dataclass
+from typing import List, Optional, Set
 
+from pennylane import numpy as np
+from src.ansatz import get_ansatz
 from src.data_generator import (
-    DataGenerator,
     DataclassJSONEncoder,
-    OptimizationProblem,
+    DataGenerator,
     ExactSolution,
+    OptimizationProblem,
     OptimizationProblemType,
     OptimizationType,
     QuantumSolution,
 )
-from src.ansatz import get_ansatz
 from src.hypermaxcut.hypergraph import HyperGraph
 from src.hypermaxcut.hypermaxcut_solver import HyperMaxCutSolver
-
-from pennylane import numpy as np
-import json
-import os
 
 
 def int_to_bitstring(int_sample: int, n_qubits: int) -> str:
@@ -91,7 +89,6 @@ def process_hypergraph(
         vqe_total_steps,
         vqe_probs,
     ) = solver.solve_vqe(ansatz=ansatz)
-    qaoa_params = vqe_params.to_list()
     vqe_bitstrings = [
         int_to_bitstring(state, hypergraph.get_n_nodes()) for state in vqe_states
     ]
@@ -104,7 +101,6 @@ def process_hypergraph(
         qaoa_total_steps,
         qaoa_probs,
     ) = solver.solve_qaoa()
-    qaoa_params = qaoa_params.to_list()
     qaoa_bitstrings = [
         int_to_bitstring(state, hypergraph.get_n_nodes()) for state in qaoa_states
     ]

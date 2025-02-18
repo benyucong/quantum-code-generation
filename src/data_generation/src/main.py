@@ -1,10 +1,11 @@
 import argparse
+import warnings
 
-from src.hypermaxcut.hypermaxcut_data_generator import (
-    HyperMaxCutDataGenerator,
-)
+from src.hypermaxcut.hypermaxcut_data_generator import HyperMaxCutDataGenerator
 
 from .data_generator import DataGenerator
+
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 def main(
