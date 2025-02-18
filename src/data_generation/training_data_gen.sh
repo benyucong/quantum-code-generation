@@ -5,11 +5,11 @@
 #SBATCH --error=../../logs/hypermaxcut_%A_%a.err
 #SBATCH --array=0-2
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=8
 #SBATCH --ntasks=1
-#SBATCH --mem=40GB
-#SBATCH --gres=gpu:3
-#SBATCH --partition=gpu-h200-141g-short
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=50GB
+##SBATCH --gres=gpu:3
+##SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
 

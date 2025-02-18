@@ -205,7 +205,7 @@ class HyperMaxCutDataGenerator(DataGenerator):
         output_path: str,
     ):
         super().__init__("hypermaxcut")
-        self.node_range = (4, 10)
+        self.node_range = (3, 8)
 
         self.layers = layers
         self.output_path = output_path
