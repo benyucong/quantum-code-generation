@@ -214,7 +214,7 @@ class HyperMaxCutSolver(Solver):
         single_qubit_params_shape, two_qubit_params_shape = (
             ansatz.get_parameter_shapes()
         )
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        dev = qml.device("lightning.gpu", wires=self.n_qubits)
         cost_hamiltonian = self.get_cost_hamiltonian()
 
         if two_qubit_params_shape is None:
@@ -384,7 +384,7 @@ class HyperMaxCutSolver(Solver):
         Returns:
             tuple: A tuple containing the compiled `qaoa_circuit` and `qaoa_probs_circuit`.
         """
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        dev = qml.device("lightning.gpu", wires=self.n_qubits)
 
         cost_hamiltonian = self.get_cost_hamiltonian()
         mixer_hamiltonian = qml.qaoa.x_mixer(range(self.n_qubits))

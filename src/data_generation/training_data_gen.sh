@@ -7,7 +7,9 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=8
 #SBATCH --ntasks=1
-#SBATCH --mem=10GB
+#SBATCH --mem=40GB
+#SBATCH --gres=gpu:3
+#SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
 
@@ -18,6 +20,8 @@ module load scicomp-llm-env
 
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install custatevec_cu12
+pip install pennylane-lightning-gpu
 
 ANSATZ_OPTIONS=("5" "6" "13")
 OPTION=${ANSATZ_OPTIONS[$SLURM_ARRAY_TASK_ID]}
