@@ -7,6 +7,6 @@ benchmark_mapping_with_cirq.csv
 __pycache__/
 .wandb_api_key
 logs/
-src/sft/data/
-src/sft/wandb/
-src/data_generation/out/
+code/sft/data/
+code/sft/wandb/
+code/data_generation/out/

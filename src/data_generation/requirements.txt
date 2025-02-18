@@ -1,6 +1,0 @@
-numpy==2.0
-pandas==2.2.3
-PennyLane==0.40.0
-PennyLane_qiskit==0.40.0
-qiskit==1.2.4
-scipy==1.15.2
