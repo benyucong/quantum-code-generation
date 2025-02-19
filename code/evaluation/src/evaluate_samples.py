@@ -98,7 +98,6 @@ def process_circuits(json_file, output_file=None):
         except ValueError as err:
             print(f"[FAIL] Failed to compile circuit: {idx}")
             sample["parse_error"] = str(err)
-            results.append(sample)
             continue
         
         # ---- 2) CHECK STATE VECTOR ----
@@ -119,8 +118,9 @@ def process_circuits(json_file, output_file=None):
                 sample["qaoa_comparison"] = compare_solution(sim_probs, sample["dataset_metrics"]["qaoa_solution"])
             else:
                 sample["vqe_comparison"] = compare_solution(sim_probs, sample["dataset_metrics"]["vqe_solution"])
-        
-        results.append(sample)
+
+        if sample["parse_error"] == None and sample["simulation_error"] == None:
+            results.append(sample)
 
     if output_file:
         with open(output_file, "w", encoding="utf-8") as f:
