@@ -6,6 +6,8 @@ from qiskit import transpile
 from qiskit_aer import AerSimulator
 from qiskit_qasm3_import import parse
 
+from computations import compute_measurement_probabilities
+
 def parse_qasm_from_str(qasm_str):
     """
     Parses a QASM string into a Qiskit QuantumCircuit object.
@@ -36,6 +38,25 @@ def parse_qasm_from_str(qasm_str):
 
     return circuit
 
+def compare_solution(sim_probs, expected_solution):
+    """
+    Compares simulated probabilities with the expected solution from the dataset.
+    expected_solution is expected to be a dict with keys "states" and "probabilities".
+    Returns a dict with the simulated probabilities for the expected states,
+    the expected probabilities, and the absolute differences.
+    """
+    expected_states = expected_solution.get("states", [])
+    expected_probs = expected_solution.get("probabilities", [])
+    sim_probs_for_states = [float(sim_probs[i]) for i in expected_states]
+    differences = [abs(sim - exp) for sim, exp in zip(sim_probs_for_states, expected_probs)]
+    
+    return {
+        "simulated_probabilities": sim_probs_for_states,
+        "expected_probabilities": expected_probs,
+        "absolute_differences": differences
+    }
+
+
 def process_circuits(json_file, output_file=None):
     """
     Processes a JSON file containing multiple circuit samples. For each sample, it checks whether the
@@ -56,10 +77,13 @@ def process_circuits(json_file, output_file=None):
     for idx, sample in enumerate(data):
         generated_qasm = sample.get("generated_circuit", "")
         
+        # ---- Init new params ----
         sample["qasm_valid"] = False
         sample["statevector"] = None
         sample["parse_error"] = None
         sample["simulation_error"] = None
+        sample["qaoa_comparison"] = None
+        sample["vqe_comparison"] = None
 
         if not generated_qasm:
             sample["parse_error"] = "No 'generated_circuit' field found."
@@ -85,9 +109,17 @@ def process_circuits(json_file, output_file=None):
             statevector = result.get_statevector(circ)
             sv_array = np.asarray(statevector)
             sample["statevector"] = [[val.real, val.imag] for val in sv_array]
+            sim_probs = compute_measurement_probabilities(sv_array)
         except Exception as err:
             sample["simulation_error"] = str(err)
 
+        # ---- 3) Compare with pre-computed ----
+        if sample["simulation_error"] == None:
+            if sample["dataset_metrics"]["optimization_type"] == "qaoa":
+                sample["qaoa_comparison"] = compare_solution(sim_probs, sample["dataset_metrics"]["qaoa_solution"])
+            else:
+                sample["vqe_comparison"] = compare_solution(sim_probs, sample["dataset_metrics"]["vqe_solution"])
+        
         results.append(sample)
 
     if output_file:

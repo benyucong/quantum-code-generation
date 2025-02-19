@@ -162,7 +162,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 1,
@@ -319,7 +321,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 2,
@@ -403,7 +407,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 3,
@@ -614,7 +620,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 4,
@@ -727,7 +735,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 5,
@@ -876,7 +886,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 6,
@@ -1060,8 +1072,16 @@
         0.0
       ],
       [
-        -0.22353391296797814,
-        -0.9746961525281735
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        -0.0
       ],
       [
         0.0,
@@ -1188,16 +1208,8 @@
         0.0
       ],
       [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
+        0.2924607255062669,
+        -0.9562775350474088
       ],
       [
         0.0,
@@ -1209,7 +1221,22 @@
       ]
     ],
     "parse_error": null,
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": {
+      "simulated_probabilities": [
+        0.0,
+        0.0
+      ],
+      "expected_probabilities": [
+        0.029737991422888493,
+        0.029737991422888493
+      ],
+      "absolute_differences": [
+        0.029737991422888493,
+        0.029737991422888493
+      ]
+    },
+    "vqe_comparison": null
   },
   {
     "sample_index": 7,
@@ -1338,7 +1365,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 8,
@@ -1479,7 +1508,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 9,
@@ -1709,7 +1740,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 10,
@@ -1782,7 +1815,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 11,
@@ -2093,7 +2128,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: ",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 12,
@@ -2261,7 +2298,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 13,
@@ -2394,7 +2433,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 14,
@@ -2594,7 +2635,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 15,
@@ -2703,7 +2746,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 16,
@@ -2898,7 +2943,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 17,
@@ -3070,7 +3117,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 18,
@@ -3308,7 +3357,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 19,
@@ -3532,7 +3583,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 20,
@@ -3766,7 +3819,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 21,
@@ -3998,7 +4053,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 22,
@@ -4081,7 +4138,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 23,
@@ -4289,7 +4348,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 24,
@@ -4722,7 +4783,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 25,
@@ -4909,7 +4972,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 26,
@@ -5091,7 +5156,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 27,
@@ -5305,7 +5372,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 28,
@@ -5469,7 +5538,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 29,
@@ -5650,7 +5721,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 30,
@@ -5936,7 +6009,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 31,
@@ -6029,7 +6104,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 32,
@@ -6116,7 +6193,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 33,
@@ -6334,7 +6413,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 34,
@@ -6492,7 +6573,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 35,
@@ -6661,7 +6744,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 36,
@@ -6846,7 +6931,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 37,
@@ -6957,7 +7044,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 38,
@@ -7094,7 +7183,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 39,
@@ -7246,7 +7337,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 40,
@@ -7426,7 +7519,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 41,
@@ -7679,7 +7774,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: ",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 42,
@@ -7853,7 +7950,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 43,
@@ -8056,7 +8155,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: ",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 44,
@@ -8147,7 +8248,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 45,
@@ -8349,7 +8452,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 46,
@@ -8551,7 +8656,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 47,
@@ -8666,7 +8773,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 48,
@@ -8829,7 +8938,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 49,
@@ -9046,7 +9157,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 50,
@@ -9187,7 +9300,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 51,
@@ -9449,7 +9564,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 52,
@@ -9633,7 +9750,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 53,
@@ -9749,7 +9868,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 54,
@@ -9890,7 +10011,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 55,
@@ -10178,7 +10301,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 56,
@@ -10374,7 +10499,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 57,
@@ -10507,7 +10634,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 58,
@@ -10629,64 +10758,64 @@
         0.0
       ],
       [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
         0.9990558979531413,
-        -0.04344321310679538
+        -0.04344321310679601
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
       ],
       [
         0.0,
@@ -10850,7 +10979,22 @@
       ]
     ],
     "parse_error": null,
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": {
+      "simulated_probabilities": [
+        0.0,
+        0.0
+      ],
+      "expected_probabilities": [
+        0.02024646545178062,
+        0.02024646545178062
+      ],
+      "absolute_differences": [
+        0.02024646545178062,
+        0.02024646545178062
+      ]
+    },
+    "vqe_comparison": null
   },
   {
     "sample_index": 59,
@@ -10929,7 +11073,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 60,
@@ -11074,7 +11220,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 61,
@@ -11151,6 +11299,22 @@
       ],
       [
         0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
         -0.0
       ],
       [
@@ -11182,7 +11346,7 @@
         0.0
       ],
       [
-        -0.004466380172710829,
+        -0.004466380172710915,
         -0.9999900256743328
       ],
       [
@@ -11380,26 +11544,25 @@
       [
         0.0,
         0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
       ]
     ],
     "parse_error": null,
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": {
+      "simulated_probabilities": [
+        0.0,
+        1.0
+      ],
+      "expected_probabilities": [
+        0.0647239749358667,
+        0.0647239749358667
+      ],
+      "absolute_differences": [
+        0.0647239749358667,
+        0.9352760250641333
+      ]
+    },
+    "vqe_comparison": null
   },
   {
     "sample_index": 62,
@@ -11508,7 +11671,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 63,
@@ -11613,7 +11778,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 64,
@@ -11758,7 +11925,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 65,
@@ -11983,7 +12152,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 66,
@@ -12115,7 +12286,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 67,
@@ -12208,7 +12381,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 68,
@@ -12436,7 +12611,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 69,
@@ -12541,7 +12718,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 70,
@@ -12634,7 +12813,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 71,
@@ -12836,7 +13017,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 72,
@@ -12983,7 +13166,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 73,
@@ -13078,7 +13263,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 74,
@@ -13340,7 +13527,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 75,
@@ -13510,7 +13699,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 76,
@@ -13718,7 +13909,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 77,
@@ -13906,7 +14099,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 78,
@@ -14064,7 +14259,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 79,
@@ -14229,7 +14426,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 80,
@@ -14357,7 +14556,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 81,
@@ -14584,7 +14785,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 82,
@@ -14786,7 +14989,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 83,
@@ -14958,7 +15163,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 84,
@@ -15183,7 +15390,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 85,
@@ -15355,7 +15564,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 86,
@@ -15537,7 +15748,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 87,
@@ -15665,7 +15878,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 88,
@@ -15933,7 +16148,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 89,
@@ -16167,7 +16384,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 90,
@@ -16347,7 +16566,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 91,
@@ -16558,7 +16779,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 92,
@@ -16724,7 +16947,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 93,
@@ -17050,7 +17275,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 94,
@@ -17222,7 +17449,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 95,
@@ -17412,7 +17641,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 96,
@@ -17618,7 +17849,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 97,
@@ -17837,7 +18070,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 98,
@@ -17930,7 +18165,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 99,
@@ -18243,7 +18480,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 100,
@@ -18360,7 +18599,9 @@
     "qasm_valid": false,
     "statevector": null,
     "parse_error": "Failed to parse QASM code. It might be invalid QASM 3.0 code: list index out of range",
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": null,
+    "vqe_comparison": null
   },
   {
     "sample_index": 101,
@@ -18436,15 +18677,7 @@
         0.0
       ],
       [
-        0.0,
-        0.0
-      ],
-      [
-        0.0,
-        0.0
-      ],
-      [
-        -0.004466380172710908,
+        -0.004466380172710922,
         -0.9999900256743328
       ],
       [
@@ -18686,9 +18919,32 @@
       [
         0.0,
         0.0
+      ],
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0
       ]
     ],
     "parse_error": null,
-    "simulation_error": null
+    "simulation_error": null,
+    "qaoa_comparison": {
+      "simulated_probabilities": [
+        0.0,
+        0.0
+      ],
+      "expected_probabilities": [
+        0.11894270553794738,
+        0.11894270553794738
+      ],
+      "absolute_differences": [
+        0.11894270553794738,
+        0.11894270553794738
+      ]
+    },
+    "vqe_comparison": null
   }
 ]
