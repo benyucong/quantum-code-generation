@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=sft_quantum_circuit_gen_multigpu
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=5
 #SBATCH --output=../../logs/sft_%A_%a.out
@@ -18,21 +18,21 @@ module load gcc cuda cmake openmpi
 module load scicomp-python-env/2024-01
 module load scicomp-llm-env
 
-source ../../.venv/bin/activate
+source .venv/bin/activate
 
 export WANDB_API_KEY=$(cat .wandb_api_key)
 
-pip install -r ../../requirements.txt
+pip install -r requirements.txt
 
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
 base_model_name="Qwen/Qwen2.5-3B-Instruct"
 
-epochs=30
+epochs=20
 block_size=16384
 save_strategy='steps'
-save_steps=4000
+save_steps=30000
 
 # Only do one batch per GPU to reduce memory footprint. Default is 8
 per_device_batch_size=1

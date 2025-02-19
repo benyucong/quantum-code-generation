@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Dict, Any, List
 from datasets import Dataset, DatasetDict
+from huggingface_hub import login
 
 
 def preprocess(text):
@@ -95,6 +96,9 @@ def main():
     data = load_json_data(filename)
     if data is None:
         return
+    
+    token = os.environ.get("HUGGINGFACE_HUB_TOKEN", "NULL")
+    login(token)
 
     quantum_cases = create_quantum_cases(data)
     print(f"Created {len(quantum_cases)} QuantumCase instances.")
@@ -104,7 +108,7 @@ def main():
 
     # Make Huggingface Dataset
     dataset = Dataset.from_list(records)
-    split_dataset = dataset.train_test_split(test_size=0.15, shuffle=True, seed=42)
+    split_dataset = dataset.train_test_split(test_size=0.1, shuffle=True, seed=42)
 
     dataset_dict = DatasetDict(
         {"train": split_dataset["train"], "test": split_dataset["test"]}
