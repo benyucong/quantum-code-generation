@@ -21,7 +21,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 model="20250218_214344"
-n_samples=5
+n_samples=20
 
 uid="$(date +%Y%m%d_%H%M%S)"
 model_path="../sft/data/checkpoints/${model}/checkpoint-30000"
