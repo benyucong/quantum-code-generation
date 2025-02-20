@@ -10,3 +10,4 @@ logs/
 code/sft/data/
 code/sft/wandb/
 code/data_generation/out/
+out/

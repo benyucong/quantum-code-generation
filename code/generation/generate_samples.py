@@ -27,7 +27,7 @@ def main():
 
     for idx, sample in enumerate(dataset):
         n_qubits = sample.get("number_of_qubits")
-        n_layers = sample.get("number_of_qubits")
+        n_layers = sample.get("number_of_layers")
         hypergraph = sample.get("hypergraph")
         optimization_type = sample.get("optimization_type")
 
