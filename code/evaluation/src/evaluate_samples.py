@@ -37,7 +37,7 @@ def is_most_probable_state_correct(
     Check if the most probable state obtained from the simulation is correct.
     """
 
-    if sample["optimization_type"] == "qaoa":
+    if sample["dataset_metrics"]["optimization_type"] == "qaoa":
         expected_states = sample["dataset_metrics"]["qaoa_solution"]["bitstrings"]
         return most_probable_state in expected_states
     else:
