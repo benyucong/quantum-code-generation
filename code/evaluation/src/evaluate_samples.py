@@ -100,7 +100,9 @@ def compare_solution(sim_probs, expected_solution):
     }
 
 
-def process_circuits(json_file, output_file=None):
+def process_circuits(
+    json_file: str, output_file=None, summary_file=None, relative_entropy_threshold=0.1
+):
     """
     Processes a JSON file containing multiple circuit samples. For each sample, it checks whether the
     QASM code (in the 'generated_circuit' field) is valid QASM 3.0, and if so, simulates it to obtain
@@ -181,7 +183,40 @@ def process_circuits(json_file, output_file=None):
         results.append(sample)
 
     # ---- 4) Summary Statistics ----
-    evaluate_statistics(results)
+    total_samples = len(results)
+    compiled_count = sum(1 for sample in results if sample.get("qasm_valid") is True)
+    correct_state_count = sum(
+        1 for sample in results if sample.get("is_most_probable_state_correct") is True
+    )
+    correct_samples = [
+        sample["sample_index"]
+        for sample in results
+        if sample.get("is_most_probable_state_correct") is True
+    ]
+
+    samples_below_threshold = []
+    for sample in results:
+        if sample.get("simulation_error") is None:
+            comp = sample.get("qaoa_comparison") or sample.get("vqe_comparison")
+            if comp and "relative_entropy" in comp:
+                if comp["relative_entropy"] < relative_entropy_threshold:
+                    samples_below_threshold.append(sample["sample_index"])
+
+    summary_stats = {
+        "total_samples": total_samples,
+        "compiled_successfully": compiled_count,
+        "correct_state_count": correct_state_count,
+        "correct_samples": correct_samples,
+        "relative_entropy_threshold": relative_entropy_threshold,
+        "samples_below_entropy_threshold": {
+            "count": len(samples_below_threshold),
+            "sample_indexes": samples_below_threshold,
+        },
+    }
+
+    print("\nSummary Statistics:")
+    for key, value in summary_stats.items():
+        print(f"{key}: {value}")
 
     if output_file:
         with open(output_file, "w", encoding="utf-8") as f:
@@ -190,15 +225,25 @@ def process_circuits(json_file, output_file=None):
     else:
         print(json.dumps(results, indent=2))
 
+    if summary_file:
+        with open(summary_file, "w", encoding="utf-8") as f:
+            json.dump(summary_stats, f, indent=2)
+        print(f"Summary statistics saved to {summary_file}")
+    else:
+        print(json.dumps(summary_stats, indent=2))
+
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python validate_qasm.py <input_json_file> [<output_json_file>]")
+        print(
+            "Usage: python validate_qasm.py <input_json_file> [<output_json_file>] [<summary_output_file>]"
+        )
         sys.exit(1)
 
     input_file = sys.argv[1]
     output_file = sys.argv[2] if len(sys.argv) > 2 else None
-    process_circuits(input_file, output_file)
+    summary_file = sys.argv[3] if len(sys.argv) > 3 else None
+    process_circuits(input_file, output_file, summary_file)
 
 
 if __name__ == "__main__":
