@@ -9,6 +9,8 @@ from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from qiskit_qasm3_import import parse
 
+from computations import compute_relative_entropy
+
 
 def evaluate_statistics(results: List) -> None:
     total_samples = len(results)
@@ -89,11 +91,12 @@ def compare_solution(sim_probs, expected_solution):
     differences = [
         abs(sim - exp) for sim, exp in zip(sim_probs_for_states, expected_probs)
     ]
-
+    relative_entropy = compute_relative_entropy(sim_probs, expected_solution)
     return {
         "simulated_probabilities": sim_probs_for_states,
         "expected_probabilities": expected_probs,
         "absolute_differences": differences,
+        "relative_entropy": relative_entropy,
     }
 
 

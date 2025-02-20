@@ -26,12 +26,12 @@ def main():
     results = []
 
     for idx, sample in enumerate(dataset):
-        n_qubits = sample.get("n_qubits", 6)
-        n_layers = sample.get("n_layers", 1)
-        hypergraph = sample.get("hypergraph", {"edges": [[0, 1]], "nodes": [0, 1]})
-        optimization_type = sample.get("optimization_type", "qaoa")
+        n_qubits = sample.get("number_of_qubits")
+        n_layers = sample.get("number_of_layers")
+        hypergraph = sample.get("hypergraph")
+        optimization_type = sample.get("optimization_type")
 
-        optimal_circuit_with_params = sample.get("circuit_with_params", "optimal circuit not provided")
+        optimal_circuit_with_params = sample.get("circuit_with_params")
         
         prompt = (
             f"<|im_start|>user Your task is to generate a quantum circuit in QASM 3.0 with "
@@ -78,7 +78,7 @@ def main():
         results.append(sample_result)
         print(f"Processed sample {idx} (generation took {generation_time:.2f} seconds)")
 
-        if idx > args.n_samples:
+        if idx >= args.n_samples:
             break
 
     output_file_name = f"out/quantum_circuits_output_{args.uid}.json"
