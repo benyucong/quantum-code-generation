@@ -1,14 +1,49 @@
+from ast import List
 import json
 import sys
+from typing import Any, Dict
 import numpy as np
 
-from qiskit import transpile
+from qiskit import transpile, QuantumCircuit
+from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from qiskit_qasm3_import import parse
 
-from computations import compute_measurement_probabilities
 
-def parse_qasm_from_str(qasm_str):
+def evaluate_statistics(results: List) -> None:
+    total_samples = len(results)
+    compiled_count = sum(1 for sample in results if sample.get("qasm_valid") is True)
+    correct_state_count = sum(
+        1 for sample in results if sample.get("is_most_probable_state_correct") is True
+    )
+
+    print("\nSummary:")
+    print(f"Total circuits processed: {total_samples}")
+    print(f"Circuits that compiled successfully: {compiled_count}")
+    print(f"Circuits with correct state: {correct_state_count}\n")
+
+
+def int_to_bitstring(i: int, n_qubits: int) -> str:
+    """Convert an integer i to a bitstring with n_qubits bits."""
+    return format(i, "0" + str(n_qubits) + "b")
+
+
+def is_most_probable_state_correct(
+    sample: Dict[str, Any], most_probable_state: str
+) -> bool:
+    """
+    Check if the most probable state obtained from the simulation is correct.
+    """
+
+    if sample["optimization_type"] == "qaoa":
+        expected_states = sample["dataset_metrics"]["qaoa_solution"]["bitstrings"]
+        return most_probable_state in expected_states
+    else:
+        expected_states = sample["dataset_metrics"]["vqe_solution"]["bitstrings"]
+        return most_probable_state in expected_states
+
+
+def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
     """
     Parses a QASM string into a Qiskit QuantumCircuit object.
 
@@ -25,7 +60,7 @@ def parse_qasm_from_str(qasm_str):
     """
     # Remove any leading marker like "Answer:"
     if qasm_str.startswith("Answer:"):
-        qasm_str = qasm_str[len("Answer:"):].strip()
+        qasm_str = qasm_str[len("Answer:") :].strip()
 
     # Basic check for QASM 3.0 header.
     if "OPENQASM 3.0" not in qasm_str:
@@ -34,9 +69,12 @@ def parse_qasm_from_str(qasm_str):
     try:
         circuit = parse(qasm_str)
     except Exception as e:
-        raise ValueError(f"Failed to parse QASM code. It might be invalid QASM 3.0 code: {e}") from e
+        raise ValueError(
+            f"Failed to parse QASM code. It might be invalid QASM 3.0 code: {e}"
+        ) from e
 
     return circuit
+
 
 def compare_solution(sim_probs, expected_solution):
     """
@@ -48,12 +86,14 @@ def compare_solution(sim_probs, expected_solution):
     expected_states = expected_solution.get("states", [])
     expected_probs = expected_solution.get("probabilities", [])
     sim_probs_for_states = [float(sim_probs[i]) for i in expected_states]
-    differences = [abs(sim - exp) for sim, exp in zip(sim_probs_for_states, expected_probs)]
-    
+    differences = [
+        abs(sim - exp) for sim, exp in zip(sim_probs_for_states, expected_probs)
+    ]
+
     return {
         "simulated_probabilities": sim_probs_for_states,
         "expected_probabilities": expected_probs,
-        "absolute_differences": differences
+        "absolute_differences": differences,
     }
 
 
@@ -76,7 +116,7 @@ def process_circuits(json_file, output_file=None):
 
     for idx, sample in enumerate(data):
         generated_qasm = sample.get("generated_circuit", "")
-        
+
         # ---- Init new params ----
         sample["qasm_valid"] = False
         sample["statevector"] = None
@@ -89,38 +129,56 @@ def process_circuits(json_file, output_file=None):
             sample["parse_error"] = "No 'generated_circuit' field found."
             results.append(sample)
             continue
-        
+
         # ---- 1) CHECK IF CIRCUIT COMPILES ----
         try:
-            circuit = parse_qasm_from_str(generated_qasm)
+            circuit: QuantumCircuit = parse_qasm_from_str(generated_qasm)
             sample["qasm_valid"] = True
             print(f"[INFO] SUCCESS! Compile successful for cicruit: {idx}")
         except ValueError as err:
             print(f"[FAIL] Failed to compile circuit: {idx}")
             sample["parse_error"] = str(err)
+            results.append(sample)
             continue
-        
+
         # ---- 2) CHECK STATE VECTOR ----
         try:
             circ = transpile(circuit, simulator)
             circ.save_statevector()
             result = simulator.run(circ).result()
             statevector = result.get_statevector(circ)
-            sv_array = np.asarray(statevector)
-            sample["statevector"] = [[val.real, val.imag] for val in sv_array]
-            sim_probs = compute_measurement_probabilities(sv_array)
+
+            # Get Probabilities
+            probs = Statevector(statevector).probabilities()
+
+            most_probable_state = np.argsort(probs)[-1]
+            most_probable_state = int_to_bitstring(
+                most_probable_state, sample["dataset_metrics"]["n_qubits"]
+            )
+
+            sample["most_probable_state_generated"] = most_probable_state
+
+            sample["is_most_probable_state_correct"] = is_most_probable_state_correct(
+                sample, most_probable_state
+            )
         except Exception as err:
             sample["simulation_error"] = str(err)
 
         # ---- 3) Compare with pre-computed ----
-        if sample["simulation_error"] == None:
+        if sample["simulation_error"] is None:
             if sample["dataset_metrics"]["optimization_type"] == "qaoa":
-                sample["qaoa_comparison"] = compare_solution(sim_probs, sample["dataset_metrics"]["qaoa_solution"])
+                sample["qaoa_comparison"] = compare_solution(
+                    probs, sample["dataset_metrics"]["qaoa_solution"]
+                )
             else:
-                sample["vqe_comparison"] = compare_solution(sim_probs, sample["dataset_metrics"]["vqe_solution"])
+                sample["vqe_comparison"] = compare_solution(
+                    probs, sample["dataset_metrics"]["vqe_solution"]
+                )
 
-        if sample["parse_error"] == None and sample["simulation_error"] == None:
-            results.append(sample)
+        results.append(sample)
+
+    # ---- 4) Summary Statistics ----
+    evaluate_statistics(results)
 
     if output_file:
         with open(output_file, "w", encoding="utf-8") as f:
@@ -128,6 +186,7 @@ def process_circuits(json_file, output_file=None):
         print(f"Processed circuits saved to {output_file}")
     else:
         print(json.dumps(results, indent=2))
+
 
 def main():
     if len(sys.argv) < 2:
@@ -137,6 +196,7 @@ def main():
     input_file = sys.argv[1]
     output_file = sys.argv[2] if len(sys.argv) > 2 else None
     process_circuits(input_file, output_file)
+
 
 if __name__ == "__main__":
     main()
