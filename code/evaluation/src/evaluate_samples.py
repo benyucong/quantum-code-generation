@@ -10,6 +10,7 @@ from qiskit_aer import AerSimulator
 from qiskit_qasm3_import import parse
 
 from computations import compute_relative_entropy
+from optimization import optimize_problem
 
 
 def evaluate_statistics(results: List) -> None:
@@ -180,9 +181,17 @@ def process_circuits(
                     probs, sample["dataset_metrics"]["vqe_solution"]
                 )
 
+        # ---- 4) Compare Iteration Count to Optimal Solution ----
+        stats = optimize_problem(
+            circuit,
+            sample["dataset_metrics"]["cost_hamiltonian"],
+            sample["dataset_metrics"]["optimization_type"],
+        )
+
+        print(stats)
         results.append(sample)
 
-    # ---- 4) Summary Statistics ----
+    # ---- 5) Summary Statistics ----
     total_samples = len(results)
     compiled_count = sum(1 for sample in results if sample.get("qasm_valid") is True)
     correct_state_count = sum(
