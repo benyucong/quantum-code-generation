@@ -8,104 +8,18 @@ from pennylane.tape import QuantumScript, QuantumScriptBatch
 from pennylane.typing import PostprocessingFn
 from qiskit import QuantumCircuit, qasm3
 from qiskit.circuit import Parameter
+from code.data_generation.src.helpers import (
+    basis_vector_to_bitstring,
+    copy_circuit_with_new_measurement,
+    int_to_bitstring,
+    smallest_eigenpairs,
+    replace_h_rz_h_with_rx,
+)
 from pennylane_qiskit import AerDevice
 
 from src.solver import Solver
 from src.hypermaxcut.hypergraph import HyperGraph
 from src.ansatz import Ansatz
-
-
-def replace_h_rz_h_with_rx(
-    tape: QuantumScript,
-) -> tuple[QuantumScriptBatch, PostprocessingFn]:
-    new_operations = []
-    i = 0
-    while i < len(tape.operations):
-        op = tape.operations[i]
-
-        # Detect pattern: H . RZ . H
-        if (
-            i + 2 < len(tape.operations)
-            and op.name == "Hadamard"
-            and tape.operations[i + 1].name == "RZ"
-            and tape.operations[i + 2].name == "Hadamard"
-            and op.wires == tape.operations[i + 1].wires == tape.operations[i + 2].wires
-        ):
-            rz_angle = tape.operations[i + 1].parameters[0]
-            rx_angle = rz_angle  # RX(angle) = H . RZ(angle) . H
-            new_operations.append(qml.RX(rx_angle, wires=op.wires[0]))
-
-            # Skip the next two gates since they are replaced
-            i += 3
-        else:
-            new_operations.append(op)
-            i += 1
-
-    # Create new transformed tape
-    new_tape = tape.copy(operations=new_operations)
-
-    def null_postprocessing(results):
-        return results[0]
-
-    return [new_tape], null_postprocessing
-
-
-def smallest_eigenpairs(A):
-    """
-    Return the smallest eigenvalues and eigenvectors of a matrix A
-    Returns always at least two eigenvalues and eigenvectors,
-    even if the second solution is not optimal.
-    The non-zero difference between the two smallest eigenvalues
-    can describe hardness of the optimization problem.
-    """
-
-    eigenvalues, eigenvectors = scipy.linalg.eig(A)
-    eigenvalues = np.real(eigenvalues)
-    eigenvectors = np.real(eigenvectors)
-    idx = np.argsort(eigenvalues)
-    smallest_eigenvalues = []
-    smallest_eigenvectors = []
-
-    smallest_eigenvalue = eigenvalues[idx[0]]
-    smallest_eigenvalues.append(smallest_eigenvalue)
-    smallest_eigenvectors.append(eigenvectors[:, idx[0]])
-
-    first_excited_energy = None
-    first_excited_state = None
-
-    # Find all smallest eigenvalues and eigenvectors
-    for i in range(1, len(eigenvalues)):
-        if eigenvalues[idx[i]] == smallest_eigenvalue:
-            smallest_eigenvalues.append(eigenvalues[idx[i]])
-            smallest_eigenvectors.append(eigenvectors[:, idx[i]])
-        else:
-            first_excited_energy = eigenvalues[idx[i]]
-            first_excited_state = eigenvectors[:, idx[i]]
-            break
-
-    return (
-        smallest_eigenvalues,
-        smallest_eigenvectors,
-        first_excited_energy,
-        first_excited_state,
-    )
-
-
-def bitstring_to_int(bit_string_sample):
-    return int(2 ** np.arange(len(bit_string_sample)) @ bit_string_sample[::-1])
-
-
-def int_to_bitstring(int_sample, n_qubits):
-    bits = np.array([int(i) for i in format(int_sample, f"0{n_qubits}b")])
-    return "".join([str(i) for i in bits])
-
-
-def basis_vector_to_bitstring(basis_vector):
-    assert np.sum(basis_vector) == 1, "Input must be a basis vector"
-    index = np.argmax(basis_vector)
-    num_qubits = int(np.log2(len(basis_vector)))
-    bitstring = format(index, f"0{num_qubits}b")
-    return bitstring
 
 
 class HyperMaxCutSolver(Solver):
@@ -122,6 +36,8 @@ class HyperMaxCutSolver(Solver):
         self.qaoa_circuit, self.qaoa_probs_circuit = self._create_qaoa_circuits()
 
         self.p = p
+        self.adaptive_vqe_circuits = []
+        self.adaptive_vqe_gradients = []
 
         # Initialize the circuit parameters -> random initialization
         self.init_params = 0.01 * np.random.rand(2, p, requires_grad=True)
@@ -314,6 +230,67 @@ class HyperMaxCutSolver(Solver):
             (single_qubit_params, two_qubit_params),
             total_steps,
             states_probs,
+        )
+
+    def solve_with_adaptive_vqe(self):
+        # Construct the operator pool
+        operator_pool = [qml.RX(0.001, i) for i in range(self.n_qubits)]
+        operator_pool += [qml.RY(0.001, i) for i in range(self.n_qubits)]
+        operator_pool += [qml.RZ(0.001, i) for i in range(self.n_qubits)]
+        for i in range(self.n_qubits):
+            for j in range(self.n_qubits):
+                if i != j:
+                    operator_pool.append(qml.CRZ(0.001, wires=[i, j]))
+                    operator_pool.append(qml.CRX(0.001, wires=[i, j]))
+                    operator_pool.append(qml.CRY(0.001, wires=[i, j]))
+
+        dev = qml.device("default.qubit", wires=self.n_qubits)
+        opt = qml.AdaptiveOptimizer()
+        cost_hamiltonian = self.get_cost_hamiltonian()
+
+        @qml.qnode(dev)
+        def vqe_circuit():
+            for wire in range(self.n_qubits):
+                qml.Hadamard(wires=wire)
+            return qml.expval(cost_hamiltonian)
+
+        total_steps = 0
+        for i in range(len(operator_pool)):
+            vqe_circuit, energy, gradient = opt.step_and_cost(
+                vqe_circuit, operator_pool, drain_pool=True
+            )
+            self.adaptive_vqe_circuits.append(vqe_circuit)
+            self.adaptive_vqe_gradients.append(gradient)
+            # if i % 3 == 0:
+            # print("n = {:},  E = {:.8f} H, Largest Gradient = {:.3f}".format(i, energy, gradient))
+            # print(qml.draw(vqe_circuit, decimals=None)())
+            # print()
+            total_steps += 1
+            if gradient < 3e-3:
+                break
+
+        self.vqe_circuit = vqe_circuit
+        expectation_value = vqe_circuit()
+        probs_circuit = copy_circuit_with_new_measurement(vqe_circuit, qml.probs)
+
+        # Run the QNode
+        probs = probs_circuit()
+        most_probable_states = np.argsort(probs)[-2:]
+        most_probable_state = most_probable_states[-1]
+        states_probs = [probs[i] for i in most_probable_states]
+        most_probable_bitstring = int_to_bitstring(most_probable_state, self.n_qubits)
+
+        if most_probable_bitstring in self.smallest_bitstrings:
+            success = True
+        else:
+            success = False
+
+        return (
+            most_probable_states,
+            expectation_value,
+            total_steps,
+            states_probs,
+            success,
         )
 
     def pennylane_to_qiskit(self, circuit, params, symbolic_params=True):
