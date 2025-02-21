@@ -25,7 +25,24 @@ def process_hypergraph_example(example: Dict) -> Dict:
 
     optimization_type = example["optimization_type"]
 
-    question = f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} layers with optimal parameters that solve the hypergraph max-cut problem using {optimization_type} for the following hypergraph: {hypergraph}. Then ensure that the final answer is correct and in valid QASM 3.0 code."
+    question = (
+        f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
+        " layers with optimal parameters that solve the hypergraph max-cut problem using {optimization_type} for "
+        "the following hypergraph: {hypergraph}. Then ensure that the final answer is correct and in valid QASM 3.0 code."
+    )
+    polynom_question = (
+        f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
+        " layers with optimal parameters that solves the problem {SOME_PROBLEM_DESCRIPTION} using {optimization_type}."
+        ". Then ensure that the final answer is correct and in valid QASM 3.0 code."
+    )
+
+    # Cost hamiltonian standard?? Qiskit or Pennylane?
+    improved_question = (
+        f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
+        " layers with optimal parameters that solves the problem for the cost hamiltonian {cost_hamiltonian} using {optimization_type}."
+        ". Then ensure that the final answer is correct and in valid QASM 3.0 code."
+    )
+
     answer = circuit_with_params
 
     return dict(
