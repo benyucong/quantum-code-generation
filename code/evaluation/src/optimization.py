@@ -86,7 +86,7 @@ class OptimizationRecorder:
         )
 
 
-def optimize_problem(
+def optimize_problem_q(
     ansatz: QuantumCircuit,
     hamiltonian_str: str,
     initial_params: np.ndarray,
@@ -153,6 +153,108 @@ def optimize_problem(
         raise ValueError("Method must be either 'vqe' or 'qaoa'.")
 
     result = algorithm.compute_minimum_eigenvalue(hamiltonian)
+
+    return {
+        "optimal_value": result.eigenvalue.real
+        if hasattr(result.eigenvalue, "real")
+        else result.eigenvalue,
+        "optimal_parameters": result.optimal_point,
+        "step_count": recorder.step_count,
+        "steps": recorder.steps,
+        "method": method.lower(),
+    }
+
+
+def optimize_problem(
+    ansatz: QuantumCircuit,
+    hamiltonian_str: str,
+    initial_params: np.ndarray,
+    method: str = "vqe",
+    optimizer=None,
+    maxiter: int = 100,
+) -> dict:
+    """
+    Optimize the energy of a Hamiltonian using either VQE or QAOA.
+
+    Converts the given Qiskit Circuit to Pennylane and optimizes using both VQE and QAOA
+    Args:
+        ansatz (QuantumCircuit): A parameterized quantum circuit used as the ansatz.
+                                  (For VQE this is used directly; for QAOA, the circuit is not used
+                                   as a custom ansatz but its depth is used to determine the number of layers.)
+        hamiltonian_str (str): The Hamiltonian to be minimized in form of a string.
+        method (str): Optimization method. Use 'vqe' for VQE or 'qaoa' for QAOA.
+        optimizer: An instance of a classical optimizer (default uses COBYLA).
+        maxiter (int): Maximum number of iterations for the optimizer.
+
+    Returns:
+        dict: A dictionary with the optimization results including:
+              - 'optimal_value': The minimized eigenvalue (energy).
+              - 'optimal_parameters': The optimal variational parameters.
+              - 'step_count': Total number of optimization steps taken.
+              - 'steps': A log of details for each iteration.
+              - 'method': Which method was used.
+    """
+    if method.lower() == "qaoa":
+        opt = qml.AdagradOptimizer(stepsize=0.5)
+
+        params = initial_params.copy()
+        probs = qaoa_probs_circuit(*params)
+
+        total_steps = 0
+        attempts = 0
+        while True:
+            steps = 10
+            for _ in range(steps):
+                params = opt.step(self.qaoa_circuit, *params)
+            total_steps += steps
+            probs = self.qaoa_probs_circuit(*params)
+            # smallest_eigenvalue_now = self.qaoa_circuit(params)
+            most_probable_state = np.argsort(probs)[-1]
+            most_probable_state = int_to_bitstring(most_probable_state, self.n_qubits)
+            # print(f"Most probable state: {most_probable_state} and smallest eigenvalue: {smallest_eigenvalue_now} and {self.smallest_bitstrings}")
+            if most_probable_state in self.smallest_bitstrings:
+                break
+            if total_steps > 1000:
+                print("Optimization did not converge")
+                print("Trying with a new initialization")
+                self.init_params = np.pi * np.random.rand(2, self.p, requires_grad=True)
+                params = self.init_params.copy()
+                total_steps = 0
+                attempts += 1
+            if attempts > 10:
+                print(
+                    "Optimization did not converge to the known optimal solution after ",
+                    attempts,
+                    " attempts.",
+                )
+                print("Returning the best solution found so far")
+                break
+
+        # probs = self.qaoa_probs_circuit(params)
+        smallest_eigenvalue = self.qaoa_circuit(*params)
+        two_most_probable_states = np.argsort(probs)[-2:]
+        states_probs = [probs[i] for i in two_most_probable_states]
+
+        return (
+            two_most_probable_states,
+            smallest_eigenvalue,
+            params,
+            total_steps,
+            states_probs,
+        )
+
+    elif method.lower() == "vqe":
+        seed = 170
+        noiseless_estimator = Estimator()
+        algorithm = VQE(
+            estimator=noiseless_estimator,
+            ansatz=ansatz,
+            optimizer=optimizer,
+            callback=recorder.callback,
+            initial_point=initial_params,
+        )
+    else:
+        raise ValueError("Method must be either 'vqe' or 'qaoa'.")
 
     return {
         "optimal_value": result.eigenvalue.real
