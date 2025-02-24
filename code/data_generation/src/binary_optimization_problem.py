@@ -420,11 +420,9 @@ class BinaryOptimizationProblem(Solver):
                     operator_pool.append(qml.CRZ(0.001, wires=[i, j]))
                     operator_pool.append(qml.CRX(0.001, wires=[i, j]))
                     operator_pool.append(qml.CRY(0.001, wires=[i, j]))
-        print("Operator pool: ", operator_pool)
         dev = qml.device("default.qubit", wires=self.n_qubits)
         opt = qml.AdaptiveOptimizer()
         cost_hamiltonian = self.get_cost_hamiltonian()
-        print("Cost Hamiltonian: ", cost_hamiltonian)
 
         @qml.qnode(dev)
         def adaptive_vqe_circuit():
@@ -432,7 +430,6 @@ class BinaryOptimizationProblem(Solver):
                 qml.Hadamard(wires=wire)
             return qml.expval(cost_hamiltonian)
 
-        print("Initial energy: ", adaptive_vqe_circuit())
         total_steps = 0
         max_steps = 100
         for i in range(max_steps):

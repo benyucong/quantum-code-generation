@@ -172,9 +172,6 @@ class DataGenerator:
             problem_specific_attributes=problem_specific_attributes,
         )
 
-        print(
-            f"Processed {optimization_type} problem for {n_qubits} qubits: {problem_data}"
-        )
         return problem_data
 
     def _process_problems(
