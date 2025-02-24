@@ -24,7 +24,9 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
         DataGenerator: The data generator for the optimization problem.
     """
     if not generate_data:
-        return f"{problem}/{problem}_data.pkl"
+        return load_pickle(f"src/algorithms/{problem}/{problem}_data.pkl")
+
+    print("Generating data for problem: ", problem)
 
     if problem == OptimizationProblemType.HYPERMAXCUT:
         return generate_hypergraphs()

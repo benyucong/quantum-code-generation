@@ -79,7 +79,7 @@ def generate_community_graphs(max_n_cliques=5, max_clique_size=5):
                     graph_already_generated.add(graph_hash)
 
             for _ in range(100):
-                # Custom funktio to generate even more community graphs
+                # Custom funcion to generate even more community graphs
                 graph = generate_community_graph(l, k)
                 graph_hash = weisfeiler_lehman_graph_hash(graph)
 

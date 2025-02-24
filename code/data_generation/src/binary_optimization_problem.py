@@ -139,7 +139,7 @@ class BinaryOptimizationProblem(Solver):
         return qaoa_circuit, qaoa_probs_circuit
 
     def solve_exactly(self):
-        # Solve sparse if required
+        # Solve normally if the number of qubits is less than 14
         if self.n_qubits < 14:
             cost_matrix = self.get_cost_hamiltonian().matrix(
                 wire_order=range(self.n_qubits)
@@ -157,7 +157,7 @@ class BinaryOptimizationProblem(Solver):
             ]
             return smallest_eigenvalues, smallest_bitstrings, first_excited_energy
 
-        # Solve normally
+        # Solve with sparse eigensolver if the number of qubits is greater than 14
         cost_matrix = self.get_cost_hamiltonian().sparse_matrix(
             wire_order=range(self.n_qubits)
         )
@@ -177,6 +177,7 @@ class BinaryOptimizationProblem(Solver):
         self.smallest_bitstrings = smallest_bitstrings
 
     def solve_with_qaoa(self) -> Dict:
+        print("Solving with QAOA")
         solver = optax.adamw(learning_rate=0.01)
 
         params = self.init_params.copy()
@@ -226,15 +227,16 @@ class BinaryOptimizationProblem(Solver):
         two_most_probable_states = np.argsort(probs)[-2:]
         states_probs = [probs[i] for i in two_most_probable_states]
         return {
-            two_most_probable_states,
-            expectation_value,
-            params,
-            total_steps,
-            states_probs,
-            success,
+            "two_most_probable_states": two_most_probable_states,
+            "expectation_value": expectation_value,
+            "params": params,
+            "total_steps": total_steps,
+            "states_probs": states_probs,
+            "success": success,
         }
 
     def solve_with_vqe(self, ansatz_id) -> Dict:
+        print("Solving with VQE")
         ansatz = Ansatz(ansatz_id, self.n_qubits, self.p)
         circuit = ansatz.get_circuit()
         single_qubit_params_shape, two_qubit_params_shape = (
@@ -369,14 +371,14 @@ class BinaryOptimizationProblem(Solver):
             two_qubit_params = two_qubit_params.reshape(two_qubit_params_shape)
 
         return {
-            two_most_probable_states,
-            expectation_value,
-            params,
-            total_steps,
-            states_probs,
-            success,
-            single_qubit_params,
-            two_qubit_params,
+            "two_most_probable_states": two_most_probable_states,
+            "expectation_value": expectation_value,
+            "params": params,
+            "total_steps": total_steps,
+            "states_probs": states_probs,
+            "success": success,
+            "single_qubit_params": single_qubit_params,
+            "two_qubit_params": two_qubit_params,
         }
 
     def get_circuits(self):
@@ -389,8 +391,8 @@ class BinaryOptimizationProblem(Solver):
             circuit,
             self.n_qubits,
             params=params,
-            symbolic_params=False,
-            adapt_vqe=True,
+            symbolic_params=symbolic_params,
+            adapt_vqe=adapt_vqe,
         )
         return qasm3.dumps(qiskit_circuit)
 
@@ -404,8 +406,7 @@ class BinaryOptimizationProblem(Solver):
         return self.variables_to_qubits
 
     def solve_with_adaptive_vqe(self) -> Dict:
-        self.adaptive_circuits = []
-        self.adaptive_gradients = []
+        print("Solving with Adaptive VQE")
         operator_pool = [qml.RX(0.001, i) for i in range(self.n_qubits)]
         operator_pool += [qml.RY(0.001, i) for i in range(self.n_qubits)]
         operator_pool += [qml.RZ(0.001, i) for i in range(self.n_qubits)]
@@ -415,10 +416,11 @@ class BinaryOptimizationProblem(Solver):
                     operator_pool.append(qml.CRZ(0.001, wires=[i, j]))
                     operator_pool.append(qml.CRX(0.001, wires=[i, j]))
                     operator_pool.append(qml.CRY(0.001, wires=[i, j]))
-
+        print("Operator pool: ", operator_pool)
         dev = qml.device("default.qubit", wires=self.n_qubits)
         opt = qml.AdaptiveOptimizer()
         cost_hamiltonian = self.get_cost_hamiltonian()
+        print("Cost Hamiltonian: ", cost_hamiltonian)
 
         @qml.qnode(dev)
         def adaptive_vqe_circuit():
@@ -426,6 +428,7 @@ class BinaryOptimizationProblem(Solver):
                 qml.Hadamard(wires=wire)
             return qml.expval(cost_hamiltonian)
 
+        print("Initial energy: ", adaptive_vqe_circuit())
         total_steps = 0
         max_steps = 100
         for i in range(max_steps):
@@ -464,11 +467,11 @@ class BinaryOptimizationProblem(Solver):
         print("Success in adaptive: ", success)
 
         return {
-            most_probable_states,
-            expectation_value,
-            total_steps,
-            states_probs,
-            success,
+            "most_probable_states": most_probable_states,
+            "expectation_value": expectation_value,
+            "total_steps": total_steps,
+            "states_probs": states_probs,
+            "success": success,
         }
 
     def get_adaptive_circuits(self):
