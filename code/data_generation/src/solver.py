@@ -107,7 +107,7 @@ class Solver(ABC):
         pass
 
     @abstractmethod
-    def circuit_to_qasm(self, circuit):
+    def circuit_to_qasm(self):
         pass
 
     @abstractmethod

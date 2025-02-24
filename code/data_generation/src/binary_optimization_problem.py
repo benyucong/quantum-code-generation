@@ -20,7 +20,7 @@ from src.utils import (
     smallest_eigenpairs,
     smallest_sparse_eigenpairs,
 )
-from src.solver import Solver
+from src.solver import OptimizationType, Solver
 
 # Global flag to set a specific platform, must be used at startup.
 # jax.config.update("jax_default_device", jax.devices("cpu")[0])
@@ -262,14 +262,12 @@ class BinaryOptimizationProblem(Solver):
 
             @qml.qnode(dev, interface="jax")
             def vqe_circuit(params):
-                single_qubit_params = params
-                circuit(single_qubit_params)
+                circuit(params)
                 return qml.expval(cost_hamiltonian)
 
             @qml.qnode(dev, interface="jax")
             def vqe_probs_circuit(params):
-                single_qubit_params = params
-                circuit(single_qubit_params)
+                circuit(params)
                 return qml.probs()
         else:
 
@@ -385,10 +383,16 @@ class BinaryOptimizationProblem(Solver):
         return self.qaoa_circuit, self.vqe_circuit, self.adaptive_vqe_circuit
 
     def circuit_to_qasm(
-        self, circuit, params=None, symbolic_params=True, adapt_vqe=False
+        self,
+        optimization_type: OptimizationType,
+        params=None,
+        symbolic_params=True,
+        adapt_vqe=False,
     ):
         qiskit_circuit = pennylane_to_qiskit(
-            circuit,
+            self.qaoa_circuit
+            if optimization_type == OptimizationType.QAOA
+            else self.vqe_circuit,
             self.n_qubits,
             params=params,
             symbolic_params=symbolic_params,

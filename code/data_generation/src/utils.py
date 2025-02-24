@@ -39,6 +39,11 @@ class DataclassJSONEncoder(json.JSONEncoder):
             return dataclasses.asdict(obj)
         if isinstance(obj, np.ndarray):
             return obj.tolist()
+        if hasattr(obj, "tolist") and callable(obj.tolist):
+            try:
+                return obj.tolist()
+            except Exception:
+                pass
         if isinstance(obj, LinearCombination):
             return str(obj)
         return super().default(obj)

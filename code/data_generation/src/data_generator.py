@@ -1,6 +1,7 @@
 import json
 import os
 from typing import List
+import traceback
 
 import concurrent
 
@@ -51,17 +52,17 @@ class DataGenerator:
         for optimization_type in list(OptimizationType):
             self._process_problems(optimization_type, graph_data, self.ansatz_template)
 
-    def _get_binary_polynomial(self, graph_data) -> BinaryQuadraticModel:
-        """
-        Converts graph data to a binary polynomial.
-        """
-        if self.problem == OptimizationProblemType.COMMUNITY_DETECTION:
-            # Here, we assume graph_data is a tuple: (graph, n_communities, size_communities)
-            graph, n_communities, size_communities = graph_data
-            p = CommunityDetection(graph, n_communities)
-            return p.get_binary_polynomial()
-        else:
-            raise ValueError("No binary polynomial defined for this problem type.")
+    # def _get_binary_polynomial(self, graph_data) -> BinaryQuadraticModel:
+    #     """
+    #     Converts graph data to a binary polynomial.
+    #     """
+    #     if self.problem == OptimizationProblemType.COMMUNITY_DETECTION:
+    #         # Here, we assume graph_data is a tuple: (graph, n_communities, size_communities)
+    #         graph, n_communities, size_communities = graph_data
+    #         p = CommunityDetection(graph, n_communities)
+    #         return p.get_binary_polynomial()
+    #     else:
+    #         raise ValueError("No binary polynomial defined for this problem type.")
 
     def _process_problem(
         self,
@@ -69,7 +70,7 @@ class DataGenerator:
         optimization_type: OptimizationType,
         ansatz_template: int,
         iteration_info: tuple,
-    ) -> str:
+    ) -> OptimizationProblem:
         """
         Process a single binary optimization problem.
         """
@@ -117,6 +118,8 @@ class DataGenerator:
             int_to_bitstring(state, n_qubits)
             for state in SOLUTION.get("two_most_probable_states")
         ]
+        params = SOLUTION.get("params", None)
+
         circuit = None
         if (
             optimization_type == OptimizationType.VQE
@@ -126,11 +129,6 @@ class DataGenerator:
         elif optimization_type == OptimizationType.QAOA:
             circuit = problem.qaoa_circuit
 
-        params = (
-            SOLUTION.get("params", None).tolist()
-            if SOLUTION.get("params", None) is not None
-            else None
-        )
         solution = QuantumSolution(
             states=SOLUTION.get("states"),
             expectation_value=SOLUTION.get("expectation_value"),
@@ -160,24 +158,23 @@ class DataGenerator:
                 circuits=problem.adaptive_circuits, gradients=problem.adaptive_gradients
             ),
             circuit_with_params=problem.circuit_to_qasm(
-                circuit=circuit,
+                optimization_type=optimization_type,
                 params=params,
                 symbolic_params=False,
-                adapt_vqe=True
-                if optimization_type == OptimizationType.ADAPTIVE_VQE
-                else False,
+                adapt_vqe=optimization_type == OptimizationType.ADAPTIVE_VQE,
             ),
             circuit_with_symbols=problem.circuit_to_qasm(
-                circuit=circuit,
-                params=None,
+                optimization_type=optimization_type,
+                params=params,
                 symbolic_params=True,
-                adapt_vqe=True
-                if optimization_type == OptimizationType.ADAPTIVE_VQE
-                else False,
+                adapt_vqe=optimization_type == OptimizationType.ADAPTIVE_VQE,
             ),
             problem_specific_attributes=problem_specific_attributes,
         )
 
+        print(
+            f"Processed {optimization_type} problem for {n_qubits} qubits: {problem_data}"
+        )
         return problem_data
 
     def _process_problems(
@@ -207,11 +204,12 @@ class DataGenerator:
 
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    solutions = future.result()
-                    for solution in solutions:
+                    solution = future.result()
+                    if solution:
                         self._save_solution(solution)
                 except Exception as exc:
                     print(f"Processing failed with exception: {exc}")
+                    traceback.print_exc()
 
     def _save_solution(self, solution: OptimizationProblem):
         """
@@ -219,6 +217,7 @@ class DataGenerator:
         The filename format is:
             {self.description}_{optimization_type}_{n_qubits}_{layers}_{signature}.json
         """
+
         filename = (
             f"{self.problem}_{solution.optimization_type}_"
             f"{solution.number_of_qubits}_{self.layers}_{solution.signature}.json"
