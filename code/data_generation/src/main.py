@@ -1,26 +1,21 @@
 import argparse
 import warnings
 
-from src.hypermaxcut.hypermaxcut_data_generator import HyperMaxCutDataGenerator
 
-from .data_generator import DataGenerator
+from src.data_generator import DataGenerator
+from src.solver import OptimizationProblemType
 
 warnings.filterwarnings("ignore", category=FutureWarning)
-
-
-def main(
-    data_problem: DataGenerator,
-    layers: int,
-):
-    print(f"Number of layers: {layers}")
-
-    data_problem.generate_data()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Data Generation.")
     parser.add_argument(
-        "--hypermaxcut", action="store_true", help="Generate Hyper MaxCut data"
+        "--problem",
+        type=str,
+        required=True,
+        choices=list(OptimizationProblemType),
+        help=f"Specify the problem to generate data for. Available are: {list(OptimizationProblemType)}",
     )
     parser.add_argument(
         "--layers", type=int, required=True, help="Number of layers to be used"
@@ -37,15 +32,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Determine what problem to generate data for
-    problem = None
-    if args.hypermaxcut:
-        problem = HyperMaxCutDataGenerator(
-            layers=args.layers,
-            ansatz_template=args.ansatz_template,
-            output_path=args.output_path,
-        )
-    else:
-        raise ValueError("No problem specified")
-
-    main(problem, args.layers)
+    generator = DataGenerator(
+        problem=args.problem,
+        output_path=args.output_path,
+        ansatz_template=args.ansatz_template,
+        layers=args.layers,
+    )
+    generator.generate_data()

@@ -93,6 +93,18 @@ def process_hypergraph(
         int_to_bitstring(state, hypergraph.get_n_nodes()) for state in vqe_states
     ]
 
+    # Solve using Adaptive VQE.
+    (
+        adapt_vqe_states,
+        adapt_vqe_expectation_value,
+        adapt_vqe_params,
+        adapt_vqe_total_steps,
+        adapt_vqe_probs,
+    ) = solver.solve_adaptive_vqe()
+    adapt_vqe_bitstrings = [
+        int_to_bitstring(state, hypergraph.get_n_nodes()) for state in adapt_vqe_states
+    ]
+
     # Solve using QAOA.
     (
         qaoa_states,
@@ -105,17 +117,19 @@ def process_hypergraph(
         int_to_bitstring(state, hypergraph.get_n_nodes()) for state in qaoa_states
     ]
 
-    qaoa_circuit_with_params = solver.qaoa_circuit_to_qasm(
+    qaoa_circuit_with_params = solver.circuit_to_qasm(
         qaoa_params, symbolic_params=False
     )
-    qaoa_circuit_with_symbols = solver.qaoa_circuit_to_qasm(
+    qaoa_circuit_with_symbols = solver.circuit_to_qasm(
         qaoa_params, symbolic_params=True
     )
-    vqe_circuit_with_params = solver.vqe_circuit_to_qasm(
-        vqe_params, symbolic_params=False
+    vqe_circuit_with_params = solver.circuit_to_qasm(vqe_params, symbolic_params=False)
+    vqe_circuit_with_symbols = solver.circuit_to_qasm(vqe_params, symbolic_params=True)
+    adapt_vqe_circuit_with_params = solver.circuit_to_qasm(
+        adapt_vqe_params, symbolic_params=False
     )
-    vqe_circuit_with_symbols = solver.vqe_circuit_to_qasm(
-        vqe_params, symbolic_params=True
+    adapt_vqe_circuit_with_symbols = solver.circuit_to_qasm(
+        adapt_vqe_params, symbolic_params=True
     )
 
     vqe_optimization_problem = HyperMaxCutOptimizationProblem(
@@ -139,6 +153,27 @@ def process_hypergraph(
         ),
     )
 
+    adapt_vqe_optimization_problem = HyperMaxCutOptimizationProblem(
+        problem_type=OptimizationProblemType.HYPERGRAPH_CUT,
+        optimization_type=OptimizationType.ADAPTIVE_VQE,
+        signature=hypergraph.get_signature(),
+        hypergraph=hypergraph.to_dict(),
+        number_of_layers=layers,
+        number_of_qubits=hypergraph.get_n_nodes(),
+        cost_hamiltonian=solver.get_cost_hamiltonian(),
+        exact_solution=exact_solution,
+        circuit_with_params=adapt_vqe_circuit_with_params,
+        circuit_with_symbols=adapt_vqe_circuit_with_symbols,
+        vqe_solution=QuantumSolution(
+            states=adapt_vqe_states,
+            expectation_value=adapt_vqe_expectation_value,
+            params=adapt_vqe_params,
+            bitstrings=adapt_vqe_bitstrings,
+            total_optimization_steps=adapt_vqe_total_steps,
+            probabilities=adapt_vqe_probs,
+        ),
+    )
+
     qaoa_optimization_problem = HyperMaxCutOptimizationProblem(
         problem_type=OptimizationProblemType.HYPERGRAPH_CUT,
         optimization_type=OptimizationType.QAOA,
@@ -159,6 +194,8 @@ def process_hypergraph(
             probabilities=qaoa_probs,
         ),
     )
+
+    print(adapt_vqe_optimization_problem)
     end_time = time.time()
     elapsed = end_time - start_time
     print(
