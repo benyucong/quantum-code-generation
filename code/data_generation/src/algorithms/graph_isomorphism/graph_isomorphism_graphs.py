@@ -4,16 +4,18 @@ import random
 import matplotlib.pyplot as plt
 
 from networkx import weisfeiler_lehman_graph_hash
+
 random.seed(0)
+
 
 def generate_graph_with_automorphism(n: int, p: float):
     """
     Generates a random graph and an isomorphic graph by applying a node permutation.
-    
+
     Parameters:
     - n: Number of nodes in the graph.
     - p: Probability of edge creation in an Erdős-Rényi random graph.
-    
+
     Returns:
     - G: The original graph.
     - G_iso: The isomorphic graph.
@@ -21,7 +23,7 @@ def generate_graph_with_automorphism(n: int, p: float):
     """
     # Generate a random graph
     G = nx.erdos_renyi_graph(n, p)
-    
+
     # Generate a random permutation of nodes
     nodes = list(G.nodes)
     permuted_nodes = nodes[:]
@@ -30,7 +32,8 @@ def generate_graph_with_automorphism(n: int, p: float):
 
     return G, automorphism
 
-def generate_graphs(max_nodes = 5):
+
+def generate_graphs(max_nodes=6):
     graphs = []
     graph_hashes = []
     for n_nodes in range(3, max_nodes):
@@ -44,12 +47,14 @@ def generate_graphs(max_nodes = 5):
                     graph_hashes.append(graph_hash)
     return graphs
 
+
 def save_graphs(graphs):
     with open("algorithms/graph_isomorphism/graph_isomorphism_data.pkl", "wb") as f:
         pickle.dump(graphs, f)
 
+
 def visualize_graphs(graphs):
-    #Visualize 10 randomly selected graphs
+    # Visualize 10 randomly selected graphs
     for i in range(10):
         G, automorphism = random.choice(graphs)
         plt.figure(figsize=(8, 6))
@@ -57,11 +62,11 @@ def visualize_graphs(graphs):
         nx.draw(G)
         plt.savefig(f"algorithms/graph_isomorphism/figures/graph_{i}.png")
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     graphs = generate_graphs()
 
-    print(f"Generated {len(graphs)} unique graphs")                
+    print(f"Generated {len(graphs)} unique graphs")
 
     save_graphs(graphs)
     visualize_graphs(graphs)

@@ -11,6 +11,9 @@ from src.algorithms.connected_components.connected_component_graphs import (
 from src.algorithms.graph_coloring.graph_coloring_graphs import (
     generate_graphs as generate_graph_coloring_graphs,
 )
+from src.algorithms.graph_isomorphism.graph_isomorphism_graphs import (
+    generate_graphs as generate_graph_isomorphism_graphs,
+)
 from src.solver import OptimizationProblemType
 
 
@@ -43,6 +46,8 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
         return generate_connected_components_graphs()
     elif problem == OptimizationProblemType.GRAPH_COLORING:
         return generate_graph_coloring_graphs()
+    elif problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
+        return generate_graph_isomorphism_graphs()
     else:
         raise ValueError("No problem specified")
 

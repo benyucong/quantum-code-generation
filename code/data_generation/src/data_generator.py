@@ -97,6 +97,9 @@ class DataGenerator:
         elif self.problem == OptimizationProblemType.GRAPH_COLORING:
             graph, n_colors, coloring = graph_data
             binary_polynomial = GraphColoring(graph, n_colors)
+        elif self.problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
+            graph, n_colors, coloring = graph_data
+            binary_polynomial = GraphColoring(graph, n_colors)
         else:
             raise ValueError("Invalid optimization problem.")
 
