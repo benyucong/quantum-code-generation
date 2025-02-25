@@ -23,8 +23,8 @@ from src.utils import (
 from src.solver import OptimizationType, Solver
 
 # Global flag to set a specific platform, must be used at startup.
-# jax.config.update("jax_default_device", jax.devices("cpu")[0])
-# jax.config.update("jax_enable_x64", True)
+jax.config.update("jax_default_device", jax.devices("cpu")[0])
+jax.config.update("jax_enable_x64", True)
 
 
 class BinaryOptimizationProblem(Solver):
@@ -240,6 +240,11 @@ class BinaryOptimizationProblem(Solver):
         expectation_value = self.qaoa_circuit(params)
         two_most_probable_states = np.argsort(probs)[-2:]
         states_probs = [probs[i] for i in two_most_probable_states]
+
+        # Round parameters before returning
+        if isinstance(params, (jnp.ndarray, np.ndarray)):
+            params = jnp.round(params, decimals=4)
+
         return {
             "two_most_probable_states": two_most_probable_states,
             "expectation_value": expectation_value,
@@ -260,13 +265,15 @@ class BinaryOptimizationProblem(Solver):
         cost_hamiltonian = self.get_cost_hamiltonian()
 
         if two_qubit_params_shape is None:
-            params = jnp.array(0.01 * np.random.rand(*single_qubit_params_shape))
+            params = jnp.asarray(0.01 * np.random.rand(*single_qubit_params_shape))
         else:
-            single_qubit_params = jnp.array(
+            single_qubit_params = jnp.asarray(
                 0.01 * np.random.rand(*single_qubit_params_shape)
             )
             single_qubit_params_size = single_qubit_params.size
-            two_qubit_params = jnp.array(0.01 * np.random.rand(*two_qubit_params_shape))
+            two_qubit_params = jnp.asarray(
+                0.01 * np.random.rand(*two_qubit_params_shape)
+            )
             # Create a single array of parameters of shape [single_qubit_params, two_qubit_params]
             params = jnp.concatenate(
                 [single_qubit_params.flatten(), two_qubit_params.flatten()]
@@ -381,6 +388,23 @@ class BinaryOptimizationProblem(Solver):
             )
             single_qubit_params = single_qubit_params.reshape(single_qubit_params_shape)
             two_qubit_params = two_qubit_params.reshape(two_qubit_params_shape)
+
+        # Round all parameters before returning
+        if isinstance(params, (jnp.ndarray, np.ndarray)):
+            params = jnp.round(params, decimals=4)
+            if two_qubit_params_shape is None:
+                single_qubit_params = params
+                two_qubit_params = None
+            else:
+                single_qubit_params, two_qubit_params = jnp.split(
+                    params, [single_qubit_params_size]
+                )
+                single_qubit_params = jnp.round(
+                    single_qubit_params.reshape(single_qubit_params_shape), decimals=4
+                )
+                two_qubit_params = jnp.round(
+                    two_qubit_params.reshape(two_qubit_params_shape), decimals=4
+                )
 
         return {
             "two_most_probable_states": two_most_probable_states,

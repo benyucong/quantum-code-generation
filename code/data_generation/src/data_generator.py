@@ -23,6 +23,7 @@ from src.solver import (
     QuantumSolution,
 )
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
+import itertools
 
 QUBIT_LIMIT = 17
 
@@ -48,11 +49,7 @@ class DataGenerator:
         graph_data = get_problem_data(self.problem, generate_data=False)
 
         # Process the binary problems for each optimization type.
-        for optimization_type in list(OptimizationType):
-            if optimization_type == OptimizationType.ADAPTIVE_VQE:
-                self._process_problems(
-                    optimization_type, graph_data, self.ansatz_template
-                )
+        self._process_problems(graph_data, self.ansatz_template)
 
     # def _get_binary_polynomial(self, graph_data) -> BinaryQuadraticModel:
     #     """
@@ -180,7 +177,6 @@ class DataGenerator:
 
     def _process_problems(
         self,
-        optimization_type: OptimizationType,
         graph_data: List,
         ansatz_template: int,
     ) -> None:
@@ -188,9 +184,7 @@ class DataGenerator:
         Processes a list of binary optimization problems concurrently,
         and saves each solution.
         """
-        print(
-            f"Processing {optimization_type} problems... for {len(graph_data)} graphs"
-        )
+        print(f"Processing problems for {len(graph_data)} graphs")
         with concurrent.futures.ProcessPoolExecutor() as executor:
             futures = [
                 executor.submit(
@@ -198,9 +192,11 @@ class DataGenerator:
                     graph,
                     optimization_type,
                     ansatz_template,
-                    (i, len(graph_data)),
+                    (i, len(graph_data) * len(list(OptimizationType))),
                 )
-                for i, graph in enumerate(graph_data)
+                for i, (graph, optimization_type) in enumerate(
+                    itertools.product(graph_data, list(OptimizationType))
+                )
             ]
 
             for future in concurrent.futures.as_completed(futures):
