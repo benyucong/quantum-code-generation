@@ -199,13 +199,15 @@ class DataGenerator:
 
         return problem_data
 
-    def _solution_exists(self, signature: str, optimization_type: OptimizationType, n_qubits: int) -> bool:
+    def _solution_exists(
+        self, signature: str, optimization_type: OptimizationType, n_qubits: int
+    ) -> bool:
         """
         Check if a solution with the given signature already exists in the output directory.
         """
         pattern = os.path.join(
-            self.output_path, 
-            f"{self.problem}_{optimization_type}_{n_qubits}_{self.layers}_{signature}.json"
+            self.output_path,
+            f"{self.problem}_{optimization_type}_{n_qubits}_{self.layers}_{signature}.json",
         )
         return bool(glob.glob(pattern))
 
@@ -218,28 +220,34 @@ class DataGenerator:
         Processes optimization problems sequentially to avoid JAX multithreading issues.
         """
         print(f"Processing problems for {len(graph_data)} graphs")
-        
+
+        # --------- Filter out existing solutions ---------
         tasks = []
         for i, (graph, optimization_type) in enumerate(
             itertools.product(graph_data, list(OptimizationType))
         ):
             # Get the signature for the current graph
             if self.problem != OptimizationProblemType.HYPERMAXCUT:
-                signature = weisfeiler_lehman_graph_hash(graph[0] if isinstance(graph, tuple) else graph)
+                signature = weisfeiler_lehman_graph_hash(
+                    graph[0] if isinstance(graph, tuple) else graph
+                )
             else:
                 signature = graph.__hash__()
-            
-            # Get number of qubits (approximate for initial check)
-            n_qubits = len(graph[0].nodes()) if isinstance(graph, tuple) else len(graph.nodes())
-            
+
+            n_qubits = (
+                len(graph[0].nodes()) if isinstance(graph, tuple) else len(graph.nodes)
+            )
+
             # Skip if solution already exists
             if self._solution_exists(signature, optimization_type, n_qubits):
-                print(f"Skipping existing solution for signature {signature} with {optimization_type}")
+                print(
+                    f"Skipping existing solution for signature {signature} with {optimization_type}"
+                )
                 continue
-                
+
             tasks.append((i, graph, optimization_type))
 
-        # Process tasks sequentially
+        # --------- Process the remaining problems ---------
         for i, graph, optimization_type in tasks:
             try:
                 solution = self._process_problem(
