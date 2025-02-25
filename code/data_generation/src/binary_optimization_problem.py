@@ -482,7 +482,7 @@ class BinaryOptimizationProblem(Solver):
         print("Success in adaptive: ", success)
 
         return {
-            "most_probable_states": most_probable_states,
+            "two_most_probable_states": most_probable_states,
             "expectation_value": expectation_value,
             "total_steps": total_steps,
             "states_probs": states_probs,

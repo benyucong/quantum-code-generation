@@ -50,7 +50,10 @@ class DataGenerator:
 
         # Process the binary problems for each optimization type.
         for optimization_type in list(OptimizationType):
-            self._process_problems(optimization_type, graph_data, self.ansatz_template)
+            if optimization_type == OptimizationType.ADAPTIVE_VQE:
+                self._process_problems(
+                    optimization_type, graph_data, self.ansatz_template
+                )
 
     # def _get_binary_polynomial(self, graph_data) -> BinaryQuadraticModel:
     #     """
@@ -108,38 +111,43 @@ class DataGenerator:
             f"Processing {iteration_info[0] + 1}/{iteration_info[1]} for {n_qubits} qubits using {optimization_type}"
         )
 
-        SOLUTION = {}
+        solution = {}
         if optimization_type == OptimizationType.VQE:
-            SOLUTION = problem.solve_with_vqe(ansatz_template)
+            solution = problem.solve_with_vqe(ansatz_template)
         elif optimization_type == OptimizationType.QAOA:
-            SOLUTION = problem.solve_with_qaoa()
+            solution = problem.solve_with_qaoa()
         elif optimization_type == OptimizationType.ADAPTIVE_VQE:
-            SOLUTION = problem.solve_with_adaptive_vqe()
+            solution = problem.solve_with_adaptive_vqe()
         else:
             raise ValueError("Invalid optimization type.")
 
+        # Check if a solution was found.
+        if not solution.get("success"):
+            print("No solution found for problem.")
+            return []
+
         bitstrings = [
             int_to_bitstring(state, n_qubits)
-            for state in SOLUTION.get("two_most_probable_states")
+            for state in solution.get("two_most_probable_states", [])
         ]
-        params = SOLUTION.get("params", None)
+        params = solution.get("params", None)
 
-        circuit = None
-        if (
-            optimization_type == OptimizationType.VQE
-            or optimization_type == OptimizationType.ADAPTIVE_VQE
-        ):
-            circuit = problem.vqe_circuit
-        elif optimization_type == OptimizationType.QAOA:
-            circuit = problem.qaoa_circuit
+        # circuit = None
+        # if (
+        #     optimization_type == OptimizationType.VQE
+        #     or optimization_type == OptimizationType.ADAPTIVE_VQE
+        # ):
+        #     circuit = problem.vqe_circuit
+        # elif optimization_type == OptimizationType.QAOA:
+        #     circuit = problem.qaoa_circuit
 
-        solution = QuantumSolution(
-            states=SOLUTION.get("states"),
-            expectation_value=SOLUTION.get("expectation_value"),
+        q_solution = QuantumSolution(
+            states=solution.get("states"),
+            expectation_value=solution.get("expectation_value"),
             params=params,
             bitstrings=bitstrings,
-            total_optimization_steps=SOLUTION.get("total_optimization_steps"),
-            probabilities=SOLUTION.get("probabilities"),
+            total_optimization_steps=solution.get("total_optimization_steps"),
+            probabilities=solution.get("probabilities"),
         )
 
         problem_data = OptimizationProblem(
@@ -157,7 +165,7 @@ class DataGenerator:
                 first_excited_energy=first_excited_energy,
                 smallest_bitstrings=smallest_bitstrings,
             ),
-            solution=solution,
+            solution=q_solution,
             adaptive_process=AdaptiveProcess(
                 circuits=problem.adaptive_circuits, gradients=problem.adaptive_gradients
             ),
