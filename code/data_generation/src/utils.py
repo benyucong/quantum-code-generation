@@ -209,6 +209,10 @@ def get_qasm_circuits(problem, optimization_type: OptimizationType, params=None)
     circuit_with_params = None
     circuit_without_params = None
 
+    if params is not None:
+        print(params)
+        params = [round(p, 4) for p in params]
+
     circuit_with_params = problem.circuit_to_qasm(
         optimization_type=optimization_type,
         params=params,
@@ -230,13 +234,37 @@ def get_qasm_circuits(problem, optimization_type: OptimizationType, params=None)
 def pennylane_to_qiskit(
     circuit, n_qubits, params=None, symbolic_params=True, adapt_vqe=False
 ):
+    if params is not None and not symbolic_params:
+        params = [round(float(p), 4) for p in params]
+
     qiskit_device = AerDevice(wires=n_qubits)
     qnode = qml.QNode(circuit.func, qiskit_device)
+
+    # Execute circuit
     if params is not None:
         qnode(params)
     else:
         qnode()
+
     qiskit_circuit = qiskit_device._circuit
+
+    # For adaptive VQE, round all constant parameters in gates
+    if adapt_vqe:
+        new_qc = QuantumCircuit(qiskit_circuit.num_qubits, qiskit_circuit.num_clbits)
+        for instr, qubits, clbits in qiskit_circuit.data:
+            new_params = []
+            if hasattr(instr, "params"):
+                for param in instr.params:
+                    if isinstance(param, (float, int)):
+                        new_params.append(round(float(param), 4))
+                    else:
+                        new_params.append(param)
+                # Create new instruction with rounded parameters
+                new_instr = instr.__class__(*new_params)
+            else:
+                new_instr = instr
+            new_qc.append(new_instr, qubits, clbits)
+        qiskit_circuit = new_qc
 
     if symbolic_params:
         # Create a new circuit with symbolic parameters

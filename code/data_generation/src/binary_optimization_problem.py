@@ -408,15 +408,17 @@ class BinaryOptimizationProblem(Solver):
 
     def solve_with_adaptive_vqe(self) -> Dict:
         print("Solving with Adaptive VQE")
-        operator_pool = [qml.RX(0.001, i) for i in range(self.n_qubits)]
-        operator_pool += [qml.RY(0.001, i) for i in range(self.n_qubits)]
-        operator_pool += [qml.RZ(0.001, i) for i in range(self.n_qubits)]
+        # Round initial operator parameters to 4 decimal places
+        operator_pool = [qml.RX(round(0.001, 4), i) for i in range(self.n_qubits)]
+        operator_pool += [qml.RY(round(0.001, 4), i) for i in range(self.n_qubits)]
+        operator_pool += [qml.RZ(round(0.001, 4), i) for i in range(self.n_qubits)]
         for i in range(self.n_qubits):
             for j in range(self.n_qubits):
                 if i != j:
-                    operator_pool.append(qml.CRZ(0.001, wires=[i, j]))
-                    operator_pool.append(qml.CRX(0.001, wires=[i, j]))
-                    operator_pool.append(qml.CRY(0.001, wires=[i, j]))
+                    operator_pool.append(qml.CRZ(round(0.001, 4), wires=[i, j]))
+                    operator_pool.append(qml.CRX(round(0.001, 4), wires=[i, j]))
+                    operator_pool.append(qml.CRY(round(0.001, 4), wires=[i, j]))
+
         dev = qml.device("default.qubit", wires=self.n_qubits)
         opt = qml.AdaptiveOptimizer()
         cost_hamiltonian = self.get_cost_hamiltonian()
@@ -432,8 +434,9 @@ class BinaryOptimizationProblem(Solver):
             adaptive_vqe_circuit, energy, gradient = opt.step_and_cost(
                 adaptive_vqe_circuit, operator_pool, drain_pool=True
             )
-            print(f"Step {i}, Energy: {energy}, Gradient: {gradient}")
+            # print(f"Step {i}, Energy: {round(float(energy), 4)}, Gradient: {round(float(gradient), 4)}")
 
+            # Store rounded values
             circuit_qasm = qasm3.dumps(
                 pennylane_to_qiskit(
                     adaptive_vqe_circuit,
@@ -444,15 +447,15 @@ class BinaryOptimizationProblem(Solver):
                 )
             )
             adaptive_circuits.append(circuit_qasm)
-            self.adaptive_gradients.append(float(gradient))
+            self.adaptive_gradients.append(round(float(gradient), 4))
             total_steps += 1
-            if gradient < 3e-3:
+            if float(gradient) < 3e-3:  # Compare with rounded gradient
                 break
 
         self.adaptive_circuits = adaptive_circuits
 
-        fig, ax = qml.draw_mpl(adaptive_vqe_circuit)()
-        fig.savefig("adaptive_vqe_circuit.png")
+        # fig, ax = qml.draw_mpl(adaptive_vqe_circuit)()
+        # fig.savefig("adaptive_vqe_circuit.png")
 
         self.adaptive_vqe_circuit = adaptive_vqe_circuit
         expectation_value = adaptive_vqe_circuit()
@@ -493,6 +496,7 @@ class BinaryOptimizationProblem(Solver):
         symbolic_params=True,
         adapt_vqe=False,
     ):
+        circuit = None
         if optimization_type == OptimizationType.QAOA:
             circuit = self.qaoa_circuit
         elif optimization_type == OptimizationType.VQE:

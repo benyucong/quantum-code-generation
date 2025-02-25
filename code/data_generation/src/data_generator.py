@@ -132,11 +132,10 @@ class DataGenerator:
         params = solution.get("params", None)
 
         circuit = None
-        if (
-            optimization_type == OptimizationType.VQE
-            or optimization_type == OptimizationType.ADAPTIVE_VQE
-        ):
+        if optimization_type == OptimizationType.VQE:
             circuit = problem.vqe_circuit
+        elif optimization_type == OptimizationType.ADAPTIVE_VQE:
+            circuit = problem.adaptive_vqe_circuit
         elif optimization_type == OptimizationType.QAOA:
             circuit = problem.qaoa_circuit
 
@@ -224,7 +223,7 @@ class DataGenerator:
             f"{self.problem}_{solution.optimization_type}_"
             f"{solution.number_of_qubits}_{self.layers}_{solution.signature}.json"
         )
-
+        print(f"Saving solution to {filename}")
         unique_path = os.path.join(self.output_path, filename)
 
         with open(unique_path, "w", encoding="utf-8") as file:
