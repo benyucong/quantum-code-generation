@@ -2,6 +2,7 @@ import json
 import os
 from typing import List
 import traceback
+import glob
 
 import concurrent
 
@@ -198,38 +199,60 @@ class DataGenerator:
 
         return problem_data
 
+    def _solution_exists(self, signature: str, optimization_type: OptimizationType, n_qubits: int) -> bool:
+        """
+        Check if a solution with the given signature already exists in the output directory.
+        """
+        pattern = os.path.join(
+            self.output_path, 
+            f"{self.problem}_{optimization_type}_{n_qubits}_{self.layers}_{signature}.json"
+        )
+        return bool(glob.glob(pattern))
+
     def _process_problems(
         self,
         graph_data: List,
         ansatz_template: int,
     ) -> None:
         """
-        Processes a list of binary optimization problems concurrently,
-        and saves each solution.
+        Processes optimization problems sequentially to avoid JAX multithreading issues.
         """
         print(f"Processing problems for {len(graph_data)} graphs")
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = [
-                executor.submit(
-                    self._process_problem,
+        
+        tasks = []
+        for i, (graph, optimization_type) in enumerate(
+            itertools.product(graph_data, list(OptimizationType))
+        ):
+            # Get the signature for the current graph
+            if self.problem != OptimizationProblemType.HYPERMAXCUT:
+                signature = weisfeiler_lehman_graph_hash(graph[0] if isinstance(graph, tuple) else graph)
+            else:
+                signature = graph.__hash__()
+            
+            # Get number of qubits (approximate for initial check)
+            n_qubits = len(graph[0].nodes()) if isinstance(graph, tuple) else len(graph.nodes())
+            
+            # Skip if solution already exists
+            if self._solution_exists(signature, optimization_type, n_qubits):
+                print(f"Skipping existing solution for signature {signature} with {optimization_type}")
+                continue
+                
+            tasks.append((i, graph, optimization_type))
+
+        # Process tasks sequentially
+        for i, graph, optimization_type in tasks:
+            try:
+                solution = self._process_problem(
                     graph,
                     optimization_type,
                     ansatz_template,
-                    (i, len(graph_data) * len(list(OptimizationType))),
+                    (i, len(tasks)),
                 )
-                for i, (graph, optimization_type) in enumerate(
-                    itertools.product(graph_data, list(OptimizationType))
-                )
-            ]
-
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    solution = future.result()
-                    if solution:
-                        self._save_solution(solution)
-                except Exception as exc:
-                    print(f"Processing failed with exception: {exc}")
-                    traceback.print_exc()
+                if solution:
+                    self._save_solution(solution)
+            except Exception as exc:
+                print(f"Processing failed with exception: {exc}")
+                traceback.print_exc()
 
     def _save_solution(self, solution: OptimizationProblem):
         """
