@@ -1,6 +1,6 @@
 #!/bin/bash
 
-problem="graph_coloring"
+problem="kclique"
 ansatz=13
 layers=1
 output_dir="out/"

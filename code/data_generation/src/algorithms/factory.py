@@ -14,6 +14,9 @@ from src.algorithms.graph_coloring.graph_coloring_graphs import (
 from src.algorithms.graph_isomorphism.graph_isomorphism_graphs import (
     generate_graphs as generate_graph_isomorphism_graphs,
 )
+from src.algorithms.kcliques.kclique_graphs import (
+    generate_kclique_data_set as generate_k_clique_graphs,
+)
 from src.solver import OptimizationProblemType
 
 
@@ -48,6 +51,8 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
         return generate_graph_coloring_graphs()
     elif problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
         return generate_graph_isomorphism_graphs()
+    elif problem == OptimizationProblemType.K_CLIQUE:
+        return generate_k_clique_graphs()
     else:
         raise ValueError("No problem specified")
 

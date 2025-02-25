@@ -6,46 +6,48 @@ import pickle
 
 random.seed(3)
 
+
 def generate_clique_graph(k=5, num_nodes=20, edge_prob=0.1):
     """
     Generate a graph with a k-sized clique and additional random nodes and edges.
-    
+
     Parameters:
         k (int): Size of the clique.
         num_nodes (int): Total number of nodes in the graph.
         edge_prob (float): Probability of edges between non-clique nodes.
-    
+
     Returns:
         networkx.Graph: A graph with a central clique and additional random nodes and edges.
     """
     G = nx.complete_graph(k)
-    
+
     # Add remaining nodes
     other_nodes = list(range(k, num_nodes))
     G.add_nodes_from(other_nodes)
-    
+
     # Add random edges between other nodes
     for i in other_nodes:
         for j in other_nodes:
             if i < j and random.random() < edge_prob:
                 G.add_edge(i, j)
-    
+
     # Add edges between clique nodes and other nodes
     for i in other_nodes:
         if random.random() < edge_prob:
             G.add_edge(i, random.choice(range(k)))
-    
+
     return G
+
 
 def add_random_nodes_and_edges(graph, k, num_additional_nodes):
     """
     Add random nodes and edges to the graph.
-    
+
     Parameters:
         graph (networkx.Graph): The initial graph.
         k (int): Size of the initial clique.
         num_additional_nodes (int): Number of additional nodes to add.
-    
+
     Returns:
         networkx.Graph: The graph with additional nodes and edges.
     """
@@ -55,29 +57,30 @@ def add_random_nodes_and_edges(graph, k, num_additional_nodes):
         graph.add_edge(random.randint(0, k), i + k)
     return graph
 
-def generate_kclique_data_set(max_k):
+
+def generate_kclique_data_set(max_k=5):
     """
     Generate a dataset of graphs with k-sized cliques.
-    
+
     Parameters:
         max_k (int): Maximum size of the clique.
-    
+
     Returns:
         set: A set of tuples containing the graph, the complete graph, and the size of the clique.
     """
     graphs = set()
     graph_already_generated = set()
-    
+
     for k in range(3, max_k + 1):
         for num_additional_nodes in range(2, 4):
             for _ in range(1000):
                 # Create a complete graph of size k
                 complete_graph = nx.complete_graph(k)
                 graph = complete_graph.copy()
-                
+
                 # Add random nodes and edges to the graph
                 graph = add_random_nodes_and_edges(graph, k, num_additional_nodes)
-                
+
                 # Remove self-loops and check connectivity
                 if nx.is_connected(graph):
                     graph.remove_edges_from(nx.selfloop_edges(graph))
@@ -92,14 +95,14 @@ def generate_kclique_data_set(max_k):
                 if whash2 not in graph_already_generated and nx.is_connected(graph2):
                     graph_already_generated.add(whash2)
                     graphs.add((graph2, complete_graph, k))
-    
+
     return graphs
 
 
 def save_graphs_to_file(graphs, filename):
     """
     Save the generated graphs to a file.
-    
+
     Parameters:
         graphs (list): List of generated graphs.
         filename (str): The filename to save the graphs.
@@ -111,7 +114,7 @@ def save_graphs_to_file(graphs, filename):
 def save_graph_figures(graphs, output_dir, num_samples=10):
     """
     Save figures of a random sample of graphs to files.
-    
+
     Parameters:
         graphs (list): List of generated graphs.
         output_dir (str): Directory to save the figures.

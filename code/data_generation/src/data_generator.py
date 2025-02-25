@@ -14,6 +14,7 @@ from src.algorithms.connected_components.connected_component import (
 from src.algorithms.factory import get_problem_data
 from src.algorithms.graph_coloring.graph_coloring import GraphColoring
 from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
+from src.algorithms.kcliques.kclique import KClique
 from src.binary_optimization_problem import (
     BinaryOptimizationProblem,
 )
@@ -100,6 +101,9 @@ class DataGenerator:
         elif self.problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
             graph, n_colors, coloring = graph_data
             binary_polynomial = GraphColoring(graph, n_colors)
+        elif self.problem == OptimizationProblemType.K_CLIQUE:
+            graph, complete_graph, k = graph_data
+            binary_polynomial = KClique(graph, k)
         else:
             raise ValueError("Invalid optimization problem.")
 
