@@ -48,6 +48,9 @@ class BinaryOptimizationProblem(Solver):
         self.qaoa_circuit = None
         self.vqe_circuit = None
         self.adaptive_vqe_circuit = None
+        self.smallest_eigenvectors = None
+        self.smallest_eigenvalues = None
+        self.smallest_bitstrings = None
         self.adaptive_circuits = []
         self.adaptive_gradients = []
 
@@ -146,16 +149,21 @@ class BinaryOptimizationProblem(Solver):
             )
 
             (
-                smallest_eigenvalues,
-                smallest_eigenvectors,
+                self.smallest_eigenvalues,
+                self.smallest_eigenvectors,
                 first_excited_energy,
                 first_excited_state,
             ) = smallest_eigenpairs(cost_matrix)
 
-            smallest_bitstrings = [
-                basis_vector_to_bitstring(v) for v in smallest_eigenvectors
+            self.smallest_bitstrings = [
+                basis_vector_to_bitstring(v) for v in self.smallest_eigenvectors
             ]
-            return smallest_eigenvalues, smallest_bitstrings, first_excited_energy
+            return (
+                self.smallest_eigenvalues,
+                self.smallest_bitstrings,
+                first_excited_energy,
+                self.smallest_eigenvectors,
+            )
 
         # Solve with sparse eigensolver if the number of qubits is greater than 14
         cost_matrix = self.get_cost_hamiltonian().sparse_matrix(
@@ -163,15 +171,21 @@ class BinaryOptimizationProblem(Solver):
         )
 
         (
-            smallest_eigenvalues,
-            smallest_eigenvectors,
+            self.smallest_eigenvalues,
+            self.smallest_eigenvectors,
             first_excited_energy,
             first_excited_state,
         ) = smallest_sparse_eigenpairs(cost_matrix)
-        smallest_bitstrings = [
-            basis_vector_to_bitstring(v) for v in smallest_eigenvectors
+
+        self.smallest_bitstrings = [
+            basis_vector_to_bitstring(v) for v in self.smallest_eigenvectors
         ]
-        return smallest_eigenvalues, smallest_bitstrings, first_excited_energy
+        return (
+            self.smallest_eigenvalues,
+            self.smallest_bitstrings,
+            first_excited_energy,
+            self.smallest_eigenvectors,
+        )
 
     def set_smallest_bitrings(self, smallest_bitstrings):
         self.smallest_bitstrings = smallest_bitstrings

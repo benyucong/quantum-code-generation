@@ -97,13 +97,17 @@ class DataGenerator:
         if n_qubits > QUBIT_LIMIT:
             return []
 
-        smallest_eigenvalues, smallest_bitstrings, first_excited_energy = (
-            problem.solve_exactly()
-        )
+        (
+            smallest_eigenvalues,
+            smallest_bitstrings,
+            first_excited_energy,
+            smallest_eigenvectors,
+        ) = problem.solve_exactly()
 
         print(
             f"Processing {iteration_info[0] + 1}/{iteration_info[1]} for {n_qubits} qubits using {optimization_type}"
         )
+
         SOLUTION = {}
         if optimization_type == OptimizationType.VQE:
             SOLUTION = problem.solve_with_vqe(ansatz_template)
