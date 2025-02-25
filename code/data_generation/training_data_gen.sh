@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=trainingdata_gen_batch
-#SBATCH --time=02:00:00
-#SBATCH --output=../../logs/hypermaxcut_%A_%a.out
-#SBATCH --error=../../logs/hypermaxcut_%A_%a.err
+#SBATCH --time=4:00:00
+#SBATCH --output=../../logs/trainingdata_gen_%A_%a.out
+#SBATCH --error=../../logs/trainingdata_gen_%A_%a.err
 #SBATCH --array=0-15
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -44,7 +44,7 @@ echo "Running ${SELECTED_PROBLEM} with ansatz option ${SELECTED_ANSATZ}..."
 layers=1
 output_dir="out/"
 
-python3 -m src.main \
+python3 -u -m src.main \
     --problem ${SELECTED_PROBLEM} \
     --layers ${layers} \
     --ansatz_template ${SELECTED_ANSATZ} \
