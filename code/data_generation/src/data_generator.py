@@ -12,6 +12,7 @@ from src.algorithms.connected_components.connected_component import (
     ConnectedComponentContainingNode,
 )
 from src.algorithms.factory import get_problem_data
+from src.algorithms.graph_coloring.graph_coloring import GraphColoring
 from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
 from src.binary_optimization_problem import (
     BinaryOptimizationProblem,
@@ -93,6 +94,9 @@ class DataGenerator:
             # If the problem is ConnectedComponents, graph_data is a graph
             graph, node, components = graph_data
             binary_polynomial = ConnectedComponentContainingNode(graph, node)
+        elif self.problem == OptimizationProblemType.GRAPH_COLORING:
+            graph, n_colors, coloring = graph_data
+            binary_polynomial = GraphColoring(graph, n_colors)
         else:
             raise ValueError("Invalid optimization problem.")
 

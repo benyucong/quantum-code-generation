@@ -1,6 +1,6 @@
 #!/bin/bash
 
-problem="connected_components"
+problem="graph_coloring"
 ansatz=13
 layers=1
 output_dir="out/"
