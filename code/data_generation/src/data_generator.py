@@ -7,7 +7,6 @@ import concurrent
 
 from networkx.readwrite import json_graph
 from networkx import weisfeiler_lehman_graph_hash
-from dimod import BinaryQuadraticModel
 from src.algorithms.community_detection.community_detection import CommunityDetection
 from src.algorithms.factory import get_problem_data
 from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
@@ -23,7 +22,7 @@ from src.solver import (
     OptimizationProblem,
     QuantumSolution,
 )
-from src.utils import DataclassJSONEncoder, int_to_bitstring
+from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
 
 QUBIT_LIMIT = 17
 
@@ -132,14 +131,14 @@ class DataGenerator:
         ]
         params = solution.get("params", None)
 
-        # circuit = None
-        # if (
-        #     optimization_type == OptimizationType.VQE
-        #     or optimization_type == OptimizationType.ADAPTIVE_VQE
-        # ):
-        #     circuit = problem.vqe_circuit
-        # elif optimization_type == OptimizationType.QAOA:
-        #     circuit = problem.qaoa_circuit
+        circuit = None
+        if (
+            optimization_type == OptimizationType.VQE
+            or optimization_type == OptimizationType.ADAPTIVE_VQE
+        ):
+            circuit = problem.vqe_circuit
+        elif optimization_type == OptimizationType.QAOA:
+            circuit = problem.qaoa_circuit
 
         q_solution = QuantumSolution(
             states=solution.get("states"),
@@ -148,6 +147,10 @@ class DataGenerator:
             bitstrings=bitstrings,
             total_optimization_steps=solution.get("total_optimization_steps"),
             probabilities=solution.get("probabilities"),
+        )
+
+        circuit_with_params, circuit_with_symbols = get_qasm_circuits(
+            problem, optimization_type, params
         )
 
         problem_data = OptimizationProblem(
@@ -169,18 +172,8 @@ class DataGenerator:
             adaptive_process=AdaptiveProcess(
                 circuits=problem.adaptive_circuits, gradients=problem.adaptive_gradients
             ),
-            circuit_with_params=problem.circuit_to_qasm(
-                optimization_type=optimization_type,
-                params=params,
-                symbolic_params=False,
-                adapt_vqe=optimization_type == OptimizationType.ADAPTIVE_VQE,
-            ),
-            circuit_with_symbols=problem.circuit_to_qasm(
-                optimization_type=optimization_type,
-                params=params,
-                symbolic_params=True,
-                adapt_vqe=optimization_type == OptimizationType.ADAPTIVE_VQE,
-            ),
+            circuit_with_params=circuit_with_params,
+            circuit_with_symbols=circuit_with_symbols,
             problem_specific_attributes=problem_specific_attributes,
         )
 

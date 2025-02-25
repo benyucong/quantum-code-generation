@@ -393,35 +393,18 @@ class BinaryOptimizationProblem(Solver):
             "two_qubit_params": two_qubit_params,
         }
 
-    def get_circuits(self):
-        return self.qaoa_circuit, self.vqe_circuit, self.adaptive_vqe_circuit
+    @staticmethod
+    def create_adaptive_circuit(n_qubits, cost_hamiltonian):
+        """Create a base adaptive VQE circuit."""
+        dev = qml.device("default.qubit", wires=n_qubits)
 
-    def circuit_to_qasm(
-        self,
-        optimization_type: OptimizationType,
-        params=None,
-        symbolic_params=True,
-        adapt_vqe=False,
-    ):
-        qiskit_circuit = pennylane_to_qiskit(
-            self.qaoa_circuit
-            if optimization_type == OptimizationType.QAOA
-            else self.vqe_circuit,
-            self.n_qubits,
-            params=params,
-            symbolic_params=symbolic_params,
-            adapt_vqe=adapt_vqe,
-        )
-        return qasm3.dumps(qiskit_circuit)
+        @qml.qnode(dev)
+        def circuit():
+            for wire in range(n_qubits):
+                qml.Hadamard(wires=wire)
+            return qml.expval(cost_hamiltonian)
 
-    def get_number_of_qubits(self):
-        return self.n_qubits
-
-    def get_number_of_layers(self):
-        return self.p
-
-    def get_variables_to_qubits(self):
-        return self.variables_to_qubits
+        return circuit
 
     def solve_with_adaptive_vqe(self) -> Dict:
         print("Solving with Adaptive VQE")
@@ -438,24 +421,35 @@ class BinaryOptimizationProblem(Solver):
         opt = qml.AdaptiveOptimizer()
         cost_hamiltonian = self.get_cost_hamiltonian()
 
-        @qml.qnode(dev)
-        def adaptive_vqe_circuit():
-            for wire in range(self.n_qubits):
-                qml.Hadamard(wires=wire)
-            return qml.expval(cost_hamiltonian)
+        adaptive_vqe_circuit = self.create_adaptive_circuit(
+            self.n_qubits, cost_hamiltonian
+        )
 
         total_steps = 0
         max_steps = 100
+        adaptive_circuits = []
         for i in range(max_steps):
             adaptive_vqe_circuit, energy, gradient = opt.step_and_cost(
                 adaptive_vqe_circuit, operator_pool, drain_pool=True
             )
             print(f"Step {i}, Energy: {energy}, Gradient: {gradient}")
-            self.adaptive_circuits.append(adaptive_vqe_circuit)
-            self.adaptive_gradients.append(gradient)
+
+            circuit_qasm = qasm3.dumps(
+                pennylane_to_qiskit(
+                    adaptive_vqe_circuit,
+                    self.n_qubits,
+                    params=None,
+                    symbolic_params=False,
+                    adapt_vqe=True,
+                )
+            )
+            adaptive_circuits.append(circuit_qasm)
+            self.adaptive_gradients.append(float(gradient))
             total_steps += 1
             if gradient < 3e-3:
                 break
+
+        self.adaptive_circuits = adaptive_circuits
 
         fig, ax = qml.draw_mpl(adaptive_vqe_circuit)()
         fig.savefig("adaptive_vqe_circuit.png")
@@ -488,6 +482,46 @@ class BinaryOptimizationProblem(Solver):
             "states_probs": states_probs,
             "success": success,
         }
+
+    def get_circuits(self):
+        return self.qaoa_circuit, self.vqe_circuit, self.adaptive_vqe_circuit
+
+    def circuit_to_qasm(
+        self,
+        optimization_type: OptimizationType,
+        params=None,
+        symbolic_params=True,
+        adapt_vqe=False,
+    ):
+        if optimization_type == OptimizationType.QAOA:
+            circuit = self.qaoa_circuit
+        elif optimization_type == OptimizationType.VQE:
+            circuit = self.vqe_circuit
+        elif optimization_type == OptimizationType.ADAPTIVE_VQE:
+            circuit = self.adaptive_vqe_circuit
+
+        if circuit is None:
+            raise ValueError(
+                f"No circuit defined for optimization type {optimization_type}"
+            )
+
+        qiskit_circuit = pennylane_to_qiskit(
+            circuit,
+            self.n_qubits,
+            params=params,
+            symbolic_params=symbolic_params,
+            adapt_vqe=adapt_vqe,
+        )
+        return qasm3.dumps(qiskit_circuit)
+
+    def get_number_of_qubits(self):
+        return self.n_qubits
+
+    def get_number_of_layers(self):
+        return self.p
+
+    def get_variables_to_qubits(self):
+        return self.variables_to_qubits
 
     def get_adaptive_circuits(self):
         adaptive_circuits_qasm = []

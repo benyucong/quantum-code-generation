@@ -106,7 +106,6 @@ class Solver(ABC):
     def solve_with_qaoa(self):
         pass
 
-    @abstractmethod
     def circuit_to_qasm(self):
         pass
 

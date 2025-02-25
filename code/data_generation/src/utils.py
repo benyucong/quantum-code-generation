@@ -1,19 +1,19 @@
-from concurrent.futures import ProcessPoolExecutor, as_completed
+import dataclasses
+import json
 import os
 import pickle
 import re
-from networkx import weisfeiler_lehman_graph_hash
-import pennylane as qml
-from pennylane import numpy as np
-from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
-from pennylane_qiskit import AerDevice
-import scipy
-import dataclasses
-import json
 
+import pennylane as qml
+import scipy
+from networkx import weisfeiler_lehman_graph_hash
 from pennylane import numpy as np
 from pennylane.ops.op_math import LinearCombination
+from pennylane_qiskit import AerDevice
+from qiskit import QuantumCircuit
+from qiskit.circuit import Parameter
+
+from src.solver import OptimizationType
 
 np.random.seed(0)
 
@@ -203,6 +203,28 @@ def basis_vector_to_bitstring(basis_vector):
     bits = np.binary_repr(index, width=num_qubits)
     bits = np.array([1 - int(i) for i in bits])
     return "".join([str(i) for i in bits])
+
+
+def get_qasm_circuits(problem, optimization_type: OptimizationType, params=None):
+    circuit_with_params = None
+    circuit_without_params = None
+
+    circuit_with_params = problem.circuit_to_qasm(
+        optimization_type=optimization_type,
+        params=params,
+        symbolic_params=False,
+        adapt_vqe=optimization_type == OptimizationType.ADAPTIVE_VQE,
+    )
+
+    if optimization_type != OptimizationType.ADAPTIVE_VQE:
+        circuit_without_params = problem.circuit_to_qasm(
+            optimization_type=optimization_type,
+            params=params,
+            symbolic_params=True,
+            adapt_vqe=optimization_type == OptimizationType.ADAPTIVE_VQE,
+        )
+
+    return circuit_with_params, circuit_without_params
 
 
 def pennylane_to_qiskit(
