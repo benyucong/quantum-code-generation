@@ -8,6 +8,9 @@ import concurrent
 from networkx.readwrite import json_graph
 from networkx import weisfeiler_lehman_graph_hash
 from src.algorithms.community_detection.community_detection import CommunityDetection
+from src.algorithms.connected_components.connected_component import (
+    ConnectedComponentContainingNode,
+)
 from src.algorithms.factory import get_problem_data
 from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
 from src.binary_optimization_problem import (
@@ -46,7 +49,7 @@ class DataGenerator:
         Retrieves graph data, converts it into binary optimization problems,
         and processes each using all available optimization types.
         """
-        graph_data = get_problem_data(self.problem, generate_data=False)
+        graph_data = get_problem_data(self.problem, generate_data=True)
 
         # Process the binary problems for each optimization type.
         self._process_problems(graph_data, self.ansatz_template)
@@ -83,8 +86,13 @@ class DataGenerator:
                 communities_size=size_communities, number_of_communities=n_communities
             )
         elif self.problem == OptimizationProblemType.HYPERMAXCUT:
+            # If the problem is HyperMaxCut, graph_data is a hypergraph
             graph = graph_data
             binary_polynomial = HyperMaxCut(graph)
+        elif self.problem == OptimizationProblemType.CONNECTED_COMPONENTS:
+            # If the problem is ConnectedComponents, graph_data is a graph
+            graph, node, components = graph_data
+            binary_polynomial = ConnectedComponentContainingNode(graph, node)
         else:
             raise ValueError("Invalid optimization problem.")
 
@@ -137,12 +145,12 @@ class DataGenerator:
             circuit = problem.qaoa_circuit
 
         q_solution = QuantumSolution(
-            states=solution.get("states"),
+            states=solution.get("two_most_probable_states"),
             expectation_value=solution.get("expectation_value"),
             params=params,
             bitstrings=bitstrings,
-            total_optimization_steps=solution.get("total_optimization_steps"),
-            probabilities=solution.get("probabilities"),
+            total_optimization_steps=solution.get("total_steps"),
+            probabilities=solution.get("states_probs"),
         )
 
         circuit_with_params, circuit_with_symbols = get_qasm_circuits(
@@ -152,8 +160,12 @@ class DataGenerator:
         problem_data = OptimizationProblem(
             problem_type=self.problem,
             optimization_type=optimization_type,
-            signature=weisfeiler_lehman_graph_hash(graph),
-            graph=json_graph.node_link_data(graph, edges="edges"),
+            signature=weisfeiler_lehman_graph_hash(graph)
+            if self.problem != OptimizationProblemType.HYPERMAXCUT
+            else graph.__hash__(),
+            graph=json_graph.node_link_data(graph, edges="edges")
+            if self.problem != OptimizationProblemType.HYPERMAXCUT
+            else graph.__dict__(),
             cost_hamiltonian=str(problem.get_cost_hamiltonian()),
             number_of_qubits=n_qubits,
             number_of_layers=self.layers,

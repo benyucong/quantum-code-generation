@@ -1,5 +1,6 @@
+import itertools
 import pickle
-
+import networkx as nx
 from src.algorithms.hypermaxcut.hypergraph import generate_random_hypergraph
 
 

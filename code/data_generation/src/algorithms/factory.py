@@ -1,10 +1,13 @@
 import pickle
-from src.algorithms.community_detection.community_detection import CommunityDetection
 from src.algorithms.community_detection.community_detection_graphs import (
     generate_community_graphs,
 )
-from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
-from src.algorithms.hypermaxcut.hypermaxcut_graphs import generate_hypergraphs
+from src.algorithms.hypermaxcut.hypermaxcut_graphs import (
+    generate_hypergraphs,
+)
+from src.algorithms.connected_components.connected_component_graphs import (
+    generate_graphs as generate_connected_components_graphs,
+)
 from src.solver import OptimizationProblemType
 
 
@@ -29,9 +32,12 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
     print("Generating data for problem: ", problem)
 
     if problem == OptimizationProblemType.HYPERMAXCUT:
-        return generate_hypergraphs()
+        hypergraphs = generate_hypergraphs()
+        return hypergraphs
     elif problem == OptimizationProblemType.COMMUNITY_DETECTION:
         return generate_community_graphs()
+    elif problem == OptimizationProblemType.CONNECTED_COMPONENTS:
+        return generate_connected_components_graphs()
     else:
         raise ValueError("No problem specified")
 

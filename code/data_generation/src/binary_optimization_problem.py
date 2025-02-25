@@ -215,9 +215,6 @@ class BinaryOptimizationProblem(Solver):
             probs = self.qaoa_probs_circuit(params)
             most_probable_state = np.argsort(probs)[-1]
             most_probable_state = int_to_bitstring(most_probable_state, self.n_qubits)
-            print(
-                f"Most probable state: {most_probable_state} and {self.smallest_bitstrings}"
-            )
 
             if most_probable_state in self.smallest_bitstrings:
                 success = True
@@ -498,9 +495,6 @@ class BinaryOptimizationProblem(Solver):
             success = True
         else:
             success = False
-
-        print("Most probable state: ", most_probable_bitstring)
-        print("Success in adaptive: ", success)
 
         return {
             "two_most_probable_states": most_probable_states,

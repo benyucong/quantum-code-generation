@@ -1,6 +1,6 @@
 #!/bin/bash
 
-problem="community_detection"
+problem="connected_components"
 ansatz=13
 layers=1
 output_dir="out/"
