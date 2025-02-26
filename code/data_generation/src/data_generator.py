@@ -2,6 +2,8 @@ import glob
 import itertools
 import json
 import os
+import random
+import time
 import traceback
 from typing import List
 
@@ -33,7 +35,6 @@ from src.solver import (
     QuantumSolution,
 )
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
-import random
 
 QUBIT_LIMIT = 16
 
@@ -98,7 +99,9 @@ class DataGenerator:
                 number_of_colors=n_colors
             )
         elif self.problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
-            graph, n_colors, coloring = graph_data
+            print(graph_data)
+            graph, n_colors = graph_data
+            print(n_colors)
             binary_polynomial = GraphColoring(graph, n_colors)
             problem_specific_attributes = GraphIsomorphismAttributes(
                 number_of_colors=n_colors
@@ -133,6 +136,7 @@ class DataGenerator:
         )
 
         solution = {}
+        start_time = time.time()
         if optimization_type == OptimizationType.VQE:
             solution = problem.solve_with_vqe(ansatz_template)
         elif optimization_type == OptimizationType.QAOA:
@@ -141,6 +145,7 @@ class DataGenerator:
             solution = problem.solve_with_adaptive_vqe()
         else:
             raise ValueError("Invalid optimization type.")
+        optimization_time = time.time() - start_time
 
         # Check if a solution was found.
         if not solution.get("success"):
@@ -168,6 +173,7 @@ class DataGenerator:
             bitstrings=bitstrings,
             total_optimization_steps=solution.get("total_steps"),
             probabilities=solution.get("states_probs"),
+            optimization_time=optimization_time,
         )
 
         circuit_with_params, circuit_with_symbols = get_qasm_circuits(

@@ -53,6 +53,7 @@ class QuantumSolution:
     bitstrings: List[str]
     total_optimization_steps: int
     probabilities: List[float]
+    optimization_time: float
 
 
 @dataclass
