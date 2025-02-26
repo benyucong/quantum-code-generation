@@ -6,6 +6,8 @@ import random
 import time
 import traceback
 from typing import List
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
 
 from networkx import weisfeiler_lehman_graph_hash
 from networkx.readwrite import json_graph
@@ -37,6 +39,34 @@ from src.solver import (
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
 
 QUBIT_LIMIT = 16
+
+
+def _worker_init():
+    """Initialize JAX for each worker process"""
+    import jax
+
+    jax.config.update("jax_default_device", jax.devices("cpu")[0])
+    jax.config.update("jax_enable_x64", True)
+
+
+def _worker_process(args):
+    """Worker function to process a single optimization task"""
+    generator, task = args
+    i, graph, optimization_type = task
+    try:
+        solution = generator._process_problem(
+            graph,
+            optimization_type,
+            generator.ansatz_template,
+            (i, 1),
+        )
+        if solution:
+            generator._save_solution(solution)
+        return True
+    except Exception as exc:
+        print(f"Processing failed with exception: {exc}")
+        traceback.print_exc()
+        return False
 
 
 class DataGenerator:
@@ -228,11 +258,11 @@ class DataGenerator:
         ansatz_template: int,
     ) -> None:
         """
-        Processes optimization problems sequentially to avoid JAX multithreading issues.
+        Processes optimization problems in parallel using multiple CPU cores.
         """
         print(f"Processing problems for {len(graph_data)} graphs")
 
-        # --------- Gather tasks and Filter out existing solutions ---------
+        # Gather tasks and Filter out existing solutions
         tasks = []
         for i, (graph, optimization_type) in enumerate(
             itertools.product(graph_data, list(OptimizationType))
@@ -256,23 +286,17 @@ class DataGenerator:
 
             tasks.append((i, graph, optimization_type))
 
-        # --------- Process the remaining problems ---------
-        random_order_tasks = tasks.copy()
-        random.shuffle(random_order_tasks)
+        random.shuffle(tasks)
 
-        for i, graph, optimization_type in random_order_tasks:
-            try:
-                solution = self._process_problem(
-                    graph,
-                    optimization_type,
-                    ansatz_template,
-                    (i, len(tasks)),
-                )
-                if solution:
-                    self._save_solution(solution)
-            except Exception as exc:
-                print(f"Processing failed with exception: {exc}")
-                traceback.print_exc()
+        # Use 90% of available CPU cores
+        n_workers = max(1, multiprocessing.cpu_count() * 0.9)
+        print(f"Using {n_workers} worker processes")
+
+        with ProcessPoolExecutor(
+            max_workers=n_workers, initializer=_worker_init
+        ) as executor:
+            args = [(self, task) for task in tasks]
+            list(executor.map(_worker_process, args))
 
     def _save_solution(self, solution: OptimizationProblem):
         """
