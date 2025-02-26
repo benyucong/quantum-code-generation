@@ -1,8 +1,12 @@
 import dimod
 
+from src.algorithms.qubo_problem import QuadradicUnconstrainedBinaryOptimization
 
-class GraphColoring:
-    def __init__(self, graph, colors):
+
+class GraphColoring(QuadradicUnconstrainedBinaryOptimization):
+    def __init__(self, graph, colors, description="Graph Coloring"):
+        super().__init__(description=description)
+
         self.graph = graph
         self.colors = colors
         self.coloring = {}

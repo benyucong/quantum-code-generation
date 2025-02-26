@@ -110,7 +110,9 @@ class DataGenerator:
             raise ValueError("Invalid optimization problem.")
 
         problem = BinaryOptimizationProblem(
-            binary_polynomial=binary_polynomial.get_binary_polynomial(), p=self.layers
+            binary_polynomial=binary_polynomial.get_binary_polynomial(),
+            description=self.problem,
+            p=self.layers,
         )
 
         # --------- Solve the problem using the specified optimization type ---------
