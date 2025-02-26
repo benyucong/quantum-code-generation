@@ -4,8 +4,6 @@ from typing import List
 import traceback
 import glob
 
-import concurrent
-
 from networkx.readwrite import json_graph
 from networkx import weisfeiler_lehman_graph_hash
 from src.algorithms.community_detection.community_detection import CommunityDetection
@@ -20,6 +18,10 @@ from src.binary_optimization_problem import (
     BinaryOptimizationProblem,
 )
 from src.solver import (
+    ConnectedComponentAttributes,
+    GraphColoringAttributes,
+    GraphIsomorphismAttributes,
+    KCliqueAttributes,
     OptimizationProblemType,
     OptimizationType,
     AdaptiveProcess,
@@ -79,9 +81,12 @@ class DataGenerator:
         """
         Process a single binary optimization problem.
         """
-        problem_specific_attributes = None
 
         binary_polynomial = None
+        problem_specific_attributes = None
+        # --------- Parse the graph data and construct problem ---------
+        # The graph data is different for each optimization problem.
+        # Also build the probelem specific attributes for each problem.
         if self.problem == OptimizationProblemType.COMMUNITY_DETECTION:
             graph, n_communities, size_communities = graph_data
             binary_polynomial = CommunityDetection(graph, n_communities)
@@ -93,18 +98,25 @@ class DataGenerator:
             graph = graph_data
             binary_polynomial = HyperMaxCut(graph)
         elif self.problem == OptimizationProblemType.CONNECTED_COMPONENTS:
-            # If the problem is ConnectedComponents, graph_data is a graph
             graph, node, components = graph_data
             binary_polynomial = ConnectedComponentContainingNode(graph, node)
+            problem_specific_attributes = ConnectedComponentAttributes(node=node)
         elif self.problem == OptimizationProblemType.GRAPH_COLORING:
             graph, n_colors, coloring = graph_data
             binary_polynomial = GraphColoring(graph, n_colors)
+            problem_specific_attributes = GraphColoringAttributes(
+                number_of_colors=n_colors
+            )
         elif self.problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
             graph, n_colors, coloring = graph_data
             binary_polynomial = GraphColoring(graph, n_colors)
+            problem_specific_attributes = GraphIsomorphismAttributes(
+                number_of_colors=n_colors
+            )
         elif self.problem == OptimizationProblemType.K_CLIQUE:
             graph, complete_graph, k = graph_data
             binary_polynomial = KClique(graph, k)
+            problem_specific_attributes = KCliqueAttributes(k=k)
         else:
             raise ValueError("Invalid optimization problem.")
 
@@ -112,6 +124,7 @@ class DataGenerator:
             binary_polynomial=binary_polynomial.get_binary_polynomial(), p=self.layers
         )
 
+        # --------- Solve the problem using the specified optimization type ---------
         n_qubits = problem.get_number_of_qubits()
         if n_qubits > QUBIT_LIMIT:
             return []
@@ -174,7 +187,7 @@ class DataGenerator:
             optimization_type=optimization_type,
             signature=weisfeiler_lehman_graph_hash(graph)
             if self.problem != OptimizationProblemType.HYPERMAXCUT
-            else graph.__hash__(),
+            else hash(graph),
             graph=json_graph.node_link_data(graph, edges="edges")
             if self.problem != OptimizationProblemType.HYPERMAXCUT
             else graph.__dict__(),
@@ -232,7 +245,7 @@ class DataGenerator:
                     graph[0] if isinstance(graph, tuple) else graph
                 )
             else:
-                signature = graph.__hash__()
+                signature = hash(graph)
 
             n_qubits = (
                 len(graph[0].nodes()) if isinstance(graph, tuple) else len(graph.nodes)

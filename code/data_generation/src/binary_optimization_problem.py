@@ -1,16 +1,17 @@
-from enum import Enum
 from typing import Dict
+
 import dimod
 import jax
 import jax.numpy as jnp
 import optax
 import pennylane as qml
+from dimod import Vartype
 from pennylane import numpy as np
 from pennylane.transforms import compile as qml_compile
 from qiskit import qasm3
-from dimod import Vartype
 
 from src.optimization.ansatz import Ansatz
+from src.solver import OptimizationType, Solver
 from src.utils import (
     basis_vector_to_bitstring,
     copy_circuit_with_new_measurement,
@@ -20,7 +21,6 @@ from src.utils import (
     smallest_eigenpairs,
     smallest_sparse_eigenpairs,
 )
-from src.solver import OptimizationType, Solver
 
 # Global flag to set a specific platform, must be used at startup.
 jax.config.update("jax_default_device", jax.devices("cpu")[0])

@@ -68,6 +68,26 @@ class CommunityDetectionAttributes:
 
 
 @dataclass
+class ConnectedComponentAttributes:
+    node: str
+
+
+@dataclass
+class GraphColoringAttributes:
+    number_of_colors: int
+
+
+@dataclass
+class GraphIsomorphismAttributes:
+    number_of_colors: int
+
+
+@dataclass
+class KCliqueAttributes:
+    k: int
+
+
+@dataclass
 class OptimizationProblem:
     problem_type: OptimizationProblemType
     optimization_type: OptimizationType
