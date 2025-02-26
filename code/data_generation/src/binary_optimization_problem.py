@@ -1,16 +1,17 @@
-from enum import Enum
 from typing import Dict
+
 import dimod
 import jax
 import jax.numpy as jnp
 import optax
 import pennylane as qml
+from dimod import BinaryQuadraticModel, Vartype
 from pennylane import numpy as np
 from pennylane.transforms import compile as qml_compile
 from qiskit import qasm3
-from dimod import Vartype
 
 from src.optimization.ansatz import Ansatz
+from src.solver import OptimizationType, Solver
 from src.utils import (
     basis_vector_to_bitstring,
     copy_circuit_with_new_measurement,
@@ -20,7 +21,6 @@ from src.utils import (
     smallest_eigenpairs,
     smallest_sparse_eigenpairs,
 )
-from src.solver import OptimizationType, Solver
 
 # Global flag to set a specific platform, must be used at startup.
 jax.config.update("jax_default_device", jax.devices("cpu")[0])
@@ -34,7 +34,8 @@ class BinaryOptimizationProblem(Solver):
                     p: number of layers in the QAOA or VQE circuit
     """
 
-    def __init__(self, binary_polynomial, p=1):
+    def __init__(self, binary_polynomial: BinaryQuadraticModel, description: str, p=1):
+        self.description = description
         self.binary_polynomial = binary_polynomial
         self.variables = sorted(list(binary_polynomial.variables))
 
@@ -455,7 +456,9 @@ class BinaryOptimizationProblem(Solver):
             adaptive_vqe_circuit, energy, gradient = opt.step_and_cost(
                 adaptive_vqe_circuit, operator_pool, drain_pool=True
             )
-            # print(f"Step {i}, Energy: {round(float(energy), 4)}, Gradient: {round(float(gradient), 4)}")
+            print(
+                f"Step {i} for problem {self.description} qubits: {self.n_qubits}, Energy: {round(float(energy), 4)}, Gradient: {round(float(gradient), 4)}"
+            )
 
             # Store rounded values
             circuit_qasm = qasm3.dumps(

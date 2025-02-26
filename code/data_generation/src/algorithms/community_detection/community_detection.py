@@ -1,11 +1,15 @@
 import dimod
 import networkx as nx
 
+from src.algorithms.qubo_problem import QuadradicUnconstrainedBinaryOptimization
+
 colors = ["gray", "blue", "red", "green", "magenta", "yellow", "purple", "black"]
 
 
-class CommunityDetection:
-    def __init__(self, graph, number_of_communities):
+class CommunityDetection(QuadradicUnconstrainedBinaryOptimization):
+    def __init__(self, graph, number_of_communities, description="Community Detection"):
+        super().__init__(description=description)
+
         self.graph = graph
         self.number_of_communities = number_of_communities
         self.max_weight = 0
