@@ -1,11 +1,13 @@
+import glob
+import itertools
 import json
 import os
-from typing import List
 import traceback
-import glob
+from typing import List
 
-from networkx.readwrite import json_graph
 from networkx import weisfeiler_lehman_graph_hash
+from networkx.readwrite import json_graph
+
 from src.algorithms.community_detection.community_detection import CommunityDetection
 from src.algorithms.connected_components.connected_component import (
     ConnectedComponentContainingNode,
@@ -18,20 +20,19 @@ from src.binary_optimization_problem import (
     BinaryOptimizationProblem,
 )
 from src.solver import (
+    AdaptiveProcess,
+    CommunityDetectionAttributes,
     ConnectedComponentAttributes,
+    ExactSolution,
     GraphColoringAttributes,
     GraphIsomorphismAttributes,
     KCliqueAttributes,
+    OptimizationProblem,
     OptimizationProblemType,
     OptimizationType,
-    AdaptiveProcess,
-    CommunityDetectionAttributes,
-    ExactSolution,
-    OptimizationProblem,
     QuantumSolution,
 )
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
-import itertools
 
 QUBIT_LIMIT = 17
 
