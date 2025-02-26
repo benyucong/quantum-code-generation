@@ -289,7 +289,7 @@ class DataGenerator:
         random.shuffle(tasks)
 
         # Use 90% of available CPU cores
-        n_workers = max(1, multiprocessing.cpu_count() * 0.9)
+        n_workers = max(1, int(multiprocessing.cpu_count() * 0.9))
         print(f"Using {n_workers} worker processes")
 
         with ProcessPoolExecutor(
