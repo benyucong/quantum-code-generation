@@ -1,13 +1,13 @@
 import glob
 import itertools
 import json
+import multiprocessing
 import os
 import random
 import time
 import traceback
-from typing import List
-import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
+from typing import List
 
 from networkx import weisfeiler_lehman_graph_hash
 from networkx.readwrite import json_graph
@@ -38,6 +38,7 @@ from src.solver import (
 )
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
 
+multiprocessing.set_start_method("spawn", force=True)
 QUBIT_LIMIT = 16
 
 
