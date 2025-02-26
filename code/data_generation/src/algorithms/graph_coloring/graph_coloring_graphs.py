@@ -71,7 +71,7 @@ def save_graphs_to_file(graphs, filename):
         pickle.dump(graphs, f)
 
 
-def generate_graphs(max_colors=10, max_nodes=10):
+def generate_graphs(max_colors=10, max_nodes=18):
     graphs = []
     graph_hashes = []
     for n_colors in range(3, max_colors + 1):

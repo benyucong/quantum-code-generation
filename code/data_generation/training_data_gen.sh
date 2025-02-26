@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=trainingdata_gen_batch
-#SBATCH --time=4:00:00
+#SBATCH --time=8:00:00
 #SBATCH --output=../../logs/trainingdata_gen_%A_%a.out
 #SBATCH --error=../../logs/trainingdata_gen_%A_%a.err
 #SBATCH --array=0-15
@@ -27,7 +27,7 @@ export JAX_PLATFORM_NAME="cpu"
 export JAX_ENABLE_X64=true
 
 PROBLEMS=("hypermaxcut" "community_detection" "graph_coloring" "connected_components")
-ANSATZ_OPTIONS=(1 5 12 13)
+ANSATZ_OPTIONS=(11 14 15 16)
 
 # Get counts
 NUM_ANSATZ=${#ANSATZ_OPTIONS[@]}   # 4

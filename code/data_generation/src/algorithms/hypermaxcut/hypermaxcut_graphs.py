@@ -4,7 +4,7 @@ import networkx as nx
 from src.algorithms.hypermaxcut.hypergraph import generate_random_hypergraph
 
 
-def generate_hypergraphs(min_num_nodes=3, max_num_nodes=10):
+def generate_hypergraphs(min_num_nodes=3, max_num_nodes=15):
     existing_hypergraphs = set()
     for n_nodes in range(min_num_nodes, max_num_nodes):
         max_num_hyperedges = n_nodes * (n_nodes - 1) // 2

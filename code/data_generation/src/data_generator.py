@@ -33,7 +33,6 @@ import itertools
 
 QUBIT_LIMIT = 17
 
-
 class DataGenerator:
     def __init__(
         self,
@@ -56,18 +55,6 @@ class DataGenerator:
 
         # Process the binary problems for each optimization type.
         self._process_problems(graph_data, self.ansatz_template)
-
-    # def _get_binary_polynomial(self, graph_data) -> BinaryQuadraticModel:
-    #     """
-    #     Converts graph data to a binary polynomial.
-    #     """
-    #     if self.problem == OptimizationProblemType.COMMUNITY_DETECTION:
-    #         # Here, we assume graph_data is a tuple: (graph, n_communities, size_communities)
-    #         graph, n_communities, size_communities = graph_data
-    #         p = CommunityDetection(graph, n_communities)
-    #         return p.get_binary_polynomial()
-    #     else:
-    #         raise ValueError("No binary polynomial defined for this problem type.")
 
     def _process_problem(
         self,
@@ -96,6 +83,7 @@ class DataGenerator:
             # If the problem is ConnectedComponents, graph_data is a graph
             graph, node, components = graph_data
             binary_polynomial = ConnectedComponentContainingNode(graph, node)
+            
         elif self.problem == OptimizationProblemType.GRAPH_COLORING:
             graph, n_colors, coloring = graph_data
             binary_polynomial = GraphColoring(graph, n_colors)

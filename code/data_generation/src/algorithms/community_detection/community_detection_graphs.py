@@ -50,7 +50,7 @@ def generate_community_graph(
     return G
 
 
-def generate_community_graphs(max_n_cliques=5, max_clique_size=5):
+def generate_community_graphs(max_n_cliques=6, max_clique_size=6):
     """
     Generate a set of community graphs.
 

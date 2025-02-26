@@ -37,7 +37,7 @@ def pick_random_node(components):
     return node
 
 
-def generate_graphs(max_nodes=18, min_components=2, max_components=6, iterations=100):
+def generate_graphs(max_nodes=18, min_components=2, max_components=8, iterations=100):
     graphs = []
     graph_hashes = []
 
