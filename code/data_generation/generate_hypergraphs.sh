@@ -3,7 +3,7 @@
 # Supported problems are: "hypermaxcut", "community_detection", "graph_coloring", "connected_components"
 # Supported ansatz templates are: 1 - 19
 
-problem="hypermaxcut"
+problem="community_detection"
 ansatz=13
 layers=1
 output_dir="out/"

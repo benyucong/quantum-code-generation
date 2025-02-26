@@ -33,8 +33,10 @@ from src.solver import (
     QuantumSolution,
 )
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
+import random
 
-QUBIT_LIMIT = 17
+QUBIT_LIMIT = 16
+
 
 class DataGenerator:
     def __init__(
@@ -224,24 +226,22 @@ class DataGenerator:
         """
         print(f"Processing problems for {len(graph_data)} graphs")
 
-        # --------- Filter out existing solutions ---------
+        # --------- Gather tasks and Filter out existing solutions ---------
         tasks = []
         for i, (graph, optimization_type) in enumerate(
             itertools.product(graph_data, list(OptimizationType))
         ):
-            # Get the signature for the current graph
-            if self.problem != OptimizationProblemType.HYPERMAXCUT:
-                signature = weisfeiler_lehman_graph_hash(
-                    graph[0] if isinstance(graph, tuple) else graph
-                )
+            graph_for_signature = (
+                graph[0] if isinstance(graph, tuple) else graph
+            )  # all networkx graphs are stored in a tuple, hypermaxcut graph is not
+            n_qubits = len(graph_for_signature.nodes)
+
+            # Calculate signature based on problem type
+            if self.problem == OptimizationProblemType.HYPERMAXCUT:
+                signature = hash(graph_for_signature)
             else:
-                signature = hash(graph)
+                signature = weisfeiler_lehman_graph_hash(graph_for_signature)
 
-            n_qubits = (
-                len(graph[0].nodes()) if isinstance(graph, tuple) else len(graph.nodes)
-            )
-
-            # Skip if solution already exists
             if self._solution_exists(signature, optimization_type, n_qubits):
                 print(
                     f"Skipping existing solution for signature {signature} with {optimization_type}"
@@ -251,7 +251,10 @@ class DataGenerator:
             tasks.append((i, graph, optimization_type))
 
         # --------- Process the remaining problems ---------
-        for i, graph, optimization_type in tasks:
+        random_order_tasks = tasks.copy()
+        random.shuffle(random_order_tasks)
+
+        for i, graph, optimization_type in random_order_tasks:
             try:
                 solution = self._process_problem(
                     graph,
