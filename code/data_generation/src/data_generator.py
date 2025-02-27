@@ -6,7 +6,7 @@ import os
 import random
 import time
 import traceback
-from concurrent.futures import ProcessPoolExecutor  # Change from ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
 from networkx import weisfeiler_lehman_graph_hash
