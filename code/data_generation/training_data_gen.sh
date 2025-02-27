@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=trainingdata_gen_batch
-#SBATCH --time=8:00:00
+#SBATCH --time=10:00:00
 #SBATCH --output=../../logs/trainingdata_gen_%A_%a.out
 #SBATCH --error=../../logs/trainingdata_gen_%A_%a.err
-#SBATCH --array=0-15
+#SBATCH --array=0-63
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=12
-#SBATCH --mem=50GB
+#SBATCH --mem=75GB
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
 
@@ -27,7 +27,7 @@ export JAX_PLATFORM_NAME="cpu"
 export JAX_ENABLE_X64=true
 
 PROBLEMS=("hypermaxcut" "community_detection" "graph_coloring" "connected_components")
-ANSATZ_OPTIONS=(11 14 15 16)
+ANSATZ_OPTIONS=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
 
 # Get counts
 NUM_ANSATZ=${#ANSATZ_OPTIONS[@]}   # 4
