@@ -324,7 +324,7 @@ class DataGenerator:
         tasks_other = [task for task in tasks if task[2] != OptimizationType.VQE]
 
         # Process VQE tasks in parallel
-        if False:
+        if tasks_vqe:
             print(f"Processing {len(tasks_vqe)} VQE tasks with multiprocessing")
             print(f"Using {n_workers} worker processes")
 
