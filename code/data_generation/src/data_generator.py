@@ -304,9 +304,7 @@ class DataGenerator:
         # Process VQE tasks in parallel using ThreadPoolExecutor
         if tasks_vqe:
             print(f"Processing {len(tasks_vqe)} VQE tasks with threading")
-            from concurrent.futures import (
-                ThreadPoolExecutor,
-            )  # Import only here to avoid JAX issues
+            from concurrent.futures import ThreadPoolExecutor
 
             print(f"Using {n_workers} worker processes")
 
@@ -320,7 +318,7 @@ class DataGenerator:
                             self.ansatz_template,
                             (i, len(graph_data)),
                         )
-                        if solution is not None:
+                        if solution:
                             self._save_solution(solution)
                     except Exception as exc:
                         print(f"Processing failed with exception: {exc}")
@@ -339,7 +337,7 @@ class DataGenerator:
                         self.ansatz_template,
                         (i, len(graph_data)),
                     )
-                    if solution is not None:
+                    if solution:
                         self._save_solution(solution)
                 except Exception as exc:
                     print(f"Processing failed with exception: {exc}")
