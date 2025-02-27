@@ -38,17 +38,39 @@ from src.solver import (
 )
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
 
+import jax.numpy as jnp
+import pennylane as qml
+
 multiprocessing.set_start_method("spawn", force=True)
 QUBIT_LIMIT = 16
 
 
-def _worker_init():
-    """Initialize JAX for each worker process"""
-    import jax
+def _get_device_type():
+    """Determine if GPU is available through JAX"""
+    try:
+        import jax
 
-    # Configure JAX
-    jax.config.update("jax_default_device", jax.devices("cpu")[0])
+        if len(jax.devices("gpu")) > 0:
+            return "gpu"
+    except:
+        pass
+    return "cpu"
+
+
+def _worker_init():
+    """Initialize JAX and PennyLane for each worker process"""
+    import jax
+    import pennylane as qml
+
+    device_type = _get_device_type()
+
+    if device_type == "gpu":
+        jax.config.update("jax_default_device", jax.devices("gpu")[0])
+    else:
+        jax.config.update("jax_default_device", jax.devices("cpu")[0])
+
     jax.config.update("jax_enable_x64", True)
+    qml.queuing.QueuingManager._active_contexts = []
 
 
 def _process_task(args):
@@ -109,6 +131,8 @@ class DataGenerator:
         self.output_path = output_path
         self.ansatz_template = ansatz_template
         self.layers = layers
+        self.device_type = _get_device_type()
+        print(f"Using device type: {self.device_type}")
 
     def generate_data(self) -> None:
         """
@@ -175,6 +199,7 @@ class DataGenerator:
             binary_polynomial=binary_polynomial.get_binary_polynomial(),
             description=self.problem,
             p=self.layers,
+            device_type=self.device_type,
         )
 
         # --------- Solve the problem using the specified optimization type ---------

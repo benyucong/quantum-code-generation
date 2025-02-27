@@ -22,10 +22,6 @@ from src.utils import (
     smallest_sparse_eigenpairs,
 )
 
-# Global flag to set a specific platform, must be used at startup.
-jax.config.update("jax_default_device", jax.devices("cpu")[0])
-jax.config.update("jax_enable_x64", True)
-
 
 class BinaryOptimizationProblem(Solver):
     """
@@ -34,7 +30,13 @@ class BinaryOptimizationProblem(Solver):
                     p: number of layers in the QAOA or VQE circuit
     """
 
-    def __init__(self, binary_polynomial: BinaryQuadraticModel, description: str, p=1):
+    def __init__(
+        self,
+        binary_polynomial: BinaryQuadraticModel,
+        description: str,
+        p=1,
+        device_type="cpu",
+    ):
         self.description = description
         self.binary_polynomial = binary_polynomial
         self.variables = sorted(list(binary_polynomial.variables))
@@ -54,6 +56,7 @@ class BinaryOptimizationProblem(Solver):
         self.smallest_bitstrings = None
         self.adaptive_circuits = []
         self.adaptive_gradients = []
+        self.device_type = device_type
 
         # This translates the binary polynomial to a spin Hamiltonian
         if isinstance(self.binary_polynomial, dimod.BinaryPolynomial):
@@ -103,8 +106,17 @@ class BinaryOptimizationProblem(Solver):
     def get_cost_hamiltonian(self):
         return self.cost_hamiltonian
 
+    def _create_quantum_device(self, n_qubits: int):
+        """Create appropriate quantum device based on available hardware"""
+        if self.device_type == "gpu":
+            try:
+                return qml.device("lightning.gpu", wires=n_qubits)
+            except:
+                return qml.device("lightning.qubit", wires=n_qubits)
+        return qml.device("lightning.qubit", wires=n_qubits)
+
     def get_qaoa_circuits(self):
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        dev = self._create_quantum_device(self.n_qubits)
 
         cost_hamiltonian = self.get_cost_hamiltonian()
         mixer_hamiltonian = qml.qaoa.x_mixer(range(self.n_qubits))
@@ -259,7 +271,7 @@ class BinaryOptimizationProblem(Solver):
         single_qubit_params_shape, two_qubit_params_shape = (
             ansatz.get_parameter_shapes()
         )
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        dev = self._create_quantum_device(self.n_qubits)
         cost_hamiltonian = self.get_cost_hamiltonian()
 
         if two_qubit_params_shape is None:
@@ -441,7 +453,7 @@ class BinaryOptimizationProblem(Solver):
                     operator_pool.append(qml.CRX(round(0.001, 4), wires=[i, j]))
                     operator_pool.append(qml.CRY(round(0.001, 4), wires=[i, j]))
 
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        dev = self._create_quantum_device(self.n_qubits)
         opt = qml.AdaptiveOptimizer()
         cost_hamiltonian = self.get_cost_hamiltonian()
 
