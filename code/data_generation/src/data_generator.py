@@ -6,7 +6,6 @@ import os
 import random
 import time
 import traceback
-from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
 from networkx import weisfeiler_lehman_graph_hash
@@ -50,27 +49,33 @@ def _worker_init():
     jax.config.update("jax_enable_x64", True)
 
 
-def _worker_process(args):
-    """Worker function to process a single optimization task"""
-    generator, task = args
-    i, graph, optimization_type = task
-    try:
-        solution = generator._process_problem(
-            graph,
-            optimization_type,
-            generator.ansatz_template,
-            (i, 1),
-        )
-        if solution:
-            generator._save_solution(solution)
-        return True
-    except Exception as exc:
-        print(f"Processing failed with exception: {exc}")
-        traceback.print_exc()
-        return False
-
-
 class DataGenerator:
+    """
+    A class for generating and processing optimization problem data.
+
+
+    Attributes:
+        problem (OptimizationProblemType): The type of optimization problem to process.
+        output_path (str): Directory path where the generated data will be saved.
+        ansatz_template (int): The template ID for the quantum circuit ansatz.
+        layers (int): Number of layers in the quantum circuit.
+
+    Methods:
+        generate_data(): Main method to generate and process optimization problems.
+        _process_problem(): Processes a single optimization problem instance.
+        _solution_exists(): Checks if a solution already exists in the output directory.
+        _process_problems(): Handles parallel processing of multiple optimization problems.
+        _save_solution(): Saves processed solution to disk.
+
+    Example:
+        generator = DataGenerator(
+            problem=OptimizationProblemType.COMMUNITY_DETECTION,
+            output_path="./data",
+            ansatz_template=1,
+            layers=2
+        generator.generate_data()
+    """
+
     def __init__(
         self,
         problem: OptimizationProblemType,
@@ -291,13 +296,54 @@ class DataGenerator:
 
         # Use 90% of available CPU cores
         n_workers = max(1, int(multiprocessing.cpu_count() * 0.9))
-        print(f"Using {n_workers} worker processes")
 
-        with ProcessPoolExecutor(
-            max_workers=n_workers, initializer=_worker_init
-        ) as executor:
-            args = [(self, task) for task in tasks]
-            list(executor.map(_worker_process, args))
+        # Separate tasks by optimization type
+        tasks_vqe = [task for task in tasks if task[2] == OptimizationType.VQE]
+        tasks_other = [task for task in tasks if task[2] != OptimizationType.VQE]
+
+        # Process VQE tasks in parallel using ThreadPoolExecutor
+        if tasks_vqe:
+            print(f"Processing {len(tasks_vqe)} VQE tasks with threading")
+            from concurrent.futures import (
+                ThreadPoolExecutor,
+            )  # Import only here to avoid JAX issues
+
+            print(f"Using {n_workers} worker processes")
+
+            with ThreadPoolExecutor(max_workers=n_workers) as executor:
+                for task in tasks_vqe:
+                    i, graph, optimization_type = task
+                    try:
+                        solution = self._process_problem(
+                            graph,
+                            optimization_type,
+                            self.ansatz_template,
+                            (i, len(graph_data)),
+                        )
+                        if solution is not None:
+                            self._save_solution(solution)
+                    except Exception as exc:
+                        print(f"Processing failed with exception: {exc}")
+                        traceback.print_exc()
+
+        # Process non-VQE tasks sequentially
+        if tasks_other:
+            print(f"Processing {len(tasks_other)} non-VQE tasks sequentially")
+            _worker_init()
+            for task in tasks_other:
+                i, graph, optimization_type = task
+                try:
+                    solution = self._process_problem(
+                        graph,
+                        optimization_type,
+                        self.ansatz_template,
+                        (i, len(graph_data)),
+                    )
+                    if solution is not None:
+                        self._save_solution(solution)
+                except Exception as exc:
+                    print(f"Processing failed with exception: {exc}")
+                    traceback.print_exc()
 
     def _save_solution(self, solution: OptimizationProblem):
         """
