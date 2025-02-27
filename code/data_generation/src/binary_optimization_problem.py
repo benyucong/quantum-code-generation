@@ -112,8 +112,8 @@ class BinaryOptimizationProblem(Solver):
             try:
                 return qml.device("lightning.gpu", wires=n_qubits)
             except:
-                return qml.device("lightning.qubit", wires=n_qubits)
-        return qml.device("lightning.qubit", wires=n_qubits)
+                return qml.device("'default.qubit'", wires=n_qubits)
+        return qml.device("default.qubit", wires=n_qubits)
 
     def get_qaoa_circuits(self):
         dev = self._create_quantum_device(self.n_qubits)
