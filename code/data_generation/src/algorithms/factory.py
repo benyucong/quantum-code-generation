@@ -41,16 +41,24 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
     print("Generating data for problem: ", problem)
 
     if problem == OptimizationProblemType.HYPERMAXCUT:
-        hypergraphs = generate_hypergraphs()
+        min_num_nodes, max_num_nodes = 3, 14
+        hypergraphs = generate_hypergraphs(min_num_nodes, max_num_nodes)
         return hypergraphs
     elif problem == OptimizationProblemType.COMMUNITY_DETECTION:
-        return generate_community_graphs()
+        max_n_cliques, max_size = 5, 5
+        return generate_community_graphs(max_n_cliques, max_size)
     elif problem == OptimizationProblemType.CONNECTED_COMPONENTS:
-        return generate_connected_components_graphs()
+        max_nodes, min_components, max_components, iterations = 15, 2, 6, 80
+        return generate_connected_components_graphs(
+            max_nodes, min_components, max_components, iterations
+        )
     elif problem == OptimizationProblemType.GRAPH_COLORING:
-        return generate_graph_coloring_graphs()
+        max_colors = 6
+        max_nodes = 14
+        return generate_graph_coloring_graphs(max_colors, max_nodes)
     elif problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
-        return generate_graph_isomorphism_graphs()
+        max_nodes = 8
+        return generate_graph_isomorphism_graphs(max_nodes)
     elif problem == OptimizationProblemType.K_CLIQUE:
         return generate_k_clique_graphs()
     else:
