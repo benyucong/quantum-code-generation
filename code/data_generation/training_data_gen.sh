@@ -22,7 +22,7 @@ pip install custatevec_cu12
 pip install pennylane-lightning-gpu
 
 # Add JAX configuration
-export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false --xla_force_host_platform_device_count=1"
+# export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false --xla_force_host_platform_device_count=1"
 export JAX_PLATFORM_NAME="cpu"
 export JAX_ENABLE_X64=true
 

@@ -6,6 +6,7 @@ import os
 import random
 import time
 import traceback
+from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
 from networkx import weisfeiler_lehman_graph_hash
@@ -45,8 +46,29 @@ def _worker_init():
     """Initialize JAX for each worker process"""
     import jax
 
+    # Configure JAX
     jax.config.update("jax_default_device", jax.devices("cpu")[0])
     jax.config.update("jax_enable_x64", True)
+
+
+def _process_task(args):
+    """Helper function to process a single task"""
+    generator, task = args
+    i, graph, optimization_type = task
+    try:
+        solution = generator._process_problem(
+            graph,
+            optimization_type,
+            generator.ansatz_template,
+            (i, 1),  # Individual progress not meaningful in parallel
+        )
+        if solution:
+            generator._save_solution(solution)
+        return True
+    except Exception as exc:
+        print(f"Processing failed with exception: {exc}")
+        traceback.print_exc()
+        return False
 
 
 class DataGenerator:
@@ -268,7 +290,7 @@ class DataGenerator:
         """
         print(f"Processing problems for {len(graph_data)} graphs")
 
-        # Gather tasks and Filter out existing solutions
+        # Gather tasks and filter out existing solutions
         tasks = []
         for i, (graph, optimization_type) in enumerate(
             itertools.product(graph_data, list(OptimizationType))
@@ -278,11 +300,11 @@ class DataGenerator:
             )  # all networkx graphs are stored in a tuple, hypermaxcut graph is not
             n_qubits = len(graph_for_signature.nodes)
 
-            # Calculate signature based on problem type
-            if self.problem == OptimizationProblemType.HYPERMAXCUT:
-                signature = hash(graph_for_signature)
-            else:
-                signature = weisfeiler_lehman_graph_hash(graph_for_signature)
+            signature = (
+                hash(graph_for_signature)
+                if self.problem == OptimizationProblemType.HYPERMAXCUT
+                else weisfeiler_lehman_graph_hash(graph_for_signature)
+            )
 
             if self._solution_exists(signature, optimization_type, n_qubits):
                 print(
@@ -294,54 +316,32 @@ class DataGenerator:
 
         random.shuffle(tasks)
 
-        # Use 90% of available CPU cores
-        n_workers = max(1, int(multiprocessing.cpu_count() * 0.9))
+        # Use 75% of available CPU cores to avoid memory issues
+        n_workers = max(1, int(multiprocessing.cpu_count() * 0.75))
 
         # Separate tasks by optimization type
         tasks_vqe = [task for task in tasks if task[2] == OptimizationType.VQE]
         tasks_other = [task for task in tasks if task[2] != OptimizationType.VQE]
 
-        # Process VQE tasks in parallel using ThreadPoolExecutor
+        # Process VQE tasks in parallel
         if tasks_vqe:
-            print(f"Processing {len(tasks_vqe)} VQE tasks with threading")
-            from concurrent.futures import ThreadPoolExecutor
-
+            print(f"Processing {len(tasks_vqe)} VQE tasks with multiprocessing")
             print(f"Using {n_workers} worker processes")
 
-            with ThreadPoolExecutor(max_workers=n_workers) as executor:
-                for task in tasks_vqe:
-                    i, graph, optimization_type = task
-                    try:
-                        solution = self._process_problem(
-                            graph,
-                            optimization_type,
-                            self.ansatz_template,
-                            (i, len(graph_data)),
-                        )
-                        if solution:
-                            self._save_solution(solution)
-                    except Exception as exc:
-                        print(f"Processing failed with exception: {exc}")
-                        traceback.print_exc()
+            with ProcessPoolExecutor(max_workers=n_workers) as executor:
+                args = [(self, task) for task in tasks_vqe]
+                # Process tasks in smaller batches to manage memory better
+                batch_size = max(1, len(args) // n_workers)
+                for i in range(0, len(args), batch_size):
+                    batch = args[i : i + batch_size]
+                    list(executor.map(_process_task, batch))
 
         # Process non-VQE tasks sequentially
         if tasks_other:
             print(f"Processing {len(tasks_other)} non-VQE tasks sequentially")
-            _worker_init()
+            _worker_init()  # Initialize JAX for sequential processing
             for task in tasks_other:
-                i, graph, optimization_type = task
-                try:
-                    solution = self._process_problem(
-                        graph,
-                        optimization_type,
-                        self.ansatz_template,
-                        (i, len(graph_data)),
-                    )
-                    if solution:
-                        self._save_solution(solution)
-                except Exception as exc:
-                    print(f"Processing failed with exception: {exc}")
-                    traceback.print_exc()
+                _process_task((self, task))
 
     def _save_solution(self, solution: OptimizationProblem):
         """
