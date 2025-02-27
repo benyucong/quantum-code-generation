@@ -311,7 +311,7 @@ class DataGenerator:
         ansatz_template: int,
     ) -> None:
         """
-        Processes optimization problems in parallel using multiple CPU cores.
+        Processes optimization problems using either parallel (CPU) or sequential (GPU) execution.
         """
         print(f"Processing problems for {len(graph_data)} graphs")
 
@@ -320,9 +320,7 @@ class DataGenerator:
         for i, (graph, optimization_type) in enumerate(
             itertools.product(graph_data, list(OptimizationType))
         ):
-            graph_for_signature = (
-                graph[0] if isinstance(graph, tuple) else graph
-            )  # all networkx graphs are stored in a tuple, hypermaxcut graph is not
+            graph_for_signature = graph[0] if isinstance(graph, tuple) else graph
             n_qubits = len(graph_for_signature.nodes)
 
             signature = (
@@ -339,10 +337,23 @@ class DataGenerator:
 
             tasks.append((i, graph, optimization_type))
 
+        if not tasks:
+            print("No tasks to process")
+            return
+
         random.shuffle(tasks)
 
-        # Use 75% of available CPU cores to avoid memory issues
+        # ---------- GPU execution: process all tasks sequentially ----------
+        if self.device_type == "gpu":
+            print(f"Using GPU - processing {len(tasks)} tasks sequentially")
+            _worker_init()  # Initialize JAX for GPU
+            for task in tasks:
+                _process_task((self, task))
+            return
+
+        # ---------- CPU execution: process tasks in parallel ----------
         n_workers = max(1, int(multiprocessing.cpu_count() * 0.75))
+        print(f"Using CPU - processing {len(tasks)} tasks with {n_workers} workers")
 
         # Separate tasks by optimization type
         tasks_vqe = [task for task in tasks if task[2] == OptimizationType.VQE]
@@ -350,12 +361,11 @@ class DataGenerator:
 
         # Process VQE tasks in parallel
         if tasks_vqe:
-            print(f"Processing {len(tasks_vqe)} VQE tasks with multiprocessing")
-            print(f"Using {n_workers} worker processes")
-
-            with ProcessPoolExecutor(max_workers=n_workers) as executor:
+            print(f"Processing {len(tasks_vqe)} VQE tasks in parallel")
+            with ProcessPoolExecutor(
+                max_workers=n_workers, initializer=_worker_init
+            ) as executor:
                 args = [(self, task) for task in tasks_vqe]
-                # Process tasks in smaller batches to manage memory better
                 batch_size = max(1, len(args) // n_workers)
                 for i in range(0, len(args), batch_size):
                     batch = args[i : i + batch_size]
@@ -364,7 +374,7 @@ class DataGenerator:
         # Process non-VQE tasks sequentially
         if tasks_other:
             print(f"Processing {len(tasks_other)} non-VQE tasks sequentially")
-            _worker_init()  # Initialize JAX for sequential processing
+            _worker_init()
             for task in tasks_other:
                 _process_task((self, task))
 
