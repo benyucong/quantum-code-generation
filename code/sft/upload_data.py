@@ -3,7 +3,7 @@ import json
 import re
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Dict, Any, List
-from datasets import Dataset, DatasetDict
+from datasets import Dataset, DatasetDict, Features, Value
 from huggingface_hub import login
 
 
@@ -25,12 +25,12 @@ class QuantumCase:
     problem_type: str
     optimization_type: str
     graph: Dict
+    solution: Dict
     cost_hamiltonian: Optional[str] = None
     ansatz_id: Optional[int] = None
     number_of_qubits: Optional[int] = None
     number_of_layers: Optional[int] = None
     exact_solution: Optional[Dict[str, Any]] = field(default_factory=dict)
-    solution: Dict
     circuit_with_params: Optional[str] = None
     circuit_with_symbols: Optional[str] = None
     problem_specific_attributes: Optional[Dict] = field(default_factory=dict)
@@ -112,8 +112,37 @@ def main():
     # Convert the list of dataclass instances into a list of dictionaries.
     records = [asdict(case) for case in quantum_cases]
 
-    # Make Huggingface Dataset
-    dataset = Dataset.from_list(records)
+    features = Features(
+        {
+            "signature": Value("string"),
+            "problem_type": Value("string"),
+            "optimization_type": Value("string"),
+            "graph": Value("string"),
+            "solution": Value("string"),
+            "cost_hamiltonian": Value("string"),
+            "ansatz_id": Value("int64"),
+            "number_of_qubits": Value("int64"),
+            "number_of_layers": Value("int64"),
+            "exact_solution": Value("string"),
+            "circuit_with_params": Value("string"),
+            "circuit_with_symbols": Value("string"),
+            "problem_specific_attributes": Value("string"),
+            "adaptive_process": Value("string"),
+        }
+    )
+
+    for record in records:
+        for field_key in [
+            "graph",
+            "solution",
+            "exact_solution",
+            "problem_specific_attributes",
+            "adaptive_process",
+        ]:
+            if record.get(field_key) is not None:
+                record[field_key] = json.dumps(record[field_key])
+
+    dataset = Dataset.from_list(records, features=features)
     split_dataset = dataset.train_test_split(test_size=0.1, shuffle=True, seed=42)
 
     dataset_dict = DatasetDict(
@@ -124,8 +153,6 @@ def main():
     repo_id = "linuzj/hypergraph-max-cut-quantum"
     print(f"Uploading dataset to Hugging Face Hub repository '{repo_id}'...")
     try:
-        # If you have set your HF token via the CLI or environment variable,
-        # you can simply call push_to_hub without a token parameter.
         dataset_dict.push_to_hub(repo_id)
         print("Upload successful!")
     except Exception as e:
