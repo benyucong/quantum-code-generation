@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Dict
 import re
 from datasets import load_dataset
@@ -7,6 +8,39 @@ from functools import partial
 QUERY_TEMPLATE_NOANSWER = """{Question}""".strip()
 
 
+class CommunityDetectionAttributes:
+    communities_size: int
+    number_of_communities: int
+
+
+class ConnectedComponentAttributes:
+    node: str
+
+
+class GraphColoringAttributes:
+    number_of_colors: int
+
+
+class GraphIsomorphismAttributes:
+    number_of_colors: int
+
+
+class OptimizationProblemType(str, Enum):
+    """
+    Enum class representing different types of optimization problems.
+
+    Attributes:
+        HYPERGRAPH_CUT (str): Represents the hypergraph cut optimization problem type.
+    """
+
+    CONNECTED_COMPONENTS = "connected_components"
+    COMMUNITY_DETECTION = "community_detection"
+    K_CLIQUE = "kclique"
+    HYPERMAXCUT = "hypermaxcut"
+    GRAPH_ISOMORPHISM = "graph_isomorphism"
+    GRAPH_COLORING = "graph_coloring"
+
+
 def preprocess(text):
     if text is None:
         return " "
@@ -14,6 +48,20 @@ def preprocess(text):
     text = text.replace(" [title]", ". ")
     text = text.replace("  ", " ")
     return text
+
+
+def generate_problem_specific_text(
+    problem: OptimizationProblemType, attributes: Dict
+) -> str:
+    if problem == OptimizationProblemType.COMMUNITY_DETECTION:
+        return f"with {attributes['community_size']} sized communities and {attributes['number_of_communities']} communities"
+    elif problem == OptimizationProblemType.CONNECTED_COMPONENTS:
+        return f"with {attributes['nodes']} nodes"
+    elif problem == OptimizationProblemType.GRAPH_COLORING:
+        return f"with {attributes['number_of_colors']} colors"
+    elif problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
+        return f"with {attributes['number_of_colors']} colors"
+    return ""
 
 
 def process_graph_example(example: Dict) -> Dict:
@@ -26,10 +74,13 @@ def process_graph_example(example: Dict) -> Dict:
     optimization_type = example["optimization_type"]
     problem_type = example["problem_type"]
 
+    problem_specific_text = generate_problem_specific_text(
+        problem_type, example["problem_specific_attributes"]
+    )
     question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
-        " layers with optimal parameters that solves the {problem_type} for "
-        "the following graph: {graph}. Then ensure that the final answer is correct and in valid QASM 3.0 code."
+        f" layers with optimal parameters that solves the {problem_type} {problem_specific_text} for "
+        f"the following graph: {graph}. Then ensure that the final answer is correct and in valid QASM 3.0 code."
     )
     polynom_question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
