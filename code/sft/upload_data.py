@@ -21,17 +21,20 @@ def preprocess(text):
 
 @dataclass
 class QuantumCase:
+    signature: str
+    problem_type: str
+    optimization_type: str
+    graph: Dict
+    cost_hamiltonian: Optional[str] = None
     ansatz_id: Optional[int] = None
-    optimization_type: str = None
     number_of_qubits: Optional[int] = None
     number_of_layers: Optional[int] = None
-    cost_hamiltonian: Optional[str] = None
     exact_solution: Optional[Dict[str, Any]] = field(default_factory=dict)
-    vqe_solution: Optional[Dict[str, Any]] = field(default_factory=dict)
-    qaoa_solution: Optional[Dict[str, Any]] = field(default_factory=dict)
-    hypergraph: Optional[Dict[str, Any]] = field(default_factory=dict)
+    solution: Dict
     circuit_with_params: Optional[str] = None
     circuit_with_symbols: Optional[str] = None
+    problem_specific_attributes: Optional[Dict] = field(default_factory=dict)
+    adaptive_process: Optional[Dict] = field(default_factory=dict)
 
     def preprocess(self):
         """
@@ -74,17 +77,20 @@ def create_quantum_cases(data: Any) -> List[QuantumCase]:
 
     for item in data:
         instance = QuantumCase(
-            ansatz_id=item.get("ansatz_id"),
+            signature=item.get("signature"),
+            problem_type=item.get("problem_type"),
             optimization_type=item.get("optimization_type"),
+            graph=item.get("hypergraph", {}),
+            cost_hamiltonian=item.get("cost_hamiltonian"),
+            ansatz_id=item.get("ansatz_id"),
             number_of_qubits=item.get("number_of_qubits"),
             number_of_layers=item.get("number_of_layers"),
-            cost_hamiltonian=item.get("cost_hamiltonian"),
             exact_solution=item.get("exact_solution", {}),
-            vqe_solution=item.get("vqe_solution", {}),
-            qaoa_solution=item.get("qaoa_solution", {}),
-            hypergraph=item.get("hypergraph", {}),
+            solution=item.get("solution", {}),
             circuit_with_params=item.get("circuit_with_params"),
             circuit_with_symbols=item.get("circuit_with_symbols"),
+            problem_specific_attributes=item.get("problem_specific_attributes", {}),
+            adaptive_process=item.get("adaptive_process", {}),
         )
         instance.preprocess()
         cases.append(instance)
@@ -96,7 +102,7 @@ def main():
     data = load_json_data(filename)
     if data is None:
         return
-    
+
     token = os.environ.get("HUGGINGFACE_HUB_TOKEN", "NULL")
     login(token)
 
