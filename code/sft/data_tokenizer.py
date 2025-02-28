@@ -16,19 +16,20 @@ def preprocess(text):
     return text
 
 
-def process_hypergraph_example(example: Dict) -> Dict:
+def process_graph_example(example: Dict) -> Dict:
     n_qubits = example["number_of_qubits"]
     n_layers = example["number_of_layers"]
-    hypergraph = example["hypergraph"]
+    graph = example["graph"]
     circuit_with_params = example["circuit_with_params"]
     circuit_with_symbols = example["circuit_with_symbols"]
 
     optimization_type = example["optimization_type"]
+    problem_type = example["problem_type"]
 
     question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
-        " layers with optimal parameters that solve the hypergraph max-cut problem using {optimization_type} for "
-        "the following hypergraph: {hypergraph}. Then ensure that the final answer is correct and in valid QASM 3.0 code."
+        " layers with optimal parameters that solves the {problem_type} for "
+        "the following graph: {graph}. Then ensure that the final answer is correct and in valid QASM 3.0 code."
     )
     polynom_question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
@@ -54,9 +55,9 @@ def process_hypergraph_example(example: Dict) -> Dict:
 
 
 def process_example(example: Dict, tokenizer):
-    hypergraph_data = process_hypergraph_example(example)
-    question = hypergraph_data["question"]
-    answer = hypergraph_data["answer"]
+    graph_data = process_graph_example(example)
+    question = graph_data["question"]
+    answer = graph_data["answer"]
 
     if "Answer:" not in answer:
         answer = "Answer: " + answer
@@ -68,7 +69,7 @@ def process_example(example: Dict, tokenizer):
             {"role": "user", "content": prompt},
             {
                 "role": "assistant",
-                "content": "\n<|im_start|>answer\n" + answer.strip(),
+                "content": "\n<|im_start|>\n" + answer.strip(),
             },
         ],
         tokenize=False,
