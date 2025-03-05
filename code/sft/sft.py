@@ -20,7 +20,7 @@ class TrainingConfig:
     block_size: int = field(default=10000)
     wandb_project: Optional[str] = field(default="quantum-circuit-generation")
     train_file_path: Optional[str] = field(
-        default="linuzj/hypergraph-max-cut-quantum_tokenized"
+        default="linuzj/graph-data-quantum_tokenized"
     )
     dagger: bool = field(default=False)
 

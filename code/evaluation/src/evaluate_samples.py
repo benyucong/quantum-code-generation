@@ -128,8 +128,7 @@ def process_circuits(
         sample["statevector"] = None
         sample["parse_error"] = None
         sample["simulation_error"] = None
-        sample["qaoa_comparison"] = None
-        sample["vqe_comparison"] = None
+        sample["comparison"] = None
 
         if not generated_qasm:
             sample["parse_error"] = "No 'generated_circuit' field found."
@@ -172,23 +171,18 @@ def process_circuits(
 
         # ---- 3) Compare with pre-computed ----
         if sample["simulation_error"] is None:
-            if sample["dataset_metrics"]["optimization_type"] == "qaoa":
-                sample["qaoa_comparison"] = compare_solution(
-                    probs, sample["dataset_metrics"]["qaoa_solution"]
-                )
-            else:
-                sample["vqe_comparison"] = compare_solution(
-                    probs, sample["dataset_metrics"]["vqe_solution"]
-                )
+            sample["qaoa_comparison"] = compare_solution(
+                probs, sample["dataset_metrics"]["solution"]
+            )
 
         # ---- 4) Compare Iteration Count to Optimal Solution ----
-        stats = optimize_problem(
-            circuit,
-            sample["dataset_metrics"]["cost_hamiltonian"],
-            sample["dataset_metrics"]["optimization_type"],
-        )
+        # stats = optimize_problem(
+        #     circuit,
+        #     sample["dataset_metrics"]["cost_hamiltonian"],
+        #     sample["dataset_metrics"]["optimization_type"],
+        # )
 
-        print(stats)
+        # print(stats)
         results.append(sample)
 
     # ---- 5) Summary Statistics ----
@@ -206,7 +200,7 @@ def process_circuits(
     samples_below_threshold = []
     for sample in results:
         if sample.get("simulation_error") is None:
-            comp = sample.get("qaoa_comparison") or sample.get("vqe_comparison")
+            comp = sample.get("comparison")
             if comp and "relative_entropy" in comp:
                 if comp["relative_entropy"] < relative_entropy_threshold:
                     samples_below_threshold.append(sample["sample_index"])

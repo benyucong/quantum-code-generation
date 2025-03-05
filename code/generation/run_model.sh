@@ -23,7 +23,7 @@ pip install -r requirements.txt
 model="20250218_214344"
 
 uid="$(date +%Y%m%d_%H%M%S)"
-model_path="../sft/data/checkpoints/${model}/checkpoint-30000"
+model_path="../sft/data/checkpoints/${model}"
 
 python3 run_model.py \
     --uid=${uid} \

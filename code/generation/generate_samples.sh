@@ -20,11 +20,11 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 
-model="20250218_214344"
-n_samples=250
+model="20250228_204928"
+n_samples=25
 
 uid="$(date +%Y%m%d_%H%M%S)"
-model_path="../sft/data/checkpoints/${model}/checkpoint-30000"
+model_path="../sft/data/checkpoints/${model}"
 
 python3 -u generate_samples.py \
     --uid=${uid} \

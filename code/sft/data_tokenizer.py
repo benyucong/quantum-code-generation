@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Dict
 import re
+import ast
 from datasets import load_dataset
 from transformers import AutoTokenizer
 from functools import partial
@@ -8,37 +9,37 @@ from functools import partial
 QUERY_TEMPLATE_NOANSWER = """{Question}""".strip()
 
 
-class CommunityDetectionAttributes:
-    communities_size: int
-    number_of_communities: int
+# class CommunityDetectionAttributes:
+#     communities_size: int
+#     number_of_communities: int
 
 
-class ConnectedComponentAttributes:
-    node: str
+# class ConnectedComponentAttributes:
+#     node: str
 
 
-class GraphColoringAttributes:
-    number_of_colors: int
+# class GraphColoringAttributes:
+#     number_of_colors: int
 
 
-class GraphIsomorphismAttributes:
-    number_of_colors: int
+# class GraphIsomorphismAttributes:
+#     number_of_colors: int
 
 
-class OptimizationProblemType(str, Enum):
-    """
-    Enum class representing different types of optimization problems.
+# class OptimizationProblemType(str, Enum):
+#     """
+#     Enum class representing different types of optimization problems.
 
-    Attributes:
-        HYPERGRAPH_CUT (str): Represents the hypergraph cut optimization problem type.
-    """
+#     Attributes:
+#         HYPERGRAPH_CUT (str): Represents the hypergraph cut optimization problem type.
+#     """
 
-    CONNECTED_COMPONENTS = "connected_components"
-    COMMUNITY_DETECTION = "community_detection"
-    K_CLIQUE = "kclique"
-    HYPERMAXCUT = "hypermaxcut"
-    GRAPH_ISOMORPHISM = "graph_isomorphism"
-    GRAPH_COLORING = "graph_coloring"
+#     CONNECTED_COMPONENTS = "connected_components"
+#     COMMUNITY_DETECTION = "community_detection"
+#     K_CLIQUE = "kclique"
+#     HYPERMAXCUT = "hypermaxcut"
+#     GRAPH_ISOMORPHISM = "graph_isomorphism"
+#     GRAPH_COLORING = "graph_coloring"
 
 
 def preprocess(text):
@@ -51,15 +52,16 @@ def preprocess(text):
 
 
 def generate_problem_specific_text(
-    problem: OptimizationProblemType, attributes: Dict
+    problem: str, attributes: Dict
 ) -> str:
-    if problem == OptimizationProblemType.COMMUNITY_DETECTION:
-        return f"with {attributes['community_size']} sized communities and {attributes['number_of_communities']} communities"
-    elif problem == OptimizationProblemType.CONNECTED_COMPONENTS:
-        return f"with {attributes['nodes']} nodes"
-    elif problem == OptimizationProblemType.GRAPH_COLORING:
+    attributes = ast.literal_eval(attributes)
+    if problem == "community_detection":
+        return f"with {attributes['communities_size']} sized communities and {attributes['number_of_communities']} communities"
+    elif problem == "connected_components":
+        return f"for node {attributes['node']}"
+    elif problem == "graph_coloring":
         return f"with {attributes['number_of_colors']} colors"
-    elif problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
+    elif problem == "graph_isomorphism":
         return f"with {attributes['number_of_colors']} colors"
     return ""
 
@@ -74,9 +76,12 @@ def process_graph_example(example: Dict) -> Dict:
     optimization_type = example["optimization_type"]
     problem_type = example["problem_type"]
 
-    problem_specific_text = generate_problem_specific_text(
-        problem_type, example["problem_specific_attributes"]
-    )
+    problem_specific_text = ""
+    if example["problem_specific_attributes"]:
+        problem_specific_text = generate_problem_specific_text(
+            problem_type, example["problem_specific_attributes"]
+        )
+    
     question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
         f" layers with optimal parameters that solves the {problem_type} {problem_specific_text} for "
@@ -156,7 +161,7 @@ def tokenize_examples_for_sft(
 
 if __name__ == "__main__":
     tokenize_examples_for_sft(
-        download_data_path="linuzj/hypergraph-max-cut-quantum",
-        upload_data_path="linuzj/hypergraph-max-cut-quantum_tokenized",
+        download_data_path="linuzj/graph-data-quantum",
+        upload_data_path="linuzj/graph-data-quantum_tokenized",
         num_proc=20,
     )
