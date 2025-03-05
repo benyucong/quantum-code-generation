@@ -48,16 +48,16 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
         max_n_cliques, max_size = 5, 5
         return generate_community_graphs(max_n_cliques, max_size)
     elif problem == OptimizationProblemType.CONNECTED_COMPONENTS:
-        max_nodes, min_components, max_components, iterations = 15, 2, 6, 80
+        max_nodes, min_components, max_components, iterations = 16, 2, 8, 100
         return generate_connected_components_graphs(
             max_nodes, min_components, max_components, iterations
         )
     elif problem == OptimizationProblemType.GRAPH_COLORING:
         max_colors = 6
-        max_nodes = 14
+        max_nodes = 16
         return generate_graph_coloring_graphs(max_colors, max_nodes)
     elif problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
-        max_nodes = 8
+        max_nodes = 10
         return generate_graph_isomorphism_graphs(max_nodes)
     elif problem == OptimizationProblemType.K_CLIQUE:
         return generate_k_clique_graphs()

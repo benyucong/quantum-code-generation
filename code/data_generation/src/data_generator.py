@@ -60,7 +60,6 @@ def _get_device_type():
 def _worker_init():
     """Initialize JAX and PennyLane for each worker process"""
     import jax
-    import pennylane as qml
 
     device_type = _get_device_type()
 
@@ -70,7 +69,6 @@ def _worker_init():
         jax.config.update("jax_default_device", jax.devices("cpu")[0])
 
     jax.config.update("jax_enable_x64", True)
-    qml.queuing.QueuingManager._active_contexts = []
 
 
 def _process_task(args):
@@ -342,6 +340,12 @@ class DataGenerator:
             return
 
         random.shuffle(tasks)
+        # sort tasks by graph size (number of nodes) to start with easier problems
+        tasks.sort(
+            key=lambda task: len(
+                task[1][0].nodes if isinstance(task[1], tuple) else task[1].nodes
+            )
+        )
 
         # ---------- GPU execution: process all tasks sequentially ----------
         if self.device_type == "gpu":
@@ -352,7 +356,7 @@ class DataGenerator:
             return
 
         # ---------- CPU execution: process tasks in parallel ----------
-        n_workers = max(1, int(multiprocessing.cpu_count() * 0.75))
+        n_workers = max(1, int(multiprocessing.cpu_count() * 0.20))
         print(f"Using CPU - processing {len(tasks)} tasks with {n_workers} workers")
 
         # Separate tasks by optimization type
@@ -360,7 +364,7 @@ class DataGenerator:
         tasks_other = [task for task in tasks if task[2] != OptimizationType.VQE]
 
         # Process VQE tasks in parallel
-        if tasks_vqe:
+        if False:
             print(f"Processing {len(tasks_vqe)} VQE tasks in parallel")
             with ProcessPoolExecutor(
                 max_workers=n_workers, initializer=_worker_init

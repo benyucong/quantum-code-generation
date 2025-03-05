@@ -80,7 +80,7 @@ def create_quantum_cases(data: Any) -> List[QuantumCase]:
             signature=item.get("signature"),
             problem_type=item.get("problem_type"),
             optimization_type=item.get("optimization_type"),
-            graph=item.get("hypergraph", {}),
+            graph=item.get("graph", {}),
             cost_hamiltonian=item.get("cost_hamiltonian"),
             ansatz_id=item.get("ansatz_id"),
             number_of_qubits=item.get("number_of_qubits"),
@@ -98,7 +98,7 @@ def create_quantum_cases(data: Any) -> List[QuantumCase]:
 
 
 def main():
-    filename = "data/all_data.json"
+    filename = "data/merged.json"
     data = load_json_data(filename)
     if data is None:
         return
@@ -150,7 +150,7 @@ def main():
     )
 
     # Upload
-    repo_id = "linuzj/hypergraph-max-cut-quantum"
+    repo_id = "linuzj/graph-data-quantum"
     print(f"Uploading dataset to Hugging Face Hub repository '{repo_id}'...")
     try:
         dataset_dict.push_to_hub(repo_id)
