@@ -37,8 +37,8 @@ def is_most_probable_state_correct(
     """
     Check if the most probable state obtained from the simulation is correct.
     """
-    sol = json.loads(sample["dataset_metrics"]["solution"])
-    return most_probable_state in sol["bitstrings"]
+    most_probable_states_bitstrings = sample["dataset_metrics"]["solution"]["bitstrings"]
+    return most_probable_state in most_probable_states_bitstrings
 
 
 def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
@@ -117,6 +117,9 @@ def process_circuits(
     simulator = AerSimulator(method="statevector")
 
     for idx, sample in enumerate(data):
+        # Becuase json.loads is not recursive parse
+        sample["dataset_metrics"]["solution"] = json.loads(sample["dataset_metrics"]["solution"])
+        
         generated_qasm = sample.get("generated_circuit", "")
 
         # ---- Init new params ----
@@ -168,7 +171,7 @@ def process_circuits(
         # ---- 3) Compare with pre-computed ----
         if sample["simulation_error"] is None:
             sample["comparison"] = compare_solution(
-                probs, json.loads(sample["dataset_metrics"]["solution"])
+                probs, sample["dataset_metrics"]["solution"]
             )
 
         # ---- 4) Compare Iteration Count to Optimal Solution ----

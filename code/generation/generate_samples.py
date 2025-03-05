@@ -33,6 +33,8 @@ def main():
         problem_type = sample.get("problem_type")
         attrs = sample.get("problem_specific_attributes")
 
+        id = sample.get("signature")
+
         optimal_circuit_with_params = sample.get("circuit_with_params")
         
         prompt = (
@@ -61,6 +63,7 @@ def main():
             generated_circuit = generated_text
 
         sample_result = {
+            "signature": id,
             "sample_index": idx,
             "dataset_metrics": {
                 "n_qubits": n_qubits,
