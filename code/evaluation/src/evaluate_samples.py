@@ -303,9 +303,6 @@ def process_circuits(
 
 def main():
     if len(sys.argv) < 2:
-        print(
-            "Usage: python validate_qasm.py <input_json_file> [<output_json_file>] [<summary_output_file>]"
-        )
         sys.exit(1)
 
     input_file = sys.argv[1]
