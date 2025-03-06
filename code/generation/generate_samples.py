@@ -9,7 +9,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate quantum circuit outputs for dataset samples")
     parser.add_argument("--uid", type=str, required=True, help="Unique identifier for output file")
     parser.add_argument("--model_path", type=str, required=True, help="Path to the model checkpoint (or model name)")
-    parser.add_argument("--n_samples", type=int, required=False, default=100, help="Amount of samples to generate. Default 100")
+    parser.add_argument("--n_samples", type=int, required=False, help="Amount of samples to generate. Default 100")
     args = parser.parse_args()
 
     if torch.cuda.is_available():
@@ -84,7 +84,7 @@ def main():
         results.append(sample_result)
         print(f"Processed sample {idx} (generation took {generation_time:.2f} seconds)")
 
-        if idx >= args.n_samples:
+        if args.n_samples and idx >= args.n_samples:
             break
 
     output_file_name = f"out/quantum_circuits_output_{args.uid}.json"

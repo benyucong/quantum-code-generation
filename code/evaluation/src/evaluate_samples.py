@@ -20,11 +20,11 @@ def int_to_bitstring(i: int, n_qubits: int) -> str:
 
 def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulator):
     """
-    Get the probaility distribution for a circuit
+    Get the probability distribution for a circuit.
 
     Args:
         circuit (QuantumCircuit): The Qiskit quantum circuit to simulate.
-        simulator (AerSimulator): The Simulator. 
+        simulator (AerSimulator): The Simulator.
 
     Returns:
         list: probabilities
@@ -36,7 +36,6 @@ def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulato
     statevector = result.get_statevector(experiment=sim_circuit)  
 
     probs = statevector.probabilities().tolist()
-
     return probs
 
 def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
@@ -46,18 +45,15 @@ def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
 
     Args:
         circuit (QuantumCircuit): The Qiskit quantum circuit to simulate.
-        simulator (AerSimulator): The Simulator. 
+        simulator (AerSimulator): The Simulator.
 
     Returns:
         tuple: (probabilities, most_probable_bitstring)
     """
     probs = get_probability_distribution(circuit, simulator)
-
     most_probable_state_index = np.argmax(probs)
     bitstring = int_to_bitstring(most_probable_state_index, circuit.num_qubits)
-
     return probs, bitstring
-
 
 def evaluate_statistics(results: List) -> None:
     total_samples = len(results)
@@ -71,7 +67,6 @@ def evaluate_statistics(results: List) -> None:
     print(f"Circuits that compiled successfully: {compiled_count}")
     print(f"Circuits with correct state: {correct_state_count}\n")
 
-
 def is_most_probable_state_correct(
     sample: Dict[str, Any], most_probable_state: str
 ) -> bool:
@@ -80,7 +75,6 @@ def is_most_probable_state_correct(
     """
     most_probable_states_bitstrings = sample["dataset_metrics"]["solution"]["bitstrings"]
     return most_probable_state in most_probable_states_bitstrings
-
 
 def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
     """
@@ -114,25 +108,58 @@ def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
 
     return circuit
 
+def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
+    """
+    Creates a new circuit with the same structure, but with random parameters
+    Args:
+        circuit (QuantumCircuit): The circuit to randomize.
 
-def compare_solution(sim_probs, solution_probs):
+    Returns:
+        QuantumCircuit: A new circuit with randomized parameters.
+    """
+    new_circ = QuantumCircuit(circuit.num_qubits, circuit.num_clbits)
+    for instr in circuit.data:
+        op = instr.operation
+        qubits = instr.qubits
+        clbits = instr.clbits
+
+        # Since the operation gates are immutable -> make mutable
+        if hasattr(op, "to_mutable"):
+            mutable_op = op.to_mutable()
+        else:
+            mutable_op = op
+
+        # If the operation has parameters, randomize them.
+        if mutable_op.params:
+            new_params = [np.random.uniform(0, 2*np.pi) for _ in mutable_op.params]
+            mutable_op.params = new_params
+
+        new_circ.append(mutable_op, qubits, clbits)
+    return new_circ
+
+def compare_solution(sim_probs, solution_probs, circuit, simulator):
     """
     Compares simulated probabilities with the solution probabilities.
-    Also computes the relative entropy for a uniform (random initial) distribution.
+    Alse compares with a circuit with random parameters 
+
+    Args:
+        sim_probs (list): Probability distribution from the original circuit.
+        solution_probs (list): Probability distribution from the solution circuit.
+        circuit (QuantumCircuit): The original generated circuit.
+        simulator (AerSimulator): The simulator to use.
+
+    Returns:
+        dict: Contains the relative entropy for the original circuit and the
+              relative entropy for the randomized circuit.
     """
     relative_entropy = compute_relative_entropy(sim_probs, solution_probs)
-
-    # Create a uniform probability distribution for the random initial state
-    num_states = len(solution_probs)
-    random_probs = np.random.rand(num_states)
-    random_probs = random_probs / np.sum(random_probs)
-    random_relative_entropy = compute_relative_entropy(random_probs, solution_probs)
+    randomized_circuit = randomize_circuit(circuit)
+    randomized_probs = get_probability_distribution(randomized_circuit, simulator)
+    random_relative_entropy = compute_relative_entropy(randomized_probs, solution_probs)
     return {
         "relative_entropy": relative_entropy,
         "random_relative_entropy": random_relative_entropy,
     }
-
-
 
 def process_circuits(
     json_file: str, output_file=None, summary_file=None, relative_entropy_threshold=0.1
@@ -150,16 +177,14 @@ def process_circuits(
     with open(json_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-
     results = []
     simulator = AerSimulator(method="statevector")
 
     for idx, sample in enumerate(data):
-        # Becuase json.loads is not recursive parse
+        # Because json.loads is not recursive parse
         sample["dataset_metrics"]["solution"] = json.loads(sample["dataset_metrics"]["solution"])
 
         generated_qasm = sample.get("generated_circuit", "")
-        # generated_qasm = sample.get("dataset_metrics").get("optimal_circuit")
 
         # ---- Init new params ----
         sample["qasm_valid"] = False
@@ -177,22 +202,18 @@ def process_circuits(
         try:
             circuit: QuantumCircuit = parse_qasm_from_str(generated_qasm)
             sample["qasm_valid"] = True
-            print(f"[INFO] SUCCESS! Compile successful for cicruit: {idx}")
+            print(f"[INFO] SUCCESS! Compile successful for circuit: {idx}")
         except ValueError as err:
             print(f"[FAIL] Failed to compile circuit: {idx}")
             sample["parse_error"] = str(err)
             results.append(sample)
             continue
 
-        # --- 2) Add Measurement Operations ---
-        n_qubits = circuit.num_qubits
-
         # --- 3) Simulate and Get Statevector/Probabilities ---
         try:
             probs, bitstring = evaluate_qiskit_circuit(circuit, simulator)
             sample["most_probable_state_generated"] = bitstring
             sample["is_most_probable_state_correct"] = is_most_probable_state_correct(sample, bitstring)
-
         except Exception as err:
             print(f"[FAIL] Simulation failed for circuit: {idx}: {err}")
             sample["simulation_error"] = str(err)
@@ -200,10 +221,16 @@ def process_circuits(
             continue
 
         # --- 4) Compare with Expected Solution ---
-        solution_circuit = parse_qasm_from_str(sample.get("dataset_metrics").get("optimal_circuit"))
-        solution_probs = get_probability_distribution(solution_circuit, simulator)
-        sample["comparison"] = compare_solution(probs, solution_probs)
-
+        try:
+            solution_circuit = parse_qasm_from_str(sample.get("dataset_metrics").get("optimal_circuit"))
+            solution_probs = get_probability_distribution(solution_circuit, simulator)
+            # Pass the generated circuit and simulator so that its parameters can be randomized
+            sample["comparison"] = compare_solution(probs, solution_probs, circuit, simulator)
+        except Exception as err:
+            print(f"[FAIL] Processing solution failed for circuit: {idx}: {err}")
+            sample["parse_error"] = str(err)
+            results.append(sample)
+            continue
 
         results.append(sample)
 
@@ -274,8 +301,6 @@ def process_circuits(
     else:
         print(json.dumps(summary_stats, indent=2))
 
-
-
 def main():
     if len(sys.argv) < 2:
         print(
@@ -287,7 +312,6 @@ def main():
     output_file = sys.argv[2] if len(sys.argv) > 2 else None
     summary_file = sys.argv[3] if len(sys.argv) > 3 else None
     process_circuits(input_file, output_file, summary_file)
-
 
 if __name__ == "__main__":
     main()
