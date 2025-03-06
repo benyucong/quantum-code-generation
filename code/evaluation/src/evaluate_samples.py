@@ -118,11 +118,20 @@ def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
 def compare_solution(sim_probs, solution_probs):
     """
     Compares simulated probabilities with the solution probabilities.
+    Also computes the relative entropy for a uniform (random initial) distribution.
     """
     relative_entropy = compute_relative_entropy(sim_probs, solution_probs)
+
+    # Create a uniform probability distribution for the random initial state
+    num_states = len(solution_probs)
+    random_probs = np.random.rand(num_states)
+    random_probs = random_probs / np.sum(random_probs)
+    random_relative_entropy = compute_relative_entropy(random_probs, solution_probs)
     return {
         "relative_entropy": relative_entropy,
+        "random_relative_entropy": random_relative_entropy,
     }
+
 
 
 def process_circuits(
@@ -211,12 +220,26 @@ def process_circuits(
     ]
 
     samples_below_threshold = []
+    rel_entropies = []
+    random_rel_entropies = []
     for sample in results:
-        if sample.get("simulation_error") is None:
+        if sample.get("simulation_error") is None and sample.get("comparison") is not None:
             comp = sample.get("comparison")
-            if comp and "relative_entropy" in comp:
+            if "relative_entropy" in comp:
+                rel_entropies.append(comp["relative_entropy"])
+                random_rel_entropies.append(comp["random_relative_entropy"])
                 if comp["relative_entropy"] < relative_entropy_threshold:
                     samples_below_threshold.append(sample["sample_index"])
+
+    # Compute average relative entropies if available
+    if rel_entropies:
+        avg_rel_entropy = float(np.mean(rel_entropies))
+        avg_random_rel_entropy = float(np.mean(random_rel_entropies))
+        ratio = avg_rel_entropy / avg_random_rel_entropy if avg_random_rel_entropy != 0 else None
+    else:
+        avg_rel_entropy = None
+        avg_random_rel_entropy = None
+        ratio = None
 
     summary_stats = {
         "total_samples": total_samples,
@@ -228,6 +251,9 @@ def process_circuits(
             "count": len(samples_below_threshold),
             "sample_indexes": samples_below_threshold,
         },
+        "average_relative_entropy": avg_rel_entropy,
+        "average_random_initial_relative_entropy": avg_random_rel_entropy,
+        "average_relative_entropy_ratio": ratio,
     }
 
     print("\nSummary Statistics:")
@@ -247,6 +273,7 @@ def process_circuits(
         print(f"Summary statistics saved to {summary_file}")
     else:
         print(json.dumps(summary_stats, indent=2))
+
 
 
 def main():
