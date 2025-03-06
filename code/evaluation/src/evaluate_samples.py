@@ -4,6 +4,8 @@ import sys
 from typing import Any, Dict
 import numpy as np
 
+import pennylane as qml
+
 from qiskit import transpile, QuantumCircuit
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
@@ -11,6 +13,50 @@ from qiskit_qasm3_import import parse
 
 from computations import compute_relative_entropy
 from optimization import optimize_problem
+
+def int_to_bitstring(i: int, n_qubits: int) -> str:
+    """Convert an integer i to a bitstring with n_qubits bits."""
+    return format(i, "0" + str(n_qubits) + "b")
+
+def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulator):
+    """
+    Get the probaility distribution for a circuit
+
+    Args:
+        circuit (QuantumCircuit): The Qiskit quantum circuit to simulate.
+        simulator (AerSimulator): The Simulator. 
+
+    Returns:
+        list: probabilities
+    """
+    sim_circuit = circuit.remove_final_measurements(inplace=False)
+    sim_circuit.save_statevector()
+
+    result = simulator.run(sim_circuit).result()
+    statevector = result.get_statevector(experiment=sim_circuit)  
+
+    probs = statevector.probabilities().tolist()
+
+    return probs
+
+def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
+    """
+    Simulates a Qiskit QuantumCircuit and returns the probability distribution
+    and the most probable state (bitstring).
+
+    Args:
+        circuit (QuantumCircuit): The Qiskit quantum circuit to simulate.
+        simulator (AerSimulator): The Simulator. 
+
+    Returns:
+        tuple: (probabilities, most_probable_bitstring)
+    """
+    probs = get_probability_distribution(circuit, simulator)
+
+    most_probable_state_index = np.argmax(probs)
+    bitstring = int_to_bitstring(most_probable_state_index, circuit.num_qubits)
+
+    return probs, bitstring
 
 
 def evaluate_statistics(results: List) -> None:
@@ -24,11 +70,6 @@ def evaluate_statistics(results: List) -> None:
     print(f"Total circuits processed: {total_samples}")
     print(f"Circuits that compiled successfully: {compiled_count}")
     print(f"Circuits with correct state: {correct_state_count}\n")
-
-
-def int_to_bitstring(i: int, n_qubits: int) -> str:
-    """Convert an integer i to a bitstring with n_qubits bits."""
-    return format(i, "0" + str(n_qubits) + "b")
 
 
 def is_most_probable_state_correct(
@@ -74,24 +115,12 @@ def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
     return circuit
 
 
-def compare_solution(sim_probs, expected_solution):
+def compare_solution(sim_probs, solution_probs):
     """
-    Compares simulated probabilities with the expected solution from the dataset.
-    expected_solution is expected to be a dict with keys "states" and "probabilities".
-    Returns a dict with the simulated probabilities for the expected states,
-    the expected probabilities, and the absolute differences.
+    Compares simulated probabilities with the solution probabilities.
     """
-    expected_states = expected_solution.get("states", [])
-    expected_probs = expected_solution.get("probabilities", [])
-    sim_probs_for_states = [float(sim_probs[i]) for i in expected_states]
-    differences = [
-        abs(sim - exp) for sim, exp in zip(sim_probs_for_states, expected_probs)
-    ]
-    relative_entropy = compute_relative_entropy(sim_probs, expected_solution)
+    relative_entropy = compute_relative_entropy(sim_probs, solution_probs)
     return {
-        "simulated_probabilities": sim_probs_for_states,
-        "expected_probabilities": expected_probs,
-        "absolute_differences": differences,
         "relative_entropy": relative_entropy,
     }
 
@@ -119,8 +148,9 @@ def process_circuits(
     for idx, sample in enumerate(data):
         # Becuase json.loads is not recursive parse
         sample["dataset_metrics"]["solution"] = json.loads(sample["dataset_metrics"]["solution"])
-        
+
         generated_qasm = sample.get("generated_circuit", "")
+        # generated_qasm = sample.get("dataset_metrics").get("optimal_circuit")
 
         # ---- Init new params ----
         sample["qasm_valid"] = False
@@ -145,43 +175,27 @@ def process_circuits(
             results.append(sample)
             continue
 
-        # ---- 2) CHECK STATE VECTOR ----
+        # --- 2) Add Measurement Operations ---
+        n_qubits = circuit.num_qubits
+
+        # --- 3) Simulate and Get Statevector/Probabilities ---
         try:
-            circ = transpile(circuit, simulator)
-            circ.save_statevector()
-            result = simulator.run(circ).result()
-            statevector = result.get_statevector(circ)
+            probs, bitstring = evaluate_qiskit_circuit(circuit, simulator)
+            sample["most_probable_state_generated"] = bitstring
+            sample["is_most_probable_state_correct"] = is_most_probable_state_correct(sample, bitstring)
 
-            # Get Probabilities
-            probs = Statevector(statevector).probabilities()
-
-            most_probable_state = np.argsort(probs)[-1]
-            most_probable_state = int_to_bitstring(
-                most_probable_state, sample["dataset_metrics"]["n_qubits"]
-            )
-
-            sample["most_probable_state_generated"] = most_probable_state
-
-            sample["is_most_probable_state_correct"] = is_most_probable_state_correct(
-                sample, most_probable_state
-            )
         except Exception as err:
+            print(f"[FAIL] Simulation failed for circuit: {idx}: {err}")
             sample["simulation_error"] = str(err)
+            results.append(sample)
+            continue
 
-        # ---- 3) Compare with pre-computed ----
-        if sample["simulation_error"] is None:
-            sample["comparison"] = compare_solution(
-                probs, sample["dataset_metrics"]["solution"]
-            )
+        # --- 4) Compare with Expected Solution ---
+        solution_circuit = parse_qasm_from_str(sample.get("dataset_metrics").get("optimal_circuit"))
+        solution_probs = get_probability_distribution(solution_circuit, simulator)
+        sample["comparison"] = compare_solution(probs, solution_probs)
 
-        # ---- 4) Compare Iteration Count to Optimal Solution ----
-        # stats = optimize_problem(
-        #     circuit,
-        #     sample["dataset_metrics"]["cost_hamiltonian"],
-        #     sample["dataset_metrics"]["optimization_type"],
-        # )
 
-        # print(stats)
         results.append(sample)
 
     # ---- 5) Summary Statistics ----

@@ -9,18 +9,27 @@ def compute_measurement_probabilities(sv_array):
     return probs
 
 
-def compute_relative_entropy(sim_probs, expected_solution, epsilon=1e-12) -> float:
+def compute_relative_entropy(p, q, epsilon=1e-12) -> float:
     """
-    Compute the relative entropy (KL divergence) between the expected probabilities and the simulated
-    probabilities for the expected states.
+    Compute the relative entropy (KL divergence) between two probability distributions.
+    
+    The KL divergence is defined as:
+        KL(p || q) = sum( p[i] * (log(p[i]) - log(q[i])) )
+    
+    Args:
+        p (array-like): The first probability distribution (e.g., the expected probabilities).
+        q (array-like): The second probability distribution (e.g., the simulated probabilities).
+        epsilon (float): A small constant added to q to avoid division by zero.
+        
+    Returns:
+        float: The KL divergence between distributions p and q.
     """
-    expected_states = expected_solution.get("states", [])
-    expected_probs = np.array(expected_solution.get("probabilities", []), dtype=float)
-    sim_probs_for_states = np.array([float(sim_probs[i]) for i in expected_states])
-
-    # Add epsilon to avoid zero
-    sim_probs_for_states = sim_probs_for_states + epsilon
-    kl_divergence = np.sum(
-        expected_probs * (np.log(expected_probs) - np.log(sim_probs_for_states))
-    )
+    p = np.array(p, dtype=float)
+    q = np.array(q, dtype=float)
+    
+    # Add epsilon to q to avoid zero probabilities in the logarithm
+    q = q + epsilon
+    
+    # Compute the KL divergence
+    kl_divergence = np.sum(p * (np.log(p) - np.log(q)))
     return float(kl_divergence)
