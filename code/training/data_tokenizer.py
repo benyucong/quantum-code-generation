@@ -9,39 +9,6 @@ from functools import partial
 QUERY_TEMPLATE_NOANSWER = """{Question}""".strip()
 
 
-# class CommunityDetectionAttributes:
-#     communities_size: int
-#     number_of_communities: int
-
-
-# class ConnectedComponentAttributes:
-#     node: str
-
-
-# class GraphColoringAttributes:
-#     number_of_colors: int
-
-
-# class GraphIsomorphismAttributes:
-#     number_of_colors: int
-
-
-# class OptimizationProblemType(str, Enum):
-#     """
-#     Enum class representing different types of optimization problems.
-
-#     Attributes:
-#         HYPERGRAPH_CUT (str): Represents the hypergraph cut optimization problem type.
-#     """
-
-#     CONNECTED_COMPONENTS = "connected_components"
-#     COMMUNITY_DETECTION = "community_detection"
-#     K_CLIQUE = "kclique"
-#     HYPERMAXCUT = "hypermaxcut"
-#     GRAPH_ISOMORPHISM = "graph_isomorphism"
-#     GRAPH_COLORING = "graph_coloring"
-
-
 def preprocess(text):
     if text is None:
         return " "
@@ -51,9 +18,7 @@ def preprocess(text):
     return text
 
 
-def generate_problem_specific_text(
-    problem: str, attributes: Dict
-) -> str:
+def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
     attributes = ast.literal_eval(attributes)
     if problem == "community_detection":
         return f"with {attributes['communities_size']} sized communities and {attributes['number_of_communities']} communities"
@@ -81,7 +46,7 @@ def process_graph_example(example: Dict) -> Dict:
         problem_specific_text = generate_problem_specific_text(
             problem_type, example["problem_specific_attributes"]
         )
-    
+
     question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
         f" layers with optimal parameters that solves the {problem_type} {problem_specific_text} for "

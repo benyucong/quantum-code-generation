@@ -1,11 +1,12 @@
-import os
-import trl
-import warnings
 import logging
+import os
+import warnings
+from dataclasses import asdict, dataclass, field
+from typing import List, Optional
+
 import transformers
-from datasets import load_dataset, concatenate_datasets, DatasetDict
-from dataclasses import dataclass, field, asdict
-from typing import Optional, List
+from datasets import DatasetDict, concatenate_datasets, load_dataset
+from trl import DataCollatorForCompletionOnlyLM, ModelConfig, SFTConfig, SFTTrainer
 
 # ----- Config Logging and Warnings -----
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -13,6 +14,7 @@ transformers.logging.set_verbosity_info()
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
 
 @dataclass
 class TrainingConfig:
@@ -29,7 +31,7 @@ class TrainingConfig:
 
 
 def train():
-    parser = transformers.HfArgumentParser((TrainingConfig, trl.SFTConfig))
+    parser = transformers.HfArgumentParser((TrainingConfig, SFTConfig))
     config, args = parser.parse_args_into_dataclasses()
     args.report_to = ["wandb"]
 
@@ -37,7 +39,13 @@ def train():
     logging.info("Training config: %s", log_config)
 
     # ----- Load Model, Data and Tokenizer -----
-    model = transformers.AutoModelForCausalLM.from_pretrained(config.model_name)
+    model_config = ModelConfig(
+        model_name_or_path="Qwen/Qwen2.5-3B-Instruct",
+        torch_dtype="bfloat16",
+        attn_implementation="flash_attention_2",
+        use_peft=True,
+        load_in_4bit=True,
+    )
     dataset = load_dataset(config.train_file_path)
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         config.model_name, use_fast=True
@@ -52,7 +60,7 @@ def train():
     # Only compute loss over assistant responses
     # Verified that it precisely starts where the thinking tokens start and ends with the first pad token
     # via labels being set to -100
-    collator = trl.DataCollatorForCompletionOnlyLM(
+    collator = DataCollatorForCompletionOnlyLM(
         instruction_template=instruction_template,
         response_template=response_template,
         tokenizer=tokenizer,
@@ -63,12 +71,12 @@ def train():
     args.max_seq_length = config.block_size
 
     # ----- Setup Trainer -----
-    trainer = trl.SFTTrainer(
-        model,
+    trainer = SFTTrainer(
+        model=model_config.model_name_or_path,
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"] if "test" in dataset else dataset["train"],
         args=args,
-        data_collator=collator
+        data_collator=collator,
     )
 
     # ----- Train Model -----
