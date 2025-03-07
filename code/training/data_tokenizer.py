@@ -1,13 +1,13 @@
-from enum import Enum
-from typing import Dict
-import re
+import argparse
 import ast
+from functools import partial
+from typing import Dict
 from datasets import load_dataset
 from transformers import AutoTokenizer
-from functools import partial
 
 QUERY_TEMPLATE_NOANSWER = """{Question}""".strip()
 
+SYSTEM_PROMPT = "You are a helpful quantum circuit design assistant. You first thinks about the reasoning process in the mind and then provides the user with the optimal answer."
 
 def preprocess(text):
     if text is None:
@@ -16,7 +16,6 @@ def preprocess(text):
     text = text.replace(" [title]", ". ")
     text = text.replace("  ", " ")
     return text
-
 
 def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
     attributes = ast.literal_eval(attributes)
@@ -30,27 +29,23 @@ def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
         return f"with {attributes['number_of_colors']} colors"
     return ""
 
-
 def process_graph_example(example: Dict) -> Dict:
     n_qubits = example["number_of_qubits"]
     n_layers = example["number_of_layers"]
     graph = example["graph"]
     circuit_with_params = example["circuit_with_params"]
     circuit_with_symbols = example["circuit_with_symbols"]
-
     optimization_type = example["optimization_type"]
     problem_type = example["problem_type"]
-
     problem_specific_text = ""
+
     if example["problem_specific_attributes"]:
-        problem_specific_text = generate_problem_specific_text(
-            problem_type, example["problem_specific_attributes"]
-        )
+        problem_specific_text = generate_problem_specific_text(problem_type, example["problem_specific_attributes"])
 
     question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
         f" layers with optimal parameters that solves the {problem_type} {problem_specific_text} for "
-        f"the following graph: {graph}. Then ensure that the final answer is correct and in valid QASM 3.0 code."
+        f"the following graph: {graph}. Ensure that the final answer is correct and in valid QASM 3.0 code with optimal parameters for the given problem."
     )
     polynom_question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
@@ -66,7 +61,6 @@ def process_graph_example(example: Dict) -> Dict:
     )
 
     answer = circuit_with_params
-
     return dict(
         question=question,
         answer=answer,
@@ -74,59 +68,63 @@ def process_graph_example(example: Dict) -> Dict:
         circuit_with_symbols=circuit_with_symbols,
     )
 
-
-def process_example(example: Dict, tokenizer):
+def process_example(example: Dict, tokenizer: AutoTokenizer, mode: str = "sft") -> Dict:
     graph_data = process_graph_example(example)
     question = graph_data["question"]
     answer = graph_data["answer"]
-
     if "Answer:" not in answer:
         answer = "Answer: " + answer
+    if mode == "sft":
+        chat_template = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": "\n<|im_start|>\n" + answer.strip()},
+        ]
+        text = tokenizer.apply_chat_template(chat_template, tokenize=False, continue_final_message=True)
+        return {"text": text}
+    elif mode == "grpo":
+        chat_template = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": question},
+        ]
+        prompt_text = tokenizer.apply_chat_template(chat_template, tokenize=False, continue_final_message=True)
+        return {"prompt": prompt_text, "target": answer}
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
 
-    prompt = QUERY_TEMPLATE_NOANSWER.format(Question=question)
-
-    text = tokenizer.apply_chat_template(
-        [
-            {"role": "user", "content": prompt},
-            {
-                "role": "assistant",
-                "content": "\n<|im_start|>\n" + answer.strip(),
-            },
-        ],
-        tokenize=False,
-    )
-    return dict(text=text)
-
-
-def tokenize_examples_for_sft(
-    upload_data_path: str, download_data_path: str, num_proc: int
-):
+def tokenize_examples(download_data_path: str, upload_data_path: str, num_proc: int, mode: str, model: str):
     dataset = load_dataset(download_data_path, download_mode="force_redownload")
-    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-3B-Instruct")
-    process_example_map = staticmethod(partial(process_example, tokenizer=tokenizer))
-
-    # If the dataset is a DatasetDict with splits (e.g., "train" and "test"),
-    # process each split separately.
+    tokenizer = AutoTokenizer.from_pretrained(model)
+    process_example_map = partial(process_example, tokenizer=tokenizer, mode=mode)
     if isinstance(dataset, dict) and "train" in dataset:
         for split in dataset.keys():
             dataset[split] = dataset[split].map(
                 process_example_map,
                 num_proc=num_proc,
-                desc=f"Tokenizing SFT data for {split} split",
+                desc=f"Tokenizing data for {split} split in {mode} mode"
             )
     else:
         dataset = dataset.map(
             process_example_map,
             num_proc=num_proc,
-            desc="Tokenizing SFT data",
+            desc=f"Tokenizing data in {mode} mode"
         )
-
-    dataset.push_to_hub(upload_data_path)
-
+    upload_data_path_with_postfix = f"{upload_data_path}_{mode}"
+    dataset.push_to_hub(upload_data_path_with_postfix)
 
 if __name__ == "__main__":
-    tokenize_examples_for_sft(
-        download_data_path="linuzj/graph-data-quantum",
-        upload_data_path="linuzj/graph-data-quantum_tokenized",
-        num_proc=20,
+    parser = argparse.ArgumentParser(description="SFT or GRPO training.")
+    parser.add_argument("--mode", type=str, choices=["sft", "grpo"], required=True, help="SFT or GRPO")
+    parser.add_argument("--download_data_path", type=str, default="linuzj/graph-data-quantum", help="Source Dataset Path")
+    parser.add_argument("--upload_data_path", type=str, default="linuzj/graph-data-quantum_tokenized", help="Tokenized Dataset Path")
+    parser.add_argument("--num_proc", type=int, default=20, help="Processes num.")
+    parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-3B-Instruct", help="(default: Qwen/Qwen2.5-3B-Instruct).")
+    args = parser.parse_args()
+
+    tokenize_examples(
+        download_data_path=args.download_data_path,
+        upload_data_path=args.upload_data_path,
+        num_proc=args.num_proc,
+        mode=args.mode,
+        model=args.model
     )
