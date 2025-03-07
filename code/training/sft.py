@@ -40,7 +40,7 @@ def train():
 
     # ----- Load Model, Data and Tokenizer -----
     model_config = ModelConfig(
-        model_name_or_path="Qwen/Qwen2.5-3B-Instruct",
+        model_name_or_path=config.model_name,
         torch_dtype="bfloat16",
         attn_implementation="flash_attention_2",
         use_peft=True,
