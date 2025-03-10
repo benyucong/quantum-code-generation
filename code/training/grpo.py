@@ -36,14 +36,11 @@ def train():
         model_name_or_path=config.model_name,
         torch_dtype="bfloat16",
         attn_implementation="flash_attention_2",
-        use_peft=True,
-        load_in_4bit=True,
     )
 
     model = transformers.AutoModelForCausalLM.from_pretrained(
         model_config.model_name_or_path,
         torch_dtype=model_config.torch_dtype,
-        load_in_4bit=model_config.load_in_4bit
     )
 
     # FIX: Use get_input_embeddings() instead of model.embed_tokens.
@@ -66,7 +63,6 @@ def train():
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"] if "test" in dataset else dataset["train"],
         args=args,
-        peft_config=trl.get_peft_config(model_config)
     )
 
     trainer.train()

@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=sft_quantum_circuit_gen_multigpu
+#SBATCH --job-name=grpo_quantum_circuit_gen_multigpu
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
 #SBATCH --output=../../logs/sft_%A_%a.out
 #SBATCH --error=../../logs/sft_%A_%a.err
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=200GB
+#SBATCH --mem=300GB
 #SBATCH --gpus=4
 #SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
-base_model_name="Qwen/Qwen2.5-3B-Instruct"
+base_model_name="Qwen/Qwen2.5-14B-Instruct"
 
 epochs=20
 block_size=16384
@@ -38,9 +38,8 @@ save_steps=30000
 per_device_batch_size=1
 gradient_accumulation_steps=1
 
-torchrun --nnodes=1 \
-        --nproc_per_node=$SLURM_NTASKS_PER_NODE \
-        --master_port 12345 \
+accelerate launch --num_processes $SLURM_NTASKS_PER_NODE \
+        --main_process_port 12345 \
         grpo.py \
         --model_name=${base_model_name} \
         --output_dir="data/checkpoints/${uid}" \
@@ -50,8 +49,6 @@ torchrun --nnodes=1 \
         --per_device_train_batch_size=${per_device_batch_size} \
         --per_device_eval_batch_size=${per_device_batch_size} \
         --gradient_accumulation_steps=${gradient_accumulation_steps} \
-        --fsdp="full_shard auto_wrap" \
-        --fsdp_config="fsdp_config_qwen.json" \
         --bf16=True \
         --save_strategy=${save_strategy} \
         --save_steps=${save_steps} \
