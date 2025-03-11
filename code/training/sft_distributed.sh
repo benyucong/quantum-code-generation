@@ -2,12 +2,12 @@
 #SBATCH --job-name=sft_quantum_circuit_gen_multigpu
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=3
+#SBATCH --ntasks-per-node=4
 #SBATCH --output=../../logs/sft_%A_%a.out
 #SBATCH --error=../../logs/sft_%A_%a.err
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=200GB
-#SBATCH --gpus=3
+#SBATCH --mem=400GB
+#SBATCH --gpus=4
 #SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi

@@ -7,7 +7,7 @@ from transformers import AutoTokenizer
 
 QUERY_TEMPLATE_NOANSWER = """{Question}""".strip()
 
-SYSTEM_PROMPT = "You are a helpful quantum circuit design assistant. You first thinks about the reasoning process in the mind and then provides the user with the optimal answer."
+SYSTEM_PROMPT = "You are a helpful quantum circuit design assistant. You provide the user with the quantum circuit with the optimal parameters for the given problem."
 
 def preprocess(text):
     if text is None:

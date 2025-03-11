@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=generate_samples_quantum_circuit_gen_singlegpu
-#SBATCH --time=02:00:00
+#SBATCH --time=03:00:00
 #SBATCH --output=../../logs/run_%A_%a.out
 #SBATCH --error=../../logs/run_%A_%a.err
 #SBATCH --cpus-per-task=3
@@ -20,12 +20,15 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 
-model="20250228_204928"
+n_samples=200
+
+model="20250307_161011"
 
 uid="$(date +%Y%m%d_%H%M%S)"
-model_path="../sft/data/checkpoints/${model}"
+model_path="../training/data/checkpoints/${model}"
 
 python3 -u generate_samples.py \
     --uid=${uid} \
-    --model_path=${model_path}
+    --model_path=${model_path} \
+    --n_samples=${n_samples}
 
