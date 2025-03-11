@@ -12,20 +12,6 @@ from qiskit_qasm3_import import parse
 
 
 def compute_relative_entropy(p, q, epsilon=1e-12) -> float:
-    """
-    Compute the relative entropy (KL divergence) between two probability distributions.
-    
-    The KL divergence is defined as:
-        KL(p || q) = sum( p[i] * (log(p[i]) - log(q[i])) )
-    
-    Args:
-        p (array-like): The first probability distribution (e.g., the expected probabilities).
-        q (array-like): The second probability distribution (e.g., the simulated probabilities).
-        epsilon (float): A small constant added to q to avoid division by zero.
-        
-    Returns:
-        float: The KL divergence between distributions p and q.
-    """
     p = np.array(p, dtype=float)
     q = np.array(q, dtype=float)
     
@@ -97,11 +83,6 @@ def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
 # ---------------------- REWARD FUNCTIONS -------------------------
 
 def reward_func1(completions: List[str], target: List[str], **kwargs) -> List[float]:
-    """
-    Reward Function 1: Checks if the generated QASM code compiles.
-    For each completion, attempt to parse it into a QuantumCircuit.
-    Return a reward of 1.0 if it compiles; otherwise, 0.0.
-    """
     rewards = []
     for qasm_str in completions:
         try:
