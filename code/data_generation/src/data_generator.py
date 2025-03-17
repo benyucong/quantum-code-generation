@@ -80,7 +80,7 @@ def _process_task(args):
             graph,
             optimization_type,
             generator.ansatz_template,
-            (i, 1),  # Individual progress not meaningful in parallel
+            (i, 1),
         )
         if solution:
             generator._save_solution(solution)

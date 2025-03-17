@@ -39,7 +39,7 @@ class BinaryOptimizationProblem(Solver):
     ):
         self.description = description
         self.binary_polynomial = binary_polynomial
-        self.variables = sorted(list(binary_polynomial.variables))
+        self.variables = sorted(list(binary_polynomial.variables), key=lambda x: str(x))
 
         # Basic vars
         self.n_qubits = len(self.variables)
