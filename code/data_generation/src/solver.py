@@ -80,7 +80,7 @@ class GraphColoringAttributes:
 
 @dataclass
 class GraphIsomorphismAttributes:
-    number_of_colors: int
+    autoisomorphic_graph: str
 
 
 @dataclass

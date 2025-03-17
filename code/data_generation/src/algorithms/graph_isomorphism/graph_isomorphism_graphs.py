@@ -28,9 +28,11 @@ def generate_graph_with_automorphism(n: int, p: float):
     nodes = list(G.nodes)
     permuted_nodes = nodes[:]
     random.shuffle(permuted_nodes)
-    automorphism = {old: new for old, new in zip(nodes, permuted_nodes)}
+    mapping = {old: new for old, new in zip(nodes, permuted_nodes)}
 
-    return G, automorphism
+    G_iso = nx.relabel_nodes(G, mapping)
+
+    return G, G_iso
 
 
 def generate_graphs(max_nodes=6):

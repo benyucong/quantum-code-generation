@@ -18,6 +18,7 @@ from src.algorithms.connected_components.connected_component import (
 )
 from src.algorithms.factory import get_problem_data
 from src.algorithms.graph_coloring.graph_coloring import GraphColoring
+from src.algorithms.graph_isomorphism.graph_isomorphism import GraphIsomorphism
 from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
 from src.algorithms.kcliques.kclique import KClique
 from src.binary_optimization_problem import (
@@ -179,12 +180,10 @@ class DataGenerator:
                 number_of_colors=n_colors
             )
         elif self.problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
-            print(graph_data)
-            graph, n_colors = graph_data
-            print(n_colors)
-            binary_polynomial = GraphColoring(graph, n_colors)
+            graph, graph_2 = graph_data
+            binary_polynomial = GraphIsomorphism(graph, graph_2)
             problem_specific_attributes = GraphIsomorphismAttributes(
-                number_of_colors=n_colors
+                autoisomorphic_graph=json_graph.node_link_data(graph_2, edges="edges")
             )
         elif self.problem == OptimizationProblemType.K_CLIQUE:
             graph, complete_graph, k = graph_data
@@ -350,7 +349,7 @@ class DataGenerator:
         # ---------- GPU execution: process all tasks sequentially ----------
         if self.device_type == "gpu":
             print(f"Using GPU - processing {len(tasks)} tasks sequentially")
-            _worker_init()  # Initialize JAX for GPU
+            _worker_init()
             for task in tasks:
                 _process_task((self, task))
             return
