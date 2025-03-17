@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 from typing import Any, Dict, List
 import numpy as np
@@ -7,6 +8,10 @@ from qiskit import transpile, QuantumCircuit
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from qiskit_qasm3_import import parse
+
+ANSWER_PATTERN = r"^<think>.*?</think>\s*<answer>.*?</answer>$"
+
+
 
 def compute_relative_entropy(p, q, epsilon=1e-12) -> float:
     p = np.array(p, dtype=float)
@@ -32,16 +37,34 @@ def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
     bitstring = int_to_bitstring(most_probable_state_index, circuit.num_qubits)
     return probs, bitstring
 
-def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
-    if qasm_str.startswith("Answer:"):
-        qasm_str = qasm_str[len("Answer:"):].strip()
+def extract_qasm(completion: str) -> str:
+    completion = completion.strip()
+
+    match = re.match(ANSWER_PATTERN, completion)
+    
+    if match:
+        completion = match.group(1)
+    else:
+        raise ValueError("Incorrect Answer format...")
+    
+    if completion.startswith("Answer:"):
+        return completion[len("Answer:"):].strip()
+
+    return completion
+
+def parse_qasm_circuit_from_str(completion: str):
+    qasm_str = extract_qasm(completion)
+
     if "OPENQASM 3.0" not in qasm_str:
         raise ValueError("QASM code does not appear to be QASM 3.0.")
+
     try:
         circuit = parse(qasm_str)
     except Exception as e:
         raise ValueError(f"Failed to parse QASM code. It might be invalid QASM 3.0 code: {e}") from e
+
     return circuit
+
 
 def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
     new_circ = QuantumCircuit(circuit.num_qubits, circuit.num_clbits)
@@ -59,66 +82,46 @@ def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
         new_circ.append(mutable_op, qubits, clbits)
     return new_circ
 
-def strip_answer_prefix(qasm_str: str) -> str:
-    if qasm_str.startswith("Answer:"):
-        return qasm_str[len("Answer:"):].strip()
-    return qasm_str
-
 # ---------------------- REWARD FUNCTIONS -------------------------
-def reward_func1(completions: List[str], target: List[str], **kwargs) -> List[float]:
+def format_reward(completions, **kwargs):
+    matches = [re.match(ANSWER_PATTERN, content) for content in completion_contents]
+    
+    return [1.0 if match else 0.0 for match in matches]
+
+def circuit_compile_reward(completions, **kwargs) -> List[float]:
     rewards = []
-    for qasm_str in completions:
+    for completion in completions:
         try:
-            qasm_str = strip_answer_prefix(qasm_str)
-            _ = parse_qasm_from_str(qasm_str)
-            print("parse successfull")
+            _ = parse_qasm_circuit_from_str(completion)
+
+            print("parse successful")
+
             rewards.append(1.0)
         except Exception as e:
             rewards.append(0.0)
     return rewards
 
-def reward_func2(completions: List[str], target: List[str], **kwargs) -> List[float]:
+def probability_distrubution_reward(completions, **kwargs) -> List[float]:
+    solutions = kwargs["solution"]
+    
     rewards = []
     simulator = AerSimulator(method="statevector")
-    for gen_qasm, tgt_qasm in zip(completions, target):
+
+    for generated_qasm, optimal_qasm in zip(completions, solutions):
         try:
-            gen_qasm = strip_answer_prefix(gen_qasm)
-            tgt_qasm = strip_answer_prefix(tgt_qasm)
-            gen_circuit = parse_qasm_from_str(gen_qasm)
-            tgt_circuit = parse_qasm_from_str(tgt_qasm)
-            gen_probs = get_probability_distribution(gen_circuit, simulator)
-            tgt_probs = get_probability_distribution(tgt_circuit, simulator)
-            rel_ent = compute_relative_entropy(gen_probs, tgt_probs)
+            generated_qasm = strip_answer_prefix(generated_qasm)
+            optimal_qasm = strip_answer_prefix(optimal_qasm)
+            
+            generated_circuit = parse_qasm_circuit_from_str(generated_qasm)
+            optimal_circuit = parse_qasm_circuit_from_str(optimal_qasm)
+
+            gen_probs = get_probability_distribution(generated_circuit, simulator)
+            opt_probs = get_probability_distribution(optimal_circuit, simulator)
+            print(gen_probs, opt_probs)
+            rel_ent = compute_relative_entropy(gen_probs, opt_probs)
             reward = 1.0 / (1.0 + rel_ent)
         except Exception as e:
             reward = 0.0
         rewards.append(reward)
     return rewards
 
-def reward_func3(completions: List[str], target: List[str], **kwargs) -> List[float]:
-    def compute_z_expectation(probs: List[float], n_qubits: int) -> float:
-        exp_val = 0.0
-        for i, p in enumerate(probs):
-            bitstring = int_to_bitstring(i, n_qubits)
-            value = 1 if bitstring[-1] == '0' else -1
-            exp_val += p * value
-        return exp_val
-
-    rewards = []
-    simulator = AerSimulator(method="statevector")
-    for gen_qasm, tgt_qasm in zip(completions, target):
-        try:
-            gen_qasm = strip_answer_prefix(gen_qasm)
-            tgt_qasm = strip_answer_prefix(tgt_qasm)
-            gen_circuit = parse_qasm_from_str(gen_qasm)
-            tgt_circuit = parse_qasm_from_str(tgt_qasm)
-            gen_probs = get_probability_distribution(gen_circuit, simulator)
-            tgt_probs = get_probability_distribution(tgt_circuit, simulator)
-            gen_exp = compute_z_expectation(gen_probs, gen_circuit.num_qubits)
-            tgt_exp = compute_z_expectation(tgt_probs, tgt_circuit.num_qubits)
-            diff = abs(gen_exp - tgt_exp)
-            reward = np.exp(-diff)
-        except Exception as e:
-            reward = 0.0
-        rewards.append(reward)
-    return rewards

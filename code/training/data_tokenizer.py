@@ -7,7 +7,17 @@ from transformers import AutoTokenizer
 
 QUERY_TEMPLATE_NOANSWER = """{Question}""".strip()
 
-SYSTEM_PROMPT = "You are a helpful quantum circuit design assistant. You provide the user with the quantum circuit with the optimal parameters for the given problem."
+SYSTEM_PROMPT = (
+    "You are a helpful quantum circuit design assistant. "
+    "You provide the user with the quantum circuit with the optimal parameters for the given problem. "
+)
+
+RESONING_ADDITION_SYSTEM_PROMT = (
+    "The user asks a question, and the you, the Assistant, solves it. The assistant "
+    "first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning "
+    "process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., "
+    "<think> reasoning process here </think><answer> answer here </answer>"
+)
 
 def preprocess(text):
     if text is None:
@@ -47,33 +57,30 @@ def process_graph_example(example: Dict) -> Dict:
         f" layers with optimal parameters that solves the {problem_type} {problem_specific_text} for "
         f"the following graph: {graph}. Ensure that the final answer is correct and in valid QASM 3.0 code with optimal parameters for the given problem."
     )
-    polynom_question = (
-        f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
-        " layers with optimal parameters that solves the problem {SOME_PROBLEM_DESCRIPTION} using {optimization_type}."
-        ". Then ensure that the final answer is correct and in valid QASM 3.0 code."
-    )
+    # polynom_question = (
+    #     f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
+    #     " layers with optimal parameters that solves the problem {SOME_PROBLEM_DESCRIPTION} using {optimization_type}."
+    #     ". Then ensure that the final answer is correct and in valid QASM 3.0 code."
+    # )
 
-    # Cost hamiltonian standard?? Qiskit or Pennylane?
-    improved_question = (
-        f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
-        " layers with optimal parameters that solves the problem for the cost hamiltonian {cost_hamiltonian} using {optimization_type}."
-        ". Then ensure that the final answer is correct and in valid QASM 3.0 code."
-    )
+    # # Cost hamiltonian standard?? Qiskit or Pennylane?
+    # improved_question = (
+    #     f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
+    #     " layers with optimal parameters that solves the problem for the cost hamiltonian {cost_hamiltonian} using {optimization_type}."
+    #     ". Then ensure that the final answer is correct and in valid QASM 3.0 code."
+    # )
 
     answer = circuit_with_params
     return dict(
         question=question,
         answer=answer,
-        circuit_with_params=circuit_with_params,
-        circuit_with_symbols=circuit_with_symbols,
     )
 
 def process_example(example: Dict, tokenizer: AutoTokenizer, mode: str = "sft") -> Dict:
     graph_data = process_graph_example(example)
     question = graph_data["question"]
     answer = graph_data["answer"]
-    if "Answer:" not in answer:
-        answer = "Answer: " + answer
+    
     if mode == "sft":
         chat_template = [
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -82,19 +89,22 @@ def process_example(example: Dict, tokenizer: AutoTokenizer, mode: str = "sft") 
         ]
         text = tokenizer.apply_chat_template(chat_template, tokenize=False, continue_final_message=True)
         return {"text": text}
+    
     elif mode == "grpo":
         chat_template = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": SYSTEM_PROMPT + RESONING_ADDITION_SYSTEM_PROMT},
             {"role": "user", "content": question},
         ]
+
         prompt_text = tokenizer.apply_chat_template(chat_template, tokenize=False, continue_final_message=True)
-        return {"prompt": prompt_text, "target": answer}
+        return {"prompt": prompt_text, "solution": answer}
     else:
         raise ValueError(f"Unknown mode: {mode}")
 
 def tokenize_examples(download_data_path: str, upload_data_path: str, num_proc: int, mode: str, model: str):
     dataset = load_dataset(download_data_path, download_mode="force_redownload")
     tokenizer = AutoTokenizer.from_pretrained(model)
+
     process_example_map = partial(process_example, tokenizer=tokenizer, mode=mode)
     if isinstance(dataset, dict) and "train" in dataset:
         for split in dataset.keys():
