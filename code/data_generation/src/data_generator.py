@@ -22,6 +22,7 @@ from src.algorithms.graph_isomorphism.graph_isomorphism import GraphIsomorphism
 from src.algorithms.hamiltonian_path.hamiltonian_path import HamiltonianPath
 from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
 from src.algorithms.kcliques.kclique import KClique
+from src.algorithms.matching.matching import Matching
 from src.binary_optimization_problem import (
     BinaryOptimizationProblem,
 )
@@ -34,6 +35,7 @@ from src.data_classes import (
     GraphIsomorphismAttributes,
     HamiltonianPathAttributes,
     KCliqueAttributes,
+    MatchingAttributes,
     OptimizationProblem,
     OptimizationProblemType,
     OptimizationType,
@@ -198,6 +200,12 @@ class DataGenerator:
             )
             problem_specific_attributes = HamiltonianPathAttributes(
                 start_node=start_node, end_node=end_node
+            )
+        elif self.problem == OptimizationProblemType.MATCHING:
+            graph, graph_2, matching, extra = graph_data
+            binary_polynomial = Matching(graph, graph_2)
+            problem_specific_attributes = MatchingAttributes(
+                matching=matching, extra=json.dumps(extra)
             )
         else:
             raise ValueError("Invalid optimization problem.")

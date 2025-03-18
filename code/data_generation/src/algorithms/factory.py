@@ -20,6 +20,9 @@ from src.algorithms.kcliques.kclique_graphs import (
 from src.algorithms.hamiltonian_path.hamiltonian_path_graphs import (
     generate_graphs as generate_hamiltonian_path_graphs,
 )
+from src.algorithms.matching.matching_graphs import (
+    generate_graphs as generate_matching_graphs,
+)
 from src.data_classes import OptimizationProblemType
 
 
@@ -67,5 +70,8 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
     elif problem == OptimizationProblemType.HAMILTONIAN_PATH:
         max_nodes = 10
         return generate_hamiltonian_path_graphs(max_nodes=max_nodes)
+    elif problem == OptimizationProblemType.MATCHING:
+        max_nodes = 10
+        return generate_matching_graphs(max_nodes=max_nodes)
     else:
         raise ValueError("No graph generator for this problem.")

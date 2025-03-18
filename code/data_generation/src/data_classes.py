@@ -5,10 +5,7 @@ from typing import Any, List, Optional
 
 class OptimizationProblemType(str, Enum):
     """
-    Enum class representing different types of optimization problems.
-
-    Attributes:
-        HYPERGRAPH_CUT (str): Represents the hypergraph cut optimization problem type.
+    Enum class representing different types of supported optimization problems.
     """
 
     CONNECTED_COMPONENTS = "connected_components"
@@ -18,20 +15,27 @@ class OptimizationProblemType(str, Enum):
     GRAPH_ISOMORPHISM = "graph_isomorphism"
     GRAPH_COLORING = "graph_coloring"
     HAMILTONIAN_PATH = "hamiltonian_path"
+    MATCHING = "matching"
 
 
 class OptimizationType(str, Enum):
     """
-    Enum class representing different types of optimization algorithms.
-
-    Attributes:
-        VQE (str): Variational Quantum Eigensolver.
-        QAOA (str): Quantum Approximate Optimization Algorithm.
+    Enum class representing different types of supported optimization algorithms.
     """
 
     VQE = "vqe"
     ADAPTIVE_VQE = "adaptive_vqe"
     QAOA = "qaoa"
+
+
+class MatchingType(str, Enum):
+    """
+    Enum class representing different types of supported matching types.
+    """
+
+    PERFECT = "perfect"
+    NEAR_PERFECT = "near_perfect"
+    MAXIMUM = "maximum"
 
 
 @dataclass
@@ -89,6 +93,12 @@ class KCliqueAttributes:
 class HamiltonianPathAttributes:
     start_node: int
     end_node: int
+
+
+@dataclass
+class MatchingAttributes:
+    matching: str
+    extra: str
 
 
 @dataclass
