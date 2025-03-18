@@ -14,7 +14,7 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from jax import numpy as jnp
 
-from src.solver import OptimizationType
+from src.data_classes import OptimizationType
 
 np.random.seed(0)
 

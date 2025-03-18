@@ -25,7 +25,7 @@ from src.algorithms.kcliques.kclique import KClique
 from src.binary_optimization_problem import (
     BinaryOptimizationProblem,
 )
-from src.solver import (
+from src.data_classes import (
     AdaptiveProcess,
     CommunityDetectionAttributes,
     ConnectedComponentAttributes,

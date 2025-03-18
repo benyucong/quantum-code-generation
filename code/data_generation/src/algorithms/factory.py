@@ -20,7 +20,7 @@ from src.algorithms.kcliques.kclique_graphs import (
 from src.algorithms.hamiltonian_path.hamiltonian_path_graphs import (
     generate_graphs as generate_hamiltonian_path_graphs,
 )
-from src.solver import OptimizationProblemType
+from src.data_classes import OptimizationProblemType
 
 
 def load_pickle(filename):

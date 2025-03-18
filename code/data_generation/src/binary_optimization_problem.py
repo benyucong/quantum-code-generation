@@ -10,8 +10,9 @@ from pennylane import numpy as np
 from pennylane.transforms import compile as qml_compile
 from qiskit import qasm3
 
+from src.data_classes import OptimizationType
 from src.optimization.ansatz import Ansatz
-from src.solver import OptimizationType, Solver
+from src.solver import Solver
 from src.utils import (
     basis_vector_to_bitstring,
     copy_circuit_with_new_measurement,

@@ -3,7 +3,7 @@ import warnings
 
 
 from src.data_generator import DataGenerator
-from src.solver import OptimizationProblemType
+from src.data_classes import OptimizationProblemType
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
