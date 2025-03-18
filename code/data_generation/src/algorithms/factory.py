@@ -68,26 +68,4 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
         max_nodes = 10
         return generate_hamiltonian_path_graphs(max_nodes=max_nodes)
     else:
-        raise ValueError("No problem specified")
-
-
-# def get_problem_polynomial(
-#     problem: OptimizationProblemType, generate_data: bool = False
-# ):
-#     """Get the polynomial for the optimization problem.
-
-#     Args:
-#         problem (OptimizationProblem): The optimization problem.
-
-#     Returns:
-#         Polynomial: The polynomial for the optimization problem.
-#     """
-#     graph_data = get_problem_data(problem, generate_data)
-
-#     if problem.problem_type == OptimizationProblemType.HYPERMAXCUT:
-#         p = HyperMaxCut(graph_data)
-#         return p.get_binary_polynomial()
-#     elif problem.problem_type == OptimizationProblemType.COMMUNITY_DETECTION:
-#         return CommunityDetection(graph_data)
-#     else:
-#         raise ValueError("No problem specified")
+        raise ValueError("No graph generator for this problem.")
