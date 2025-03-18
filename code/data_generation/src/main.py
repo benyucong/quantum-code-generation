@@ -29,6 +29,13 @@ if __name__ == "__main__":
         required=False,
         help="Choose one of the available Ansatz templates for VQE",
     )
+    parser.add_argument(
+        "--vqe",
+        type=bool,
+        required=False,
+        default=False,
+        help="Run VQE",
+    )
 
     args = parser.parse_args()
 
@@ -37,5 +44,6 @@ if __name__ == "__main__":
         output_path=args.output_path,
         ansatz_template=args.ansatz_template,
         layers=args.layers,
+        vqe=args.vqe,
     )
     generator.generate_data()

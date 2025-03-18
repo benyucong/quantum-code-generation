@@ -129,12 +129,14 @@ class DataGenerator:
         output_path: str,
         ansatz_template: int,
         layers: int,
+        vqe: bool = True,
     ):
         self.problem = problem
         self.output_path = output_path
         self.ansatz_template = ansatz_template
         self.layers = layers
         self.device_type = _get_device_type()
+        self.vqe = vqe
         print(f"Using device type: {self.device_type}")
 
     def generate_data(self) -> None:
@@ -384,7 +386,7 @@ class DataGenerator:
         tasks_other = [task for task in tasks if task[2] != OptimizationType.VQE]
 
         # Process VQE tasks in parallel
-        if False:
+        if self.vqe and tasks_vqe:
             print(f"Processing {len(tasks_vqe)} VQE tasks in parallel")
             with ProcessPoolExecutor(
                 max_workers=n_workers, initializer=_worker_init
@@ -394,13 +396,15 @@ class DataGenerator:
                 for i in range(0, len(args), batch_size):
                     batch = args[i : i + batch_size]
                     list(executor.map(_process_task, batch))
-
-        # Process non-VQE tasks sequentially
-        if tasks_other:
-            print(f"Processing {len(tasks_other)} non-VQE tasks sequentially")
-            _worker_init()
-            for task in tasks_other:
-                _process_task((self, task))
+        elif tasks_other:
+            # Process non-VQE tasks sequentially
+            if tasks_other:
+                print(f"Processing {len(tasks_other)} non-VQE tasks sequentially")
+                _worker_init()
+                for task in tasks_other:
+                    _process_task((self, task))
+        else:
+            raise ValueError("No tasks to process...")
 
     def _save_solution(self, solution: OptimizationProblem):
         """
