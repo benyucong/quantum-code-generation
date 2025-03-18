@@ -21,6 +21,7 @@ class OptimizationProblemType(str, Enum):
     HYPERMAXCUT = "hypermaxcut"
     GRAPH_ISOMORPHISM = "graph_isomorphism"
     GRAPH_COLORING = "graph_coloring"
+    HAMILTONIAN_PATH = "hamiltonian_path"
 
 
 class OptimizationType(str, Enum):
@@ -86,6 +87,12 @@ class GraphIsomorphismAttributes:
 @dataclass
 class KCliqueAttributes:
     k: int
+
+
+@dataclass
+class HamiltonianPathAttributes:
+    start_node: int
+    end_node: int
 
 
 @dataclass

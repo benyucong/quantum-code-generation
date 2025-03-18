@@ -17,6 +17,9 @@ from src.algorithms.graph_isomorphism.graph_isomorphism_graphs import (
 from src.algorithms.kcliques.kclique_graphs import (
     generate_kclique_data_set as generate_k_clique_graphs,
 )
+from src.algorithms.hamiltonian_path.hamiltonian_path_graphs import (
+    generate_graphs as generate_hamiltonian_path_graphs,
+)
 from src.solver import OptimizationProblemType
 
 
@@ -61,6 +64,9 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
         return generate_graph_isomorphism_graphs(max_nodes)
     elif problem == OptimizationProblemType.K_CLIQUE:
         return generate_k_clique_graphs()
+    elif problem == OptimizationProblemType.HAMILTONIAN_PATH:
+        max_nodes = 10
+        return generate_hamiltonian_path_graphs(max_nodes=max_nodes)
     else:
         raise ValueError("No problem specified")
 

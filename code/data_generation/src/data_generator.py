@@ -19,6 +19,7 @@ from src.algorithms.connected_components.connected_component import (
 from src.algorithms.factory import get_problem_data
 from src.algorithms.graph_coloring.graph_coloring import GraphColoring
 from src.algorithms.graph_isomorphism.graph_isomorphism import GraphIsomorphism
+from src.algorithms.hamiltonian_path.hamiltonian_path import HamiltonianPath
 from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
 from src.algorithms.kcliques.kclique import KClique
 from src.binary_optimization_problem import (
@@ -31,6 +32,7 @@ from src.solver import (
     ExactSolution,
     GraphColoringAttributes,
     GraphIsomorphismAttributes,
+    HamiltonianPathAttributes,
     KCliqueAttributes,
     OptimizationProblem,
     OptimizationProblemType,
@@ -189,8 +191,19 @@ class DataGenerator:
             graph, complete_graph, k = graph_data
             binary_polynomial = KClique(graph, k)
             problem_specific_attributes = KCliqueAttributes(k=k)
+        elif self.problem == OptimizationProblemType.HAMILTONIAN_PATH:
+            graph, hamiltonian_path, start_node, end_node = graph_data
+            binary_polynomial = HamiltonianPath(
+                graph, hamiltonian_path, start_node, end_node
+            )
+            problem_specific_attributes = HamiltonianPathAttributes(
+                start_node=start_node, end_node=end_node
+            )
         else:
             raise ValueError("Invalid optimization problem.")
+
+        if graph is None:
+            raise ValueError("Make sure graph is defined.")
 
         problem = BinaryOptimizationProblem(
             binary_polynomial=binary_polynomial.get_binary_polynomial(),
