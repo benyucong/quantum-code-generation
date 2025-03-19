@@ -12,7 +12,6 @@ from qiskit_qasm3_import import parse
 ANSWER_PATTERN = r"^<think>.*?</think>\s*<answer>.*?</answer>$"
 
 
-
 def compute_relative_entropy(p, q, epsilon=1e-12) -> float:
     p = np.array(p, dtype=float)
     q = np.array(q, dtype=float)
@@ -20,8 +19,10 @@ def compute_relative_entropy(p, q, epsilon=1e-12) -> float:
     kl_divergence = np.sum(p * (np.log(p) - np.log(q)))
     return float(kl_divergence)
 
+
 def int_to_bitstring(i: int, n_qubits: int) -> str:
     return format(i, "0" + str(n_qubits) + "b")
+
 
 def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulator):
     sim_circuit = circuit.remove_final_measurements(inplace=False)
@@ -31,26 +32,29 @@ def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulato
     probs = statevector.probabilities().tolist()
     return probs
 
+
 def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
     probs = get_probability_distribution(circuit, simulator)
     most_probable_state_index = np.argmax(probs)
     bitstring = int_to_bitstring(most_probable_state_index, circuit.num_qubits)
     return probs, bitstring
 
+
 def extract_qasm(completion: str) -> str:
     completion = completion.strip()
 
     match = re.match(ANSWER_PATTERN, completion)
-    
+
     if match:
         completion = match.group(1)
     else:
         raise ValueError("Incorrect Answer format...")
-    
+
     if completion.startswith("Answer:"):
-        return completion[len("Answer:"):].strip()
+        return completion[len("Answer:") :].strip()
 
     return completion
+
 
 def parse_qasm_circuit_from_str(completion: str):
     qasm_str = extract_qasm(completion)
@@ -61,7 +65,9 @@ def parse_qasm_circuit_from_str(completion: str):
     try:
         circuit = parse(qasm_str)
     except Exception as e:
-        raise ValueError(f"Failed to parse QASM code. It might be invalid QASM 3.0 code: {e}") from e
+        raise ValueError(
+            f"Failed to parse QASM code. It might be invalid QASM 3.0 code: {e}"
+        ) from e
 
     return circuit
 
@@ -77,16 +83,18 @@ def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
         else:
             mutable_op = op
         if mutable_op.params:
-            new_params = [np.random.uniform(0, 2*np.pi) for _ in mutable_op.params]
+            new_params = [np.random.uniform(0, 2 * np.pi) for _ in mutable_op.params]
             mutable_op.params = new_params
         new_circ.append(mutable_op, qubits, clbits)
     return new_circ
 
+
 # ---------------------- REWARD FUNCTIONS -------------------------
 def format_reward(completions, **kwargs):
-    matches = [re.match(ANSWER_PATTERN, content) for content in completion_contents]
-    
+    matches = [re.match(ANSWER_PATTERN, content) for content in completions]
+
     return [1.0 if match else 0.0 for match in matches]
+
 
 def circuit_compile_reward(completions, **kwargs) -> List[float]:
     rewards = []
@@ -101,17 +109,15 @@ def circuit_compile_reward(completions, **kwargs) -> List[float]:
             rewards.append(0.0)
     return rewards
 
+
 def probability_distrubution_reward(completions, **kwargs) -> List[float]:
     solutions = kwargs["solution"]
-    
+
     rewards = []
     simulator = AerSimulator(method="statevector")
 
     for generated_qasm, optimal_qasm in zip(completions, solutions):
         try:
-            generated_qasm = strip_answer_prefix(generated_qasm)
-            optimal_qasm = strip_answer_prefix(optimal_qasm)
-            
             generated_circuit = parse_qasm_circuit_from_str(generated_qasm)
             optimal_circuit = parse_qasm_circuit_from_str(optimal_qasm)
 
@@ -124,4 +130,3 @@ def probability_distrubution_reward(completions, **kwargs) -> List[float]:
             reward = 0.0
         rewards.append(reward)
     return rewards
-
