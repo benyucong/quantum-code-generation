@@ -1,7 +1,9 @@
 import json
 import re
 import sys
+import logging
 from typing import Any, Dict, List
+
 import numpy as np
 from qiskit import transpile, QuantumCircuit
 from qiskit.quantum_info import Statevector
@@ -10,6 +12,7 @@ from qiskit_qasm3_import import parse
 
 ANSWER_PATTERN = r"^<think>.*?</think>\s*<answer>.*?</answer>$"
 
+logger = logging.getLogger(__name__)
 
 def compute_relative_entropy(p, q, epsilon=1e-12) -> float:
     p = np.array(p, dtype=float)
@@ -101,7 +104,7 @@ def circuit_compile_reward(completions, **kwargs) -> List[float]:
         try:
             _ = parse_qasm_circuit_from_str(completion)
 
-            print("parse successful")
+            logger.debug("Parse Successful!")
 
             rewards.append(1.0)
         except Exception as e:
@@ -122,8 +125,9 @@ def probability_distrubution_reward(completions, **kwargs) -> List[float]:
 
             gen_probs = get_probability_distribution(generated_circuit, simulator)
             opt_probs = get_probability_distribution(optimal_circuit, simulator)
-            print(gen_probs, opt_probs)
+
             rel_ent = compute_relative_entropy(gen_probs, opt_probs)
+            logger.debug("Relative Entropy: %s", rel_ent)
             reward = 1.0 / (1.0 + rel_ent)
         except Exception as e:
             reward = 0.0

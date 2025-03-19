@@ -28,17 +28,28 @@ uid="$(date +%Y%m%d_%H%M%S)"
 base_model_name="linuzj/quantum-circuit-qubo-3B"
 report_to="wandb"
 
+# HYPERPARAMS
 epochs=20
 block_size=16384
-save_strategy='steps'
-save_steps=1000
 max_prompt_length=4000
 temperature=0.95
 learning_rate=0.00001
 
+# SAVING
+save_strategy='steps'
+save_steps=1000
+
+# LOGGING
+logging_strategy="steps"
+logging_steps=10
+
+# EVAL (options=[no, steps, epoch])
+evaluation_strategy="epoch"
+
+
 # Only do one batch per GPU to reduce memory footprint. Default is 8
 per_device_batch_size=1
-gradient_accumulation_steps=1
+gradient_accumulation_steps=4
 
 accelerate launch \
     --num_processes=$SLURM_NTASKS_PER_NODE \
@@ -55,7 +66,9 @@ accelerate launch \
         --learning_rate=${learning_rate} \
         --block_size=${block_size} \
         --remove_unused_columns=false \
-
+        --logging_strategy=${logging_strategy} \
+        --logging_steps=${logging_steps} \
+        --evaluation_strategy=${evaluation_strategy} \
         --num_train_epochs=${epochs} \
         --per_device_train_batch_size=${per_device_batch_size} \
         --per_device_eval_batch_size=${per_device_batch_size} \
