@@ -2,28 +2,26 @@
 #SBATCH --job-name=grpo_quantum_circuit_gen_multigpu
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=6
+#SBATCH --ntasks-per-node=4
 #SBATCH --output=../../logs/grpo_%A_%a.out
 #SBATCH --error=../../logs/grpo_%A_%a.err
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=300GB
-#SBATCH --gpus=6
+#SBATCH --gpus=4
 #SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
-##SBATCH --partition=gpu-debug
 
 module purge
-module load gcc cuda cmake openmpi
-module load scicomp-python-env/2024-01
+# module load gcc cuda cmake openmpi
+module load scicomp-python-env
 module load scicomp-llm-env
 
 source .venv/bin/activate
 
 export WANDB_API_KEY=$(cat .wandb_api_key)
 
-pip install --upgrade -r requirements.txt
-
+pip install -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
@@ -42,7 +40,13 @@ learning_rate=0.00001
 per_device_batch_size=1
 gradient_accumulation_steps=1
 
-accelerate launch --num_processes=$SLURM_NTASKS_PER_NODE --num_machines=1 grpo.py \
+accelerate launch \
+    --num_processes=$SLURM_NTASKS_PER_NODE \
+    --num_machines=1 \
+    --mixed_precision=bf16 \
+    --dynamo_backend=no \
+    -- \
+    grpo.py \
         --model_name=${base_model_name} \
         --output_dir="data/checkpoints/${uid}" \
         --log_level="info" \
@@ -51,6 +55,7 @@ accelerate launch --num_processes=$SLURM_NTASKS_PER_NODE --num_machines=1 grpo.p
         --learning_rate=${learning_rate} \
         --block_size=${block_size} \
         --remove_unused_columns=false \
+
         --num_train_epochs=${epochs} \
         --per_device_train_batch_size=${per_device_batch_size} \
         --per_device_eval_batch_size=${per_device_batch_size} \
