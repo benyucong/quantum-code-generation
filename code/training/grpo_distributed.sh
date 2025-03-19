@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=grpo_quantum_circuit_gen_multigpu
-#SBATCH --time=04:00:00
+#SBATCH --time=00:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
 #SBATCH --output=../../logs/grpo_%A_%a.out
@@ -9,6 +9,7 @@
 #SBATCH --mem=300GB
 #SBATCH --gpus=4
 #SBATCH --partition=gpu-h200-141g-short
+##SBATCH --partition=gpu-debug
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
 
@@ -56,6 +57,7 @@ accelerate launch \
     --num_machines=1 \
     --mixed_precision=bf16 \
     --dynamo_backend=no \
+    --main_process_port=29501 \
     -- \
     grpo.py \
         --model_name=${base_model_name} \

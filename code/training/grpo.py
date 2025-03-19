@@ -3,6 +3,7 @@ import trl
 import warnings
 import logging
 import transformers
+from transformers.utils import logging
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 from dataclasses import dataclass, field, asdict
 from typing import Optional, List
@@ -10,8 +11,8 @@ from grpo_reward_functions import probability_distrubution_reward, circuit_compi
 import torch
 
 warnings.filterwarnings("ignore", category=FutureWarning)
-transformers.logging.set_verbosity_info()
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.set_verbosity_info()
+logger = logging.get_logger("transformers")
 
 @dataclass
 class TrainingConfig:
@@ -29,7 +30,7 @@ def train():
     config, args = parser.parse_args_into_dataclasses()
 
     log_config = {**asdict(config), **asdict(args)}
-    logging.info("Training config: %s", log_config)
+    logger.info("Training config: %s", log_config)
 
     model_config = trl.ModelConfig(
         model_name_or_path=config.model_name,
@@ -41,13 +42,6 @@ def train():
         model_config.model_name_or_path,
         torch_dtype=model_config.torch_dtype,
     )
-
-    # # FIX: Use get_input_embeddings() instead of model.embed_tokens.
-    # embedding_layer = model.get_input_embeddings()
-    # if embedding_layer.weight.ndim != 2:
-    #     orig_shape = embedding_layer.weight.shape
-    #     logging.info(f"Reshaping input embeddings from {orig_shape} to 2-D.")
-    #     embedding_layer.weight.data = embedding_layer.weight.data.view(orig_shape[0], -1).to(torch.float32)
 
     dataset = load_dataset(config.train_file_path)
     tokenizer = transformers.AutoTokenizer.from_pretrained(config.model_name, use_fast=True)

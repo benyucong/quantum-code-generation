@@ -1,7 +1,6 @@
 import json
 import re
 import sys
-import logging
 from typing import Any, Dict, List
 
 import numpy as np
@@ -9,10 +8,13 @@ from qiskit import transpile, QuantumCircuit
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from qiskit_qasm3_import import parse
+from transformers.utils import logging
 
-ANSWER_PATTERN = r"^<think>.*?</think>\s*<answer>.*?</answer>$"
+ANSWER_PATTERN = r"(?s)^<think>.*?</think>\s*<answer>(.*?)</answer>$"
 
-logger = logging.getLogger(__name__)
+logging.set_verbosity_info()
+logger = logging.get_logger("transformers")
+
 
 def compute_relative_entropy(p, q, epsilon=1e-12) -> float:
     p = np.array(p, dtype=float)
@@ -45,7 +47,7 @@ def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
 def extract_qasm(completion: str) -> str:
     completion = completion.strip()
 
-    match = re.match(ANSWER_PATTERN, completion)
+    match = re.match(ANSWER_PATTERN, completion, flags=re.DOTALL)
 
     if match:
         completion = match.group(1)
@@ -93,7 +95,7 @@ def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
 
 # ---------------------- REWARD FUNCTIONS -------------------------
 def format_reward(completions, **kwargs):
-    matches = [re.match(ANSWER_PATTERN, content) for content in completions]
+    matches = [re.match(ANSWER_PATTERN, content, flags=re.DOTALL) for content in completions]
 
     return [1.0 if match else 0.0 for match in matches]
 
@@ -102,10 +104,7 @@ def circuit_compile_reward(completions, **kwargs) -> List[float]:
     rewards = []
     for completion in completions:
         try:
-            _ = parse_qasm_circuit_from_str(completion)
-
-            logger.debug("Parse Successful!")
-
+            parse_qasm_circuit_from_str(completion)
             rewards.append(1.0)
         except Exception as e:
             rewards.append(0.0)
@@ -127,7 +126,6 @@ def probability_distrubution_reward(completions, **kwargs) -> List[float]:
             opt_probs = get_probability_distribution(optimal_circuit, simulator)
 
             rel_ent = compute_relative_entropy(gen_probs, opt_probs)
-            logger.debug("Relative Entropy: %s", rel_ent)
             reward = 1.0 / (1.0 + rel_ent)
         except Exception as e:
             reward = 0.0
