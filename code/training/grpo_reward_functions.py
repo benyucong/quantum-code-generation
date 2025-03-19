@@ -3,7 +3,6 @@ import re
 import sys
 from typing import Any, Dict, List
 import numpy as np
-import pennylane as qml
 from qiskit import transpile, QuantumCircuit
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
