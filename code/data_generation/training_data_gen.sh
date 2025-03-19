@@ -17,8 +17,8 @@ module load scicomp-python-env
 
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install custatevec_cu12
-pip install pennylane-lightning-gpu
+# pip install custatevec_cu12
+# pip install pennylane-lightning-gpu
 
 # JAX and OpenMP configuration
 export JAX_PLATFORM_NAME="cpu"
@@ -28,7 +28,7 @@ export OMP_NUM_THREADS=4
 PROBLEMS=("community_detection" "graph_coloring" "connected_components" "hypermaxcut" "kclique" "graph_isomorphism" "hamiltonian_path" "matching")
 ANSATZ_OPTIONS=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
 
-VQE=false
+VQE=true
 
 if [ "$VQE" = true ]; then
     total_tasks=$((${#PROBLEMS[@]} * ${#ANSATZ_OPTIONS[@]}))
@@ -65,4 +65,4 @@ python3 -u -m src.main \
     --layers ${layers} \
     --ansatz_template ${SELECTED_ANSATZ} \
     --output_path="${output_dir}" \
-    --vqe=${VQE}
+    --vqe

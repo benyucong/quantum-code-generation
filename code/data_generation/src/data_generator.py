@@ -106,21 +106,7 @@ class DataGenerator:
         output_path (str): Directory path where the generated data will be saved.
         ansatz_template (int): The template ID for the quantum circuit ansatz.
         layers (int): Number of layers in the quantum circuit.
-
-    Methods:
-        generate_data(): Main method to generate and process optimization problems.
-        _process_problem(): Processes a single optimization problem instance.
-        _solution_exists(): Checks if a solution already exists in the output directory.
-        _process_problems(): Handles parallel processing of multiple optimization problems.
-        _save_solution(): Saves processed solution to disk.
-
-    Example:
-        generator = DataGenerator(
-            problem=OptimizationProblemType.COMMUNITY_DETECTION,
-            output_path="./data",
-            ansatz_template=1,
-            layers=2
-        generator.generate_data()
+        vqe (bool): Solve with VQE or other methods.
     """
 
     def __init__(
@@ -129,7 +115,7 @@ class DataGenerator:
         output_path: str,
         ansatz_template: int,
         layers: int,
-        vqe: bool = True,
+        vqe: bool = False,
     ):
         self.problem = problem
         self.output_path = output_path

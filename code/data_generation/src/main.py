@@ -29,15 +29,10 @@ if __name__ == "__main__":
         required=False,
         help="Choose one of the available Ansatz templates for VQE",
     )
-    parser.add_argument(
-        "--vqe",
-        type=bool,
-        required=False,
-        default=False,
-        help="Run VQE",
-    )
+    parser.add_argument('--vqe', action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
+
 
     generator = DataGenerator(
         problem=args.problem,
