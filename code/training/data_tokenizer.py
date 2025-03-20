@@ -1,5 +1,7 @@
 import argparse
 import ast
+import random
+import json
 from functools import partial
 from typing import Dict
 from datasets import load_dataset
@@ -19,6 +21,37 @@ RESONING_ADDITION_SYSTEM_PROMT = (
     "<think> reasoning process here </think><answer> answer here </answer>"
 )
 
+def generate_prompt_permutations(n_qubits, n_layers, problem_type, problem_specific_text, graph):
+    prompts = [
+        (
+            f"Generate a quantum circuit in QASM 3.0 with {n_qubits} qubits "
+            f"and {n_layers} layers that solves the {problem_type} {problem_specific_text} "
+            f"for the graph: {graph}. The answer must be correct and in valid QASM 3.0 code "
+            f"with optimal parameters."
+        ),
+        (
+            f"Given the graph: {graph}, design a QASM 3.0 quantum circuit using {n_qubits} qubits "
+            f"and {n_layers} layers to solve the {problem_type} {problem_specific_text}. "
+            f"Output valid QASM 3.0 code with optimal parameters."
+        ),
+        (
+            f"Construct a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} layers "
+            f"to address the {problem_type} {problem_specific_text} for the graph: {graph}. "
+            f"Ensure the final output is valid QASM 3.0 code with optimal parameters."
+        ),
+        (
+            f"Create a quantum circuit in QASM 3.0 featuring {n_qubits} qubits and {n_layers} layers "
+            f"that resolves the {problem_type} {problem_specific_text} for the graph: {graph}. "
+            f"The answer should be in correct QASM 3.0 code with optimal parameters."
+        ),
+        (
+            f"Design a QASM 3.0 quantum circuit with {n_qubits} qubits and {n_layers} layers "
+            f"to solve the {problem_type} {problem_specific_text} given the graph: {graph}. "
+            f"Provide valid QASM 3.0 code with optimal parameters."
+        )
+    ]
+    return prompts
+
 def preprocess(text):
     if text is None:
         return " "
@@ -28,7 +61,11 @@ def preprocess(text):
     return text
 
 def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
-    attributes = ast.literal_eval(attributes)
+    if not isinstance(attributes, dict):
+        try:
+            attributes = ast.literal_eval(attributes)
+        except Exception as e:
+            raise ValueError(f"Could not parse attributes: {attributes}") from e
     if problem == "community_detection":
         return f"with {attributes['communities_size']} sized communities and {attributes['number_of_communities']} communities"
     elif problem == "connected_components":
@@ -36,7 +73,15 @@ def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
     elif problem == "graph_coloring":
         return f"with {attributes['number_of_colors']} colors"
     elif problem == "graph_isomorphism":
-        return f"with {attributes['number_of_colors']} colors"
+        return ""
+    # To ADD: hamiltonian path, hypermaxcut, kcliques, matching
+    elif problem == "hamiltonian_path":
+        start_node, end_node = attributes["start_node"], attributes["end_node"]
+        return f"starting from node {start_node} and ending at node {end_node}."
+    elif problem == "matching":
+        matching = attributes["matching"]
+        return f"using {matching} matching"
+
     return ""
 
 def process_graph_example(example: Dict) -> Dict:
@@ -48,31 +93,15 @@ def process_graph_example(example: Dict) -> Dict:
     optimization_type = example["optimization_type"]
     problem_type = example["problem_type"]
     problem_specific_text = ""
-
     if example["problem_specific_attributes"]:
-        problem_specific_text = generate_problem_specific_text(problem_type, example["problem_specific_attributes"])
+        problem_specific_text = generate_problem_specific_text(problem_type, json.loads(example["problem_specific_attributes"]))
 
-    question = (
-        f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
-        f" layers with optimal parameters that solves the {problem_type} {problem_specific_text} for "
-        f"the following graph: {graph}. Ensure that the final answer is correct and in valid QASM 3.0 code with optimal parameters for the given problem."
-    )
-    # polynom_question = (
-    #     f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
-    #     " layers with optimal parameters that solves the problem {SOME_PROBLEM_DESCRIPTION} using {optimization_type}."
-    #     ". Then ensure that the final answer is correct and in valid QASM 3.0 code."
-    # )
-
-    # # Cost hamiltonian standard?? Qiskit or Pennylane?
-    # improved_question = (
-    #     f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
-    #     " layers with optimal parameters that solves the problem for the cost hamiltonian {cost_hamiltonian} using {optimization_type}."
-    #     ". Then ensure that the final answer is correct and in valid QASM 3.0 code."
-    # )
+    prompt = generate_prompt_permutations(n_qubits, n_layers, problem_type, problem_specific_text, graph)
+    prompt = random.choice(prompt)
 
     answer = circuit_with_params
     return dict(
-        question=question,
+        question=prompt,
         answer=answer,
     )
 
@@ -92,7 +121,7 @@ def process_example(example: Dict, tokenizer: AutoTokenizer, mode: str = "sft") 
     
     elif mode == "grpo":
         chat_template = [
-            {"role": "system", "content": SYSTEM_PROMPT + RESONING_ADDITION_SYSTEM_PROMT},
+            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": question},
         ]
 
@@ -119,14 +148,26 @@ def tokenize_examples(download_data_path: str, upload_data_path: str, num_proc: 
             num_proc=num_proc,
             desc=f"Tokenizing data in {mode} mode"
         )
+
+    # Remove Unused Columns
+    column_names = set(dataset["train"].column_names)
+
+    if mode == "sft":
+        column_names.remove("text")
+    elif mode == "grpo":
+        column_names.remove("prompt")
+        column_names.remove("solution")
+
+    dataset = dataset.remove_columns(list(column_names))
+
     upload_data_path_with_postfix = f"{upload_data_path}_{mode}"
     dataset.push_to_hub(upload_data_path_with_postfix)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SFT or GRPO training.")
     parser.add_argument("--mode", type=str, choices=["sft", "grpo"], required=True, help="SFT or GRPO")
-    parser.add_argument("--download_data_path", type=str, default="linuzj/graph-data-quantum", help="Source Dataset Path")
-    parser.add_argument("--upload_data_path", type=str, default="linuzj/graph-data-quantum_tokenized", help="Tokenized Dataset Path")
+    parser.add_argument("--download_data_path", type=str, default="linuzj/graph-data-quantum-basic-optimizer", help="Source Dataset Path")
+    parser.add_argument("--upload_data_path", type=str, default="linuzj/graph-data-quantum-basic-optimizer_tokenized", help="Tokenized Dataset Path")
     parser.add_argument("--num_proc", type=int, default=20, help="Processes num.")
     parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-3B-Instruct", help="(default: Qwen/Qwen2.5-3B-Instruct).")
     args = parser.parse_args()
