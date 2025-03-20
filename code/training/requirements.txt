@@ -4,13 +4,15 @@ sympy==1.13.1
 pandas==2.2.3
 torch==2.5.1
 transformers==4.48.3
-trl==0.14.0
+trl==0.15.2
 peft
 wandb==0.19.6
-accelerate==1.0.1
+accelerate==1.5.0
 hf-transfer==0.1.9
 flash-attn
 qiskit==1.2.4
 qiskit_aer==0.16.1
 qiskit_algorithms==0.3.1
 qiskit_qasm3_import==0.5.1
+vllm
+deepspeed

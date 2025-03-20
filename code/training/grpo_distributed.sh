@@ -14,7 +14,6 @@
 ##SBATCH --mail-user=linus.jern@aalto.fi
 
 module purge
-# module load gcc cuda cmake openmpi
 module load scicomp-python-env
 module load scicomp-llm-env
 
@@ -26,15 +25,23 @@ pip install -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
-base_model_name="linuzj/quantum-circuit-qubo-3B"
+base_model_name="Qwen/Qwen2.5-3B-Instruct"
 report_to="wandb"
 
+# Optimizer
+optim="adamw_8bit"
+
 # HYPERPARAMS
-epochs=20
+epochs=10
 block_size=16384
-max_prompt_length=4000
-temperature=0.95
+max_prompt_length=8000
+temperature=0.9
 learning_rate=0.00001
+max_completion_length=8000
+num_generations=2
+per_device_train_batch_size=2
+gradient_accumulation_steps=4
+
 
 # SAVING
 save_strategy='steps'
@@ -42,41 +49,35 @@ save_steps=1000
 
 # LOGGING
 logging_strategy="steps"
-logging_steps=10
+logging_steps=5
+log_completions=true
 
 # EVAL (options=[no, steps, epoch])
-evaluation_strategy="epoch"
+evaluation_strategy="no"
 
 
-# Only do one batch per GPU to reduce memory footprint. Default is 8
-per_device_batch_size=1
-gradient_accumulation_steps=4
 
 accelerate launch \
-    --num_processes=$SLURM_NTASKS_PER_NODE \
-    --num_machines=1 \
+    --config_file "ds_config.yaml" \
     --mixed_precision=bf16 \
-    --dynamo_backend=no \
-    --main_process_port=29501 \
     -- \
     grpo.py \
         --model_name=${base_model_name} \
         --output_dir="data/checkpoints/${uid}" \
         --log_level="info" \
         --max_prompt_length=${max_prompt_length} \
+        --max_completion_length=${max_completion_length} \
+        --per_device_train_batch_size=${per_device_train_batch_size} \
+        --gradient_accumulation_steps=${gradient_accumulation_steps} \
+        --num_generations=${num_generations} \
         --temperature=${temperature} \
         --learning_rate=${learning_rate} \
         --block_size=${block_size} \
-        --remove_unused_columns=false \
         --logging_strategy=${logging_strategy} \
         --logging_steps=${logging_steps} \
+        --log_completions=${log_completions} \
         --evaluation_strategy=${evaluation_strategy} \
         --num_train_epochs=${epochs} \
-        --per_device_train_batch_size=${per_device_batch_size} \
-        --per_device_eval_batch_size=${per_device_batch_size} \
-        --gradient_accumulation_steps=${gradient_accumulation_steps} \
+        --optim=${optim} \
         --bf16=True \
-        --report_to=${report_to} \
-        --save_strategy=${save_strategy} \
-        --save_steps=${save_steps} \
-        --save_only_model=True
+        --report_to=${report_to}
