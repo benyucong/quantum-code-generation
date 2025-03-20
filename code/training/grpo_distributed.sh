@@ -10,8 +10,8 @@
 #SBATCH --gpus=4
 #SBATCH --partition=gpu-h200-141g-short
 ##SBATCH --partition=gpu-debug
-#SBATCH --mail-type=BEGIN
-#SBATCH --mail-user=linus.jern@aalto.fi
+##SBATCH --mail-type=BEGIN
+##SBATCH --mail-user=linus.jern@aalto.fi
 
 module purge
 # module load gcc cuda cmake openmpi
