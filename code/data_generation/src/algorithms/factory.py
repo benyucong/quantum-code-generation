@@ -1,9 +1,7 @@
 import pickle
+
 from src.algorithms.community_detection.community_detection_graphs import (
     generate_community_graphs,
-)
-from src.algorithms.hypermaxcut.hypermaxcut_graphs import (
-    generate_hypergraphs,
 )
 from src.algorithms.connected_components.connected_component_graphs import (
     generate_graphs as generate_connected_components_graphs,
@@ -14,11 +12,14 @@ from src.algorithms.graph_coloring.graph_coloring_graphs import (
 from src.algorithms.graph_isomorphism.graph_isomorphism_graphs import (
     generate_graphs as generate_graph_isomorphism_graphs,
 )
-from src.algorithms.kcliques.kclique_graphs import (
-    generate_kclique_data_set as generate_k_clique_graphs,
-)
 from src.algorithms.hamiltonian_path.hamiltonian_path_graphs import (
     generate_graphs as generate_hamiltonian_path_graphs,
+)
+from src.algorithms.hypermaxcut.hypermaxcut_graphs import (
+    generate_hypergraphs,
+)
+from src.algorithms.kcliques.kclique_graphs import (
+    generate_kclique_data_set as generate_k_clique_graphs,
 )
 from src.algorithms.matching.matching_graphs import (
     generate_graphs as generate_matching_graphs,

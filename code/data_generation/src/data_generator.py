@@ -9,6 +9,8 @@ import traceback
 from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
+import jax.numpy as jnp
+import pennylane as qml
 from networkx import weisfeiler_lehman_graph_hash
 from networkx.readwrite import json_graph
 
@@ -45,9 +47,6 @@ from src.data_classes import (
     QuantumSolution,
 )
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
-
-import jax.numpy as jnp
-import pennylane as qml
 
 multiprocessing.set_start_method("spawn", force=True)
 QUBIT_LIMIT = 16
