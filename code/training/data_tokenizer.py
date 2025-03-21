@@ -19,6 +19,7 @@ RESONING_ADDITION_SYSTEM_PROMT = (
     "<think> reasoning process here </think><answer> answer here </answer>"
 )
 
+
 def preprocess(text):
     if text is None:
         return " "
@@ -26,6 +27,7 @@ def preprocess(text):
     text = text.replace(" [title]", ". ")
     text = text.replace("  ", " ")
     return text
+
 
 def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
     attributes = ast.literal_eval(attributes)
@@ -39,6 +41,7 @@ def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
         return f"with {attributes['number_of_colors']} colors"
     return ""
 
+
 def process_graph_example(example: Dict) -> Dict:
     n_qubits = example["number_of_qubits"]
     n_layers = example["number_of_layers"]
@@ -50,7 +53,9 @@ def process_graph_example(example: Dict) -> Dict:
     problem_specific_text = ""
 
     if example["problem_specific_attributes"]:
-        problem_specific_text = generate_problem_specific_text(problem_type, example["problem_specific_attributes"])
+        problem_specific_text = generate_problem_specific_text(
+            problem_type, example["problem_specific_attributes"]
+        )
 
     question = (
         f"Your task is to generate a quantum circuit in QASM 3.0 with {n_qubits} qubits and {n_layers} "
@@ -76,32 +81,43 @@ def process_graph_example(example: Dict) -> Dict:
         answer=answer,
     )
 
+
 def process_example(example: Dict, tokenizer: AutoTokenizer, mode: str = "sft") -> Dict:
     graph_data = process_graph_example(example)
     question = graph_data["question"]
     answer = graph_data["answer"]
-    
+
     if mode == "sft":
         chat_template = [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": question},
             {"role": "assistant", "content": "\n<|im_start|>\n" + answer.strip()},
         ]
-        text = tokenizer.apply_chat_template(chat_template, tokenize=False, continue_final_message=True)
+        text = tokenizer.apply_chat_template(
+            chat_template, tokenize=False, continue_final_message=True
+        )
         return {"text": text}
-    
+
     elif mode == "grpo":
         chat_template = [
-            {"role": "system", "content": SYSTEM_PROMPT + RESONING_ADDITION_SYSTEM_PROMT},
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT + RESONING_ADDITION_SYSTEM_PROMT,
+            },
             {"role": "user", "content": question},
         ]
 
-        prompt_text = tokenizer.apply_chat_template(chat_template, tokenize=False, continue_final_message=True)
+        prompt_text = tokenizer.apply_chat_template(
+            chat_template, tokenize=False, continue_final_message=True
+        )
         return {"prompt": prompt_text, "solution": answer}
     else:
         raise ValueError(f"Unknown mode: {mode}")
 
-def tokenize_examples(download_data_path: str, upload_data_path: str, num_proc: int, mode: str, model: str):
+
+def tokenize_examples(
+    download_data_path: str, upload_data_path: str, num_proc: int, mode: str, model: str
+):
     dataset = load_dataset(download_data_path, download_mode="force_redownload")
     tokenizer = AutoTokenizer.from_pretrained(model)
 
@@ -111,24 +127,42 @@ def tokenize_examples(download_data_path: str, upload_data_path: str, num_proc: 
             dataset[split] = dataset[split].map(
                 process_example_map,
                 num_proc=num_proc,
-                desc=f"Tokenizing data for {split} split in {mode} mode"
+                desc=f"Tokenizing data for {split} split in {mode} mode",
             )
     else:
         dataset = dataset.map(
             process_example_map,
             num_proc=num_proc,
-            desc=f"Tokenizing data in {mode} mode"
+            desc=f"Tokenizing data in {mode} mode",
         )
     upload_data_path_with_postfix = f"{upload_data_path}_{mode}"
     dataset.push_to_hub(upload_data_path_with_postfix)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SFT or GRPO training.")
-    parser.add_argument("--mode", type=str, choices=["sft", "grpo"], required=True, help="SFT or GRPO")
-    parser.add_argument("--download_data_path", type=str, default="linuzj/graph-data-quantum", help="Source Dataset Path")
-    parser.add_argument("--upload_data_path", type=str, default="linuzj/graph-data-quantum_tokenized", help="Tokenized Dataset Path")
+    parser.add_argument(
+        "--mode", type=str, choices=["sft", "grpo"], required=True, help="SFT or GRPO"
+    )
+    parser.add_argument(
+        "--download_data_path",
+        type=str,
+        default="linuzj/graph-data-quantum",
+        help="Source Dataset Path",
+    )
+    parser.add_argument(
+        "--upload_data_path",
+        type=str,
+        default="linuzj/graph-data-quantum_tokenized",
+        help="Tokenized Dataset Path",
+    )
     parser.add_argument("--num_proc", type=int, default=20, help="Processes num.")
-    parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-3B-Instruct", help="(default: Qwen/Qwen2.5-3B-Instruct).")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="Qwen/Qwen2.5-3B-Instruct",
+        help="(default: Qwen/Qwen2.5-3B-Instruct).",
+    )
     args = parser.parse_args()
 
     tokenize_examples(
@@ -136,5 +170,5 @@ if __name__ == "__main__":
         upload_data_path=args.upload_data_path,
         num_proc=args.num_proc,
         mode=args.mode,
-        model=args.model
+        model=args.model,
     )

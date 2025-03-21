@@ -23,6 +23,15 @@ from src.algorithms.hamiltonian_path.hamiltonian_path_graphs import (
 from src.algorithms.matching.matching_graphs import (
     generate_graphs as generate_matching_graphs,
 )
+from src.algorithms.max_flow.max_flow_graphs import (
+    generate_networks as generate_max_flow_graphs,
+)
+from src.algorithms.min_cut.min_cut_graphs import (
+    generate_networks as generate_min_cut_graphs,
+)
+from src.algorithms.steiner_tree.steiner_tree_graphs import (
+    generate_steiner_dataset as generate_steiner_tree_graphs,
+)
 from src.data_classes import OptimizationProblemType
 
 
@@ -73,5 +82,14 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
     elif problem == OptimizationProblemType.MATCHING:
         max_nodes = 10
         return generate_matching_graphs(max_nodes=max_nodes)
+    elif problem == OptimizationProblemType.MAX_FLOW:
+        max_nodes = 12
+        return generate_max_flow_graphs(max_nodes=max_nodes)
+    elif problem == OptimizationProblemType.MIN_CUT:
+        max_nodes = 12
+        return generate_min_cut_graphs(max_nodes=max_nodes)
+    elif problem == OptimizationProblemType.STEINER_TREE:
+        n_instances = 100
+        return generate_steiner_tree_graphs(n_instances=n_instances)
     else:
         raise ValueError("No graph generator for this problem.")

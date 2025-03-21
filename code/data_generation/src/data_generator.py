@@ -23,6 +23,9 @@ from src.algorithms.hamiltonian_path.hamiltonian_path import HamiltonianPath
 from src.algorithms.hypermaxcut.hypermaxcut import HyperMaxCut
 from src.algorithms.kcliques.kclique import KClique
 from src.algorithms.matching.matching import Matching
+from src.algorithms.max_flow.max_flow import MaxFlow
+from src.algorithms.min_cut.min_cut import MinCut
+from src.algorithms.steiner_tree.steiner_tree import SteinerTree
 from src.binary_optimization_problem import (
     BinaryOptimizationProblem,
 )
@@ -194,6 +197,17 @@ class DataGenerator:
             binary_polynomial = Matching(graph, graph_2)
             problem_specific_attributes = MatchingAttributes(
                 matching=matching, extra=json.dumps(extra)
+            )
+        elif self.problem == OptimizationProblemType.MAX_FLOW:
+            graph, source, sink, max_flow, flow_dict, cut_value, cut_edges = graph_data
+            binary_polynomial = MaxFlow(graph, source, sink, max_flow, flow_dict)
+        elif self.problem == OptimizationProblemType.MIN_CUT:
+            graph, source, sink, max_flow, flow_dict, cut_value, cut_edges = graph_data
+            binary_polynomial = MinCut(graph, source, sink, cut_value, cut_edges)
+        elif self.problem == OptimizationProblemType.STEINER_TREE:
+            graph, terminals, steiner_tree, optimal_weight = graph_data
+            binary_polynomial = SteinerTree(
+                graph, terminals, steiner_tree, optimal_weight
             )
         else:
             raise ValueError("Invalid optimization problem.")

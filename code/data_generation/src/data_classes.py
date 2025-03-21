@@ -16,6 +16,9 @@ class OptimizationProblemType(str, Enum):
     GRAPH_COLORING = "graph_coloring"
     HAMILTONIAN_PATH = "hamiltonian_path"
     MATCHING = "matching"
+    MAX_FLOW = "max_flow"
+    MIN_CUT = "min_cut"
+    STEINER_TREE = "steiner_tree"
 
 
 class OptimizationType(str, Enum):

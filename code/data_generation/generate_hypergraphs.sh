@@ -10,12 +10,12 @@
 
 # Problems:
 #   "hypermaxcut", "community_detection", "graph_coloring", "connected_components",
-#   "kclique", "graph_isomorphism", "hamiltonian_path", "matching"
+#   "kclique", "graph_isomorphism", "hamiltonian_path", "matching", "max_cut", "min_cut", "steiner_tree"
 #
 # Ansatz templates: 1 - 19
 
 
-: ${PROBLEM:="matching"}
+: ${PROBLEM:="max_cut"}
 : ${ANSATZ:="13"}
 : ${LAYERS:="1"}
 : ${OUTPUT_DIR:="out/"}
