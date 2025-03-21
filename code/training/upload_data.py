@@ -150,7 +150,7 @@ def main():
     )
 
     # Upload
-    repo_id = "linuzj/graph-data-quantum"
+    repo_id = "linuzj/graph-data-quantum-basic-optimizer"
     print(f"Uploading dataset to Hugging Face Hub repository '{repo_id}'...")
     try:
         dataset_dict.push_to_hub(repo_id)
