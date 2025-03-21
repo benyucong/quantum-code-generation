@@ -3,7 +3,7 @@
 #SBATCH --time=10:00:00
 #SBATCH --output=../../logs/trainingdata_gen_%A_%a.out
 #SBATCH --error=../../logs/trainingdata_gen_%A_%a.err
-#SBATCH --array=0-71
+#SBATCH --array=0-111
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=10
@@ -22,10 +22,9 @@ export JAX_PLATFORM_NAME="cpu"
 export JAX_ENABLE_X64=true
 export OMP_NUM_THREADS=4
 
-PROBLEMS=("community_detection" "graph_coloring" "connected_components" "kclique" "graph_isomorphism" "hamiltonian_path")
-# options: ANSATZ_OPTIONS=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+PROBLEMS=("kclique" "graph_isomorphism" "hamiltonian_path" "matching" "max_flow", "min_cut" "steiner_tree")
 ANSATZ_OPTIONS=(5 12 13 6)
-LAYERS=(2 3 4)
+LAYERS=(1 2 3 4)
 
 VQE=false
 
