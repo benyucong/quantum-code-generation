@@ -26,7 +26,7 @@ PROBLEMS=("kclique" "graph_isomorphism" "matching" "max_flow" "steiner_tree")
 ANSATZ_OPTIONS=(1 3 4 5 6 7 9 10 11 12 13 14 15 16 18)
 LAYERS=(1 2 3 4)
 
-VQE=true
+VQE=false
 
 NUM_PROBLEMS=${#PROBLEMS[@]}
 NUM_ANSATZ=${#ANSATZ_OPTIONS[@]}
@@ -35,7 +35,7 @@ NUM_LAYERS=${#LAYERS[@]}
 if [ "$VQE" = true ]; then
     total_tasks=$((NUM_PROBLEMS * NUM_ANSATZ * NUM_LAYERS))
 else
-    total_tasks=$NUM_PROBLEMS
+    total_tasks=$((NUM_PROBLEMS * NUM_LAYERS))
 fi
 
 echo "Total tasks expected: $total_tasks"
@@ -56,9 +56,12 @@ if [ "$VQE" = true ]; then
     SELECTED_ANSATZ=${ANSATZ_OPTIONS[$ANSATZ_INDEX]}
     SELECTED_LAYER=${LAYERS[$LAYER_INDEX]}
 else
-    SELECTED_PROBLEM=${PROBLEMS[$TASK_ID]}
+    PROBLEM_INDEX=$(( TASK_ID / NUM_LAYERS ))
+    LAYER_INDEX=$(( TASK_ID % NUM_LAYERS ))
+
+    SELECTED_PROBLEM=${PROBLEMS[$PROBLEM_INDEX]}
     SELECTED_ANSATZ=${ANSATZ_OPTIONS[0]}
-    SELECTED_LAYER=1
+    SELECTED_LAYER=${LAYERS[$LAYER_INDEX]}
 fi
 
 echo "Running ${SELECTED_PROBLEM} | Ansatz ${SELECTED_ANSATZ} | Layers ${SELECTED_LAYER} | VQE=${VQE}"

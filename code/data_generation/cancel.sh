@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-JOBID=6444641
+JOBID=6444719
 
-for i in {30..299}
+for i in {35..299}
 do
   echo "Canceling job ${JOBID}_${i}"
   scancel "${JOBID}_${i}"

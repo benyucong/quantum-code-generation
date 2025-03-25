@@ -109,7 +109,6 @@ def main():
     quantum_cases = create_quantum_cases(data)
     print(f"Created {len(quantum_cases)} QuantumCase instances.")
 
-    # Convert the list of dataclass instances into a list of dictionaries.
     records = [asdict(case) for case in quantum_cases]
 
     features = Features(
