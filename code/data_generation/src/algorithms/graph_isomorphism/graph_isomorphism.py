@@ -12,11 +12,10 @@ def append_dict(d, key, value):
 
 
 class GraphIsomorphism(QuadradicUnconstrainedBinaryOptimization):
-    def __init__(self, graph1, graph2, description="GraphIsomorpthism") -> None:
-        super().__init__(description=description)
-
+    def __init__(self, graph1, graph2, automorphism) -> None:
         self.graph1 = graph1
         self.graph2 = graph2
+        self.automorphism = automorphism
         assert len(graph1.nodes()) == len(graph2.nodes())
         self.bqm = dimod.BinaryQuadraticModel(dimod.BINARY)
         self.isomorphism_is_bijective()
@@ -54,3 +53,31 @@ class GraphIsomorphism(QuadradicUnconstrainedBinaryOptimization):
 
     def get_binary_polynomial(self):
         return self.bqm
+
+    def get_problem_data(self):
+        return None
+
+    def verify_bitstring(self, bitstring, qubits_to_variables):
+        isomorphism = {}
+        for i in range(len(bitstring)):
+            if bitstring[i] == "1":
+                node1 = qubits_to_variables[i][0]
+                node2 = qubits_to_variables[i][1]
+                isomorphism[node1] = node2
+
+        # Isomorphism is bijective between nodes
+        if len(isomorphism) != len(self.graph1.nodes()):
+            return False
+        if len(set(isomorphism.values())) != len(self.graph2.nodes()):
+            return False
+
+        # Isomorphism respects edges
+        for i, j in self.graph1.edges():
+            if (isomorphism[i], isomorphism[j]) not in self.graph2.edges():
+                return False
+
+        for key, value in isomorphism.items():
+            if self.automorphism[key] != value:
+                return False
+
+        return True

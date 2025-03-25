@@ -1,57 +1,51 @@
 import dimod
-from itertools import combinations
+import networkx as nx
 from networkx import weisfeiler_lehman_graph_hash
 from networkx.readwrite import json_graph
-import networkx as nx
 
-class Matching:
+from src.algorithms.qubo_problem import QuadradicUnconstrainedBinaryOptimization
+
+
+class Matching(QuadradicUnconstrainedBinaryOptimization):
     """
     Simple formulation in https://arxiv.org/pdf/1910.05129.pdf
     """
-    
-    def __init__(self, graph, mathcing):
+
+    def __init__(self, graph, matching):
         self.graph = graph
-        self.matching = mathcing
+        self.edges = set(tuple(sorted([edge[0], edge[1]])) for edge in graph.edges())
+        self.nodes = set(graph.nodes())
+        self.matching = matching
         self.qubo = dimod.BinaryQuadraticModel(dimod.BINARY)
         self.build_qubo()
-    
+
     def build_qubo(self):
-        objective = dimod.BinaryQuadraticModel(dimod.BINARY)
-        
-        for edge in self.graph.edges:
-            if type(edge[0]) == str:
-                edge = tuple(sorted(list(edge)))
-            if "weight" in self.graph.edges[edge]:
-                objective.add_variable(edge, self.graph.edges[edge]["weight"])
-            else:
-                objective.add_variable(edge, 1)
-        
-        objective.scale(-1)
-        self.qubo.update(objective)
-        
+        B = 1
+        A = len(self.graph.nodes) * B + 1
+
         for node in self.graph.nodes:
-            adjecent_edges = self.graph.edges(node)
-            sorted_adjecent_edges = []
-            for edge in adjecent_edges:
-                if type(edge[0]) == int and type(edge[1]) == int:
-                    if edge[0] > edge[1]:
-                        edge = (edge[1], edge[0])
-                elif type(edge[0]) == str:
-                    edge = tuple(sorted(list(edge)))
-                sorted_adjecent_edges.append(edge)
-            linear = {}
-            quadratic = {}
-            for edge in sorted_adjecent_edges:
-                linear[edge] = -1
-            for edge1, edge2 in combinations(sorted_adjecent_edges, 2):
-                quadratic[(edge1, edge2)] = 2
-            constraint = dimod.BinaryQuadraticModel(linear, quadratic, 0, dimod.BINARY)
-            constraint.scale(len(self.graph.edges))
-            self.qubo.update(constraint)
-    
+            adjacent_edges = self.graph.edges(node)
+            adjacent_edges = set(
+                tuple(sorted([edge[0], edge[1]])) for edge in adjacent_edges
+            )
+            # Select one edge from the adjacent edges
+            if len(adjacent_edges) > 0:
+                bqm = dimod.generators.combinations(adjacent_edges, 1, strength=1.0)
+                self.qubo.update(bqm)
+        self.qubo.scale(A)
+
+        Hb = dimod.BinaryQuadraticModel(dimod.BINARY)
+        for edge in self.edges:
+            if "weight" in self.graph.edges[edge]:
+                Hb.add_variable(edge, self.graph.edges[edge]["weight"])
+            else:
+                Hb.add_variable(edge, 1)
+        Hb.scale(B)
+        self.qubo.update(Hb)
+
     def get_binary_polynomial(self):
         return self.qubo
-    
+
     def get_solution(self):
         solution = {}
         for v in self.qubo.variables:
@@ -63,11 +57,24 @@ class Matching:
 
     def get_problem_data(self):
         graph_json = json_graph.node_link_data(self.graph, edges="edges")
-        return {
-            "graph": graph_json,
-            "matching": self.matching            
-        }
-        
+        return {"graph": graph_json, "matching": self.matching}
+
     def get_hash(self):
         match_hash = weisfeiler_lehman_graph_hash(nx.Graph(self.matching))
         return weisfeiler_lehman_graph_hash(self.graph) + f"_{match_hash}"
+
+    def verify_bitstring(self, bitstring, qubits_to_variables):
+        variables_to_qubits = {v: k for k, v in qubits_to_variables.items()}
+        matching = []
+
+        for edge in self.graph.edges():
+            if bitstring[variables_to_qubits[edge]] == "1":
+                matching.append(edge)
+        print("Matching:")
+        print(matching)
+        print("Original Matching:")
+        print(self.matching)
+        for edge in self.matching:
+            if edge not in matching:
+                return False
+        return True

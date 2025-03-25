@@ -5,42 +5,57 @@ from src.algorithms.qubo_problem import QuadradicUnconstrainedBinaryOptimization
 
 
 class KClique(QuadradicUnconstrainedBinaryOptimization):
-    def __init__(self, graph, k, coclique=False, description="KClique"):
-        super().__init__(description=description)
-
+    def __init__(self, graph, k, clique_result, coclique=False):
         self.graph = graph
+        self.clique_result = clique_result
         if coclique:
             self.graph = nx.complement(graph)
         self.k = k
-        self.qubo = dimod.BinaryQuadraticModel.empty(dimod.BINARY)
+        self.qubo = dimod.BinaryQuadraticModel(dimod.BINARY)
+        self.variables = list(self.graph.nodes)
+
+        # Ensure A > K*B
+        self.B = 1
+        self.A = self.k * self.B + 1
 
         ## Aim to select k nodes
-        bqm = dimod.generators.combinations(self.graph.nodes, self.k, strength=1.0)
-        self.qubo.update(bqm)
+        Ha = dimod.generators.combinations(self.variables, self.k, strength=1.0)
+        Ha.scale(self.A)
+        self.qubo.update(Ha)
 
         ## Aim to select n(n - 1)/2 edges, i.e., all edges between the k nodes
-        n_edges = self.k * (self.k - 1) / 2
-        # print("Number of selected edges: ", n_edges)
-        bqm = dimod.generators.combinations(self.graph.edges, n_edges, strength=1.0)
-        self.qubo.update(bqm)
+        n_edges = self.B * (self.k * (self.k - 1) / 2)
+        edge_variable_pairs = [(edge[0], edge[1], -1.0) for edge in self.graph.edges]
+        Hb = dimod.BinaryQuadraticModel(dimod.BINARY)
+        Hb.add_interactions_from(edge_variable_pairs)
+        Hb.scale(self.B)
+        Hb.offset = n_edges
 
-        # For each selected edge, we must select the source and target nodes
-        poly = {}
-        for edge in self.graph.edges:
-            poly[edge] = 1
-            poly[(edge, edge[0], edge[1])] = -2
-            poly[(edge[0], edge[1])] = 1
-
-        for v in self.qubo.linear:
-            poly[(v,)] = self.qubo.get_linear(v)
-        for v in self.qubo.quadratic:
-            poly[(v[0], v[1])] = self.qubo.get_quadratic(*v)
-
-        self.poly = dimod.BinaryPolynomial(poly, dimod.BINARY)
-
-        bqm = dimod.make_quadratic(self.poly, 3.0, dimod.BINARY)
-        self.qubo.update(bqm)
-        self.qubo.offset += n_edges
+        # Final Hamiltonian
+        self.qubo.update(Hb)
 
     def get_binary_polynomial(self):
-        return self.poly
+        return self.qubo
+
+    def verify_bitstring(self, string, qubits_to_variables):
+        clique = []
+        variables_to_qubits = {v: k for k, v in qubits_to_variables.items()}
+        for i in range(len(string)):
+            if string[variables_to_qubits[self.variables[i]]] == "1":
+                clique.append(self.variables[i])
+
+        # Check if the clique is valid
+        for i in range(len(clique)):
+            for j in range(i + 1, len(clique)):
+                if not self.graph.has_edge(clique[i], clique[j]):
+                    return False
+
+        # Check if the size of the clique is k
+        if len(clique) != self.k:
+            return False
+
+        # Check if the clique is equal to the given clique result
+        if sorted(clique) != sorted(self.clique_result):
+            return False
+
+        return True
