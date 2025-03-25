@@ -2,8 +2,10 @@ import dimod
 from networkx import weisfeiler_lehman_graph_hash
 from networkx.readwrite import json_graph
 
+from src.algorithms.qubo_problem import QuadradicUnconstrainedBinaryOptimization
 
-class HamiltonianPath:
+
+class HamiltonianPath(QuadradicUnconstrainedBinaryOptimization):
     """
     This implementation is based on https://arxiv.org/pdf/1302.5843.pdf
     For a weighted graph this problem is the traveling salesman problem

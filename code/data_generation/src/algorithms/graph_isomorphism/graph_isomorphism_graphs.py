@@ -41,11 +41,13 @@ def generate_graphs(max_nodes=6):
     for n_nodes in range(3, max_nodes):
         for prob in range(4, 10):
             p = prob / 10
-            for _ in range(100):
+            for _ in range(1000):
                 G, automorphism = generate_graph_with_automorphism(n_nodes, p)
                 graph_hash = weisfeiler_lehman_graph_hash(G)
                 if graph_hash not in graph_hashes:
-                    graphs.append((G, automorphism))
+                    graph1 = G
+                    graph2 = nx.relabel_nodes(G, automorphism)
+                    graphs.append((graph1, graph2, automorphism))
                     graph_hashes.append(graph_hash)
     return graphs
 

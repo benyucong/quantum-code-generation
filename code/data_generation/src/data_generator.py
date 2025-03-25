@@ -174,14 +174,14 @@ class DataGenerator:
                 number_of_colors=n_colors
             )
         elif self.problem == OptimizationProblemType.GRAPH_ISOMORPHISM:
-            graph, graph_2 = graph_data
-            binary_polynomial = GraphIsomorphism(graph, graph_2)
+            graph, graph_2, automorphism = graph_data
+            binary_polynomial = GraphIsomorphism(graph, graph_2, automorphism)
             problem_specific_attributes = GraphIsomorphismAttributes(
                 autoisomorphic_graph=json_graph.node_link_data(graph_2, edges="edges")
             )
         elif self.problem == OptimizationProblemType.K_CLIQUE:
             graph, complete_graph, k = graph_data
-            binary_polynomial = KClique(graph, k)
+            binary_polynomial = KClique(graph, k, complete_graph)
             problem_specific_attributes = KCliqueAttributes(k=k)
         elif self.problem == OptimizationProblemType.HAMILTONIAN_PATH:
             graph, hamiltonian_path, start_node, end_node = graph_data
