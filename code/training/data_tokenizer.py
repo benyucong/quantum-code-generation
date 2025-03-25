@@ -71,6 +71,7 @@ def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
             attributes = ast.literal_eval(attributes)
         except Exception as e:
             raise ValueError(f"Could not parse attributes: {attributes}") from e
+
     if problem == "community_detection":
         return f"with {attributes['communities_size']} sized communities and {attributes['number_of_communities']} communities"
     elif problem == "connected_components":
@@ -78,14 +79,15 @@ def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
     elif problem == "graph_coloring":
         return f"with {attributes['number_of_colors']} colors"
     elif problem == "graph_isomorphism":
-        return ""
-    # To ADD: hamiltonian path, hypermaxcut, kcliques, matching
+        return f"with the second graph being {attributes['autoisomorphic_graph']}"
     elif problem == "hamiltonian_path":
         start_node, end_node = attributes["start_node"], attributes["end_node"]
         return f"starting from node {start_node} and ending at node {end_node}."
     elif problem == "matching":
         matching = attributes["matching"]
         return f"using {matching} matching"
+    elif problem == "kclique":
+        return f"with {attributes['k']} sized clique"
 
     return ""
 
