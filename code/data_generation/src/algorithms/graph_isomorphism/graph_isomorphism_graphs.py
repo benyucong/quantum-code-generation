@@ -28,14 +28,12 @@ def generate_graph_with_automorphism(n: int, p: float):
     nodes = list(G.nodes)
     permuted_nodes = nodes[:]
     random.shuffle(permuted_nodes)
-    mapping = {old: new for old, new in zip(nodes, permuted_nodes)}
+    automorphism = {old: new for old, new in zip(nodes, permuted_nodes)}
 
-    G_iso = nx.relabel_nodes(G, mapping)
-
-    return G, G_iso
+    return G, automorphism
 
 
-def generate_graphs(max_nodes=6):
+def generate_graphs(max_nodes=5):
     graphs = []
     graph_hashes = []
     for n_nodes in range(3, max_nodes):
@@ -60,10 +58,14 @@ def save_graphs(graphs):
 def visualize_graphs(graphs):
     # Visualize 10 randomly selected graphs
     for i in range(10):
-        G, automorphism = random.choice(graphs)
-        plt.figure(figsize=(8, 6))
-        pos = nx.spring_layout(G, seed=42)
-        nx.draw(G)
+        graph1, graph2, automorphism = random.choice(graphs)
+        plt.figure(figsize=(12, 6))
+        plt.subplot(1, 2, 1)
+        plt.title("Original Graph")
+        nx.draw(graph1, with_labels=True, node_color="lightblue", edge_color="gray")
+        plt.subplot(1, 2, 2)
+        plt.title("Isomorphic Graph")
+        nx.draw(graph2, with_labels=True, node_color="lightgreen", edge_color="gray")
         plt.savefig(f"algorithms/graph_isomorphism/figures/graph_{i}.png")
 
 
