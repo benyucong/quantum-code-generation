@@ -15,8 +15,8 @@
 # Ansatz templates: 1 - 19
 
 
-: ${PROBLEM:="hamiltonian_path"}
-: ${ANSATZ:="13"}
+: ${PROBLEM:="kclique"}
+: ${ANSATZ:="5"}
 : ${LAYERS:="1"}
 : ${OUTPUT_DIR:="out/"}
 

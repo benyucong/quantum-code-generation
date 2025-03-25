@@ -76,7 +76,8 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
         max_nodes = 10
         return generate_graph_isomorphism_graphs(max_nodes)
     elif problem == OptimizationProblemType.K_CLIQUE:
-        return generate_k_clique_graphs()
+        max_k = 5
+        return generate_k_clique_graphs(5)
     elif problem == OptimizationProblemType.HAMILTONIAN_PATH:
         max_nodes = 10
         return generate_hamiltonian_path_graphs(max_nodes=max_nodes)
