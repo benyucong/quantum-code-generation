@@ -5,38 +5,17 @@ from glob import glob
 
 
 def find_json_files(directory, exclude_files=None):
-    """
-    Recursively find all JSON files in the specified directory.
-
-    Parameters:
-        directory (str): The root directory to search.
-        exclude_files (set): A set of file paths to exclude (optional).
-
-    Returns:
-        list: A list of JSON file paths.
-    """
-    # Use recursive glob to search for all .json files in the directory.
     pattern = os.path.join(directory, "**", "*.json")
     json_files = glob(pattern, recursive=True)
 
     if exclude_files is None:
         exclude_files = set()
 
-    # Exclude files if necessary (e.g. the output file)
     json_files = [f for f in json_files if os.path.abspath(f) not in exclude_files]
     return json_files
 
 
 def merge_json_files(json_files):
-    """
-    Merge the JSON content from a list of JSON file paths into a list.
-
-    Parameters:
-        json_files (list): List of paths to JSON files.
-
-    Returns:
-        list: A list containing the parsed JSON objects.
-    """
     merged_data = []
     for file in json_files:
         try:

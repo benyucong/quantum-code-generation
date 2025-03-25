@@ -149,8 +149,7 @@ def main():
         {"train": split_dataset["train"], "test": split_dataset["test"]}
     )
 
-    # Upload
-    repo_id = "linuzj/graph-data-quantum-basic-optimizer"
+    repo_id = "linuzj/graph-data-quantum"
     print(f"Uploading dataset to Hugging Face Hub repository '{repo_id}'...")
     try:
         dataset_dict.push_to_hub(repo_id)
