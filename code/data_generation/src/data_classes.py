@@ -105,6 +105,23 @@ class MatchingAttributes:
 
 
 @dataclass
+class MaxFlowAttributes:
+    source: int
+    sink: int
+
+
+@dataclass
+class MinCutAttributes:
+    source: int
+    sink: int
+
+
+@dataclass
+class SteinerTreeAttributes:
+    terminal_nodes: List[int]
+
+
+@dataclass
 class OptimizationProblem:
     problem_type: OptimizationProblemType
     optimization_type: OptimizationType

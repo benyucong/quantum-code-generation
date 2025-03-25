@@ -41,10 +41,13 @@ from src.data_classes import (
     HamiltonianPathAttributes,
     KCliqueAttributes,
     MatchingAttributes,
+    MaxFlowAttributes,
+    MinCutAttributes,
     OptimizationProblem,
     OptimizationProblemType,
     OptimizationType,
     QuantumSolution,
+    SteinerTreeAttributes,
 )
 from src.utils import DataclassJSONEncoder, get_qasm_circuits, int_to_bitstring
 
@@ -201,13 +204,18 @@ class DataGenerator:
         elif self.problem == OptimizationProblemType.MAX_FLOW:
             graph, source, sink, max_flow, flow_dict, cut_value, cut_edges = graph_data
             binary_polynomial = MaxFlow(graph, source, sink, max_flow, flow_dict)
+            problem_specific_attributes = MaxFlowAttributes(source=source, sink=sink)
         elif self.problem == OptimizationProblemType.MIN_CUT:
             graph, source, sink, max_flow, flow_dict, cut_value, cut_edges = graph_data
             binary_polynomial = MinCut(graph, source, sink, cut_value, cut_edges)
+            problem_specific_attributes = MinCutAttributes(source=source, sink=sink)
         elif self.problem == OptimizationProblemType.STEINER_TREE:
             graph, terminals, steiner_tree, optimal_weight = graph_data
             binary_polynomial = SteinerTree(
                 graph, terminals, steiner_tree, optimal_weight
+            )
+            problem_specific_attributes = SteinerTreeAttributes(
+                terminal_nodes=terminals
             )
         else:
             raise ValueError("Invalid optimization problem.")
