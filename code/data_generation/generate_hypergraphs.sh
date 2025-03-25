@@ -15,7 +15,7 @@
 # Ansatz templates: 1 - 19
 
 
-: ${PROBLEM:="kclique"}
+: ${PROBLEM:="steiner_tree"}
 : ${ANSATZ:="5"}
 : ${LAYERS:="1"}
 : ${OUTPUT_DIR:="out/"}
@@ -33,8 +33,6 @@ module load scicomp-python-env
 source .venv/bin/activate
 
 pip install -r requirements.txt
-# pip install custatevec_cu12
-# pip install pennylane-lightning-gpu
 
 python3 -u -m src.main \
     --problem ${PROBLEM} \

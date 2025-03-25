@@ -180,7 +180,6 @@ class DataGenerator:
                 autoisomorphic_graph=json_graph.node_link_data(graph_2, edges="edges")
             )
         elif self.problem == OptimizationProblemType.K_CLIQUE:
-            print(graph_data)
             graph, complete_graph, k = graph_data
             binary_polynomial = KClique(graph, k, complete_graph)
             problem_specific_attributes = KCliqueAttributes(k=k)
