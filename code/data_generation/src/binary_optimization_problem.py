@@ -64,7 +64,7 @@ class BinaryOptimizationProblem(Solver):
             if self.binary_polynomial.vartype == Vartype.BINARY:
                 h, J, offset = self.binary_polynomial.to_hising()
                 for var in h:
-                    J[var, var] = h[var]
+                    J[(var,)] = h[var]
                 self.binary_polynomial = dimod.BinaryPolynomial(J, Vartype.SPIN)
         elif isinstance(self.binary_polynomial, dimod.BinaryQuadraticModel):
             if self.binary_polynomial.vartype == Vartype.BINARY:
