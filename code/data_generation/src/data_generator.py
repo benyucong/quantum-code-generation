@@ -18,6 +18,7 @@ from src.algorithms.community_detection.community_detection import CommunityDete
 from src.algorithms.connected_components.connected_component import (
     ConnectedComponentContainingNode,
 )
+from src.algorithms.edge_cover.edge_cover import EdgeCover
 from src.algorithms.factory import get_problem_data
 from src.algorithms.graph_coloring.graph_coloring import GraphColoring
 from src.algorithms.graph_isomorphism.graph_isomorphism import GraphIsomorphism
@@ -28,6 +29,7 @@ from src.algorithms.matching.matching import Matching
 from src.algorithms.max_flow.max_flow import MaxFlow
 from src.algorithms.min_cut.min_cut import MinCut
 from src.algorithms.steiner_tree.steiner_tree import SteinerTree
+from src.algorithms.vertex_cover.vertex_cover import VertexCover
 from src.binary_optimization_problem import (
     BinaryOptimizationProblem,
 )
@@ -216,6 +218,12 @@ class DataGenerator:
             problem_specific_attributes = SteinerTreeAttributes(
                 terminal_nodes=terminals
             )
+        elif self.problem == OptimizationProblemType.EDGE_COVER:
+            graph, edge_cover = graph_data
+            binary_polynomial = EdgeCover(graph, edge_cover)
+        elif self.problem == OptimizationProblemType.VERTEX_COVER:
+            graph, vertex_cover = graph_data
+            binary_polynomial = VertexCover(graph, vertex_cover)
         else:
             raise ValueError("Invalid optimization problem.")
 

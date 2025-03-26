@@ -6,6 +6,9 @@ from src.algorithms.community_detection.community_detection_graphs import (
 from src.algorithms.connected_components.connected_component_graphs import (
     generate_graphs as generate_connected_components_graphs,
 )
+from src.algorithms.edge_cover.edge_cover_graphs import (
+    generate_networks as generate_edge_cover_graphs,
+)
 from src.algorithms.graph_coloring.graph_coloring_graphs import (
     generate_graphs as generate_graph_coloring_graphs,
 )
@@ -32,6 +35,9 @@ from src.algorithms.min_cut.min_cut_graphs import (
 )
 from src.algorithms.steiner_tree.steiner_tree_graphs import (
     generate_steiner_dataset as generate_steiner_tree_graphs,
+)
+from src.algorithms.vertex_cover.vertex_cover_graphs import (
+    generate_networks as generate_vertex_cover_graphs,
 )
 from src.data_classes import OptimizationProblemType
 
@@ -93,5 +99,11 @@ def get_problem_data(problem: OptimizationProblemType, generate_data: bool = Fal
     elif problem == OptimizationProblemType.STEINER_TREE:
         n_instances = 100
         return generate_steiner_tree_graphs(n_instances=n_instances)
+    elif problem == OptimizationProblemType.VERTEX_COVER:
+        max_nodes = 12
+        return generate_vertex_cover_graphs(max_nodes=max_nodes)
+    elif problem == OptimizationProblemType.EDGE_COVER:
+        max_nodes = 12
+        return generate_edge_cover_graphs(max_nodes=max_nodes)
     else:
         raise ValueError("No graph generator for this problem.")

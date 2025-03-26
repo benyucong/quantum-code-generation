@@ -19,6 +19,8 @@ class OptimizationProblemType(str, Enum):
     MAX_FLOW = "max_flow"
     MIN_CUT = "min_cut"
     STEINER_TREE = "steiner_tree"
+    VERTEX_COVER = "vertex_cover"
+    EDGE_COVER = "edge_cover"
 
 
 class OptimizationType(str, Enum):
