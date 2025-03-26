@@ -219,10 +219,10 @@ class DataGenerator:
                 terminal_nodes=terminals
             )
         elif self.problem == OptimizationProblemType.EDGE_COVER:
-            graph, edge_cover = graph_data
+            graph, edge_cover, cover_size = graph_data
             binary_polynomial = EdgeCover(graph, edge_cover)
         elif self.problem == OptimizationProblemType.VERTEX_COVER:
-            graph, vertex_cover = graph_data
+            graph, vertex_cover, cover_size = graph_data
             binary_polynomial = VertexCover(graph, vertex_cover)
         else:
             raise ValueError("Invalid optimization problem.")
