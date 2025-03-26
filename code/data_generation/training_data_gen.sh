@@ -3,7 +3,7 @@
 #SBATCH --time=10:00:00
 #SBATCH --output=../../logs/trainingdata_gen_%A_%a.out
 #SBATCH --error=../../logs/trainingdata_gen_%A_%a.err
-#SBATCH --array=0-299
+#SBATCH --array=0-179
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=10
@@ -22,11 +22,13 @@ export JAX_PLATFORM_NAME="cpu"
 export JAX_ENABLE_X64=true
 export OMP_NUM_THREADS=4
 
-PROBLEMS=("kclique" "graph_isomorphism" "matching" "max_flow" "steiner_tree")
+# PROBLEMS=("kclique" "graph_isomorphism" "matching" "max_flow" "steiner_tree" "min_cut")
+# PROBLEMS=("graph_isomorphism" "max_flow" "steiner_tree")
+PROBLEMS=("kclique" "matching" "min_cut")
 ANSATZ_OPTIONS=(1 3 4 5 6 7 9 10 11 12 13 14 15 16 18)
 LAYERS=(1 2 3 4)
 
-VQE=false
+VQE=true
 
 NUM_PROBLEMS=${#PROBLEMS[@]}
 NUM_ANSATZ=${#ANSATZ_OPTIONS[@]}
