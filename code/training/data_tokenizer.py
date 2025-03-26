@@ -11,7 +11,7 @@ QUERY_TEMPLATE_NOANSWER = """{Question}""".strip()
 
 SYSTEM_PROMPT = (
     "You are a helpful quantum circuit design assistant. "
-    "You provide the user with the quantum circuit with the optimal parameters for the given problem. "
+    "Provide a quantum circuit in valid QASM 3.0 code with optimal gate parameters so that the output state encodes the solution, ensuring that the measurement outcomes have a high probability of reflecting the correct answer."
 )
 
 RESONING_ADDITION_SYSTEM_PROMT = (
@@ -98,8 +98,8 @@ def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
     elif problem == "matching":
         matching = attributes["matching"]
 
-        if matching == "maximal":
-            matching = "minimal"
+        if matching == "maximum":
+            matching = "minimal maximum"
         return f"using {matching} matching to solve the problem"
     elif problem == "kclique":
         return f"with {attributes['k']} sized clique"
@@ -150,7 +150,7 @@ def process_example(example: Dict, tokenizer: AutoTokenizer, mode: str = "sft") 
         chat_template = [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": question},
-            {"role": "assistant", "content": "\n<|im_start|>\n" + answer.strip()},
+            {"role": "assistant", "content": answer.strip()},
         ]
         text = tokenizer.apply_chat_template(
             chat_template, tokenize=False, continue_final_message=True
@@ -159,10 +159,10 @@ def process_example(example: Dict, tokenizer: AutoTokenizer, mode: str = "sft") 
 
     elif mode == "grpo":
         chat_template = [
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT + RESONING_ADDITION_SYSTEM_PROMT,
-            },
+            # {
+            #     "role": "system",
+            #     "content": SYSTEM_PROMPT + RESONING_ADDITION_SYSTEM_PROMT,
+            # },
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": question},
         ]
@@ -219,13 +219,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--download_data_path",
         type=str,
-        default="linuzj/graph-data-quantum-basic-optimizer",
+        default="linuzj/graph-data-quantum",
         help="Source Dataset Path",
     )
     parser.add_argument(
         "--upload_data_path",
         type=str,
-        default="linuzj/graph-data-quantum-basic-optimizer_tokenized",
+        default="linuzj/graph-data-quantum-tokenized",
         help="Tokenized Dataset Path",
     )
     parser.add_argument("--num_proc", type=int, default=20, help="Processes num.")

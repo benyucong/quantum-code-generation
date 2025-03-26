@@ -2,19 +2,18 @@
 #SBATCH --job-name=sft_quantum_circuit_gen_multigpu
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=5
 #SBATCH --output=../../logs/sft_%A_%a.out
 #SBATCH --error=../../logs/sft_%A_%a.err
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=400GB
-#SBATCH --gpus=4
+#SBATCH --gpus=5
 #SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
 ##SBATCH --partition=gpu-debug
 
 module purge
-module load gcc cuda cmake openmpi
 module load scicomp-python-env/2024-01
 module load scicomp-llm-env
 
@@ -27,12 +26,14 @@ pip install -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
-base_model_name="Qwen/Qwen2.5-14B-Instruct"
+base_model_name="Qwen/Qwen2.5-7B-Instruct"
+output_dir_name="linuzj/quantum-circuit-qubo-7B"
 
 epochs=20
 block_size=16384
 save_strategy='steps'
 save_steps=30000
+
 
 # Only do one batch per GPU to reduce memory footprint. Default is 8
 per_device_batch_size=1
@@ -43,7 +44,7 @@ torchrun --nnodes=1 \
         --master_port 12345 \
         sft.py \
         --model_name=${base_model_name} \
-        --output_dir="data/checkpoints/${uid}" \
+        --output_dir=${output_dir_name} \
         --log_level="info" \
         --block_size=${block_size} \
         --num_train_epochs=${epochs} \
@@ -55,4 +56,6 @@ torchrun --nnodes=1 \
         --bf16=True \
         --save_strategy=${save_strategy} \
         --save_steps=${save_steps} \
-        --save_only_model=True
+        --save_only_model=True \
+        --push_to_hub=True \ # PUSH TO HUB AND SAVE
+        --hub_strategy=checkpoint

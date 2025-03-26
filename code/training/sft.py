@@ -22,7 +22,7 @@ class TrainingConfig:
     block_size: int = field(default=10000)
     wandb_project: Optional[str] = field(default="quantum-circuit-generation")
     train_file_path: Optional[str] = field(
-        default="linuzj/graph-data-quantum_tokenized"
+        default="linuzj/graph-data-quantum-tokenized_sft"
     )
     dagger: bool = field(default=False)
 
@@ -43,8 +43,6 @@ def train():
         model_name_or_path=config.model_name,
         torch_dtype="bfloat16",
         attn_implementation="flash_attention_2",
-        use_peft=True,
-        load_in_4bit=True,
     )
     dataset = load_dataset(config.train_file_path)
     tokenizer = transformers.AutoTokenizer.from_pretrained(
