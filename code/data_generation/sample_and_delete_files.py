@@ -1,5 +1,4 @@
 import os
-import argparse
 import random
 
 VALID_OPTIMIZATION_TYPES = {"VQE", "QAOA", "ADAPTIVE"}
@@ -55,10 +54,6 @@ def sample_files(folder: str, target_problem: str, sample_size: int, target_opti
             print(f"Deleted: {file_path}")
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Randomly sample N files for a given problem type and delete the rest."
-    )
-
     FOLDER = "out/"
     PROBLEM = "matching"
     SAMPLE_SIZE = 1000
