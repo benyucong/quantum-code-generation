@@ -111,6 +111,12 @@ def main():
 
     records = [asdict(case) for case in quantum_cases]
 
+    filtered_records = [
+        record for record in records 
+        if record.get("circuit_with_params") is None or len(record["circuit_with_params"]) <= 18000
+    ]
+    print(f"Filtered records: {len(filtered_records)} remaining after removing long circuit_with_params entries.")
+
     features = Features(
         {
             "signature": Value("string"),
@@ -130,7 +136,7 @@ def main():
         }
     )
 
-    for record in records:
+    for record in filtered_records:
         for field_key in [
             "graph",
             "solution",
@@ -141,8 +147,8 @@ def main():
             if record.get(field_key) is not None:
                 record[field_key] = json.dumps(record[field_key])
 
-    dataset = Dataset.from_list(records, features=features)
-    split_dataset = dataset.train_test_split(test_size=0.1, shuffle=True, seed=42)
+    dataset = Dataset.from_list(filtered_records, features=features)
+    split_dataset = dataset.train_test_split(test_size=0.05, shuffle=True, seed=42)
 
     dataset_dict = DatasetDict(
         {"train": split_dataset["train"], "test": split_dataset["test"]}
