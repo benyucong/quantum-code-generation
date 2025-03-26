@@ -64,6 +64,18 @@ def preprocess(text):
     text = text.replace("  ", " ")
     return text
 
+    # CONNECTED_COMPONENTS = "connected_components"
+    # COMMUNITY_DETECTION = "community_detection"
+    # K_CLIQUE = "kclique"
+    # HYPERMAXCUT = "hypermaxcut"
+    # GRAPH_ISOMORPHISM = "graph_isomorphism"
+    # GRAPH_COLORING = "graph_coloring"
+    # HAMILTONIAN_PATH = "hamiltonian_path"
+    # MATCHING = "matching"
+    # MAX_FLOW = "max_flow"
+    # MIN_CUT = "min_cut"
+    # STEINER_TREE = "steiner_tree"
+
 
 def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
     if not isinstance(attributes, dict):
@@ -85,9 +97,20 @@ def generate_problem_specific_text(problem: str, attributes: Dict) -> str:
         return f"starting from node {start_node} and ending at node {end_node}."
     elif problem == "matching":
         matching = attributes["matching"]
-        return f"using {matching} matching"
+
+        if matching == "maximal":
+            matching = "minimal"
+        return f"using {matching} matching to solve the problem"
     elif problem == "kclique":
         return f"with {attributes['k']} sized clique"
+    elif problem == "max_flow":
+        source, sink = attributes["source"], attributes["sink"]
+        return f"from source node {source} to sink node {sink}"
+    elif problem == "min_cut":
+        source, sink = attributes["source"], attributes["sink"]
+        return f"from source node {source} to sink node {sink}"
+    elif problem == "steiner_tree":
+        return f"with the following terminals: {attributes['terminal_nodes']}"
 
     return ""
 
