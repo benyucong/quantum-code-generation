@@ -15,7 +15,7 @@
 # Ansatz templates: 1 - 19
 
 
-: ${PROBLEM:="steiner_tree"}
+: ${PROBLEM:="hamiltonian_path"}
 : ${ANSATZ:="5"}
 : ${LAYERS:="1"}
 : ${OUTPUT_DIR:="out/"}
@@ -39,3 +39,4 @@ python3 -u -m src.main \
     --layers ${LAYERS} \
     --ansatz_template ${ANSATZ} \
     --output_path="${OUTPUT_DIR}" \
+    --vqe

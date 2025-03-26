@@ -60,8 +60,8 @@ def main():
     )
 
     FOLDER = "out/"
-    PROBLEM = "min_cut"
-    SAMPLE_SIZE = 1500
+    PROBLEM = "matching"
+    SAMPLE_SIZE = 1000
     DRY_RUN = False
     
     sample_files(FOLDER, PROBLEM, SAMPLE_SIZE, target_optimization="VQE", dry_run=DRY_RUN)
