@@ -148,7 +148,7 @@ def main():
                 record[field_key] = json.dumps(record[field_key])
 
     dataset = Dataset.from_list(filtered_records, features=features)
-    split_dataset = dataset.train_test_split(test_size=0.05, shuffle=True, seed=42)
+    split_dataset = dataset.train_test_split(test_size=0.04, shuffle=True, seed=42)
 
     dataset_dict = DatasetDict(
         {"train": split_dataset["train"], "test": split_dataset["test"]}
