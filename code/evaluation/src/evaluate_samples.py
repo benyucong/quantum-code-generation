@@ -14,6 +14,10 @@ from qiskit_qasm3_import import parse
 from computations import compute_relative_entropy
 from optimization import optimize_problem
 
+ASSISTANT_START_STRING = "<|im_start|>assistant"
+ASSISTANS_END_STRING = "<|im_end|>"
+
+
 def int_to_bitstring(i: int, n_qubits: int) -> str:
     """Convert an integer i to a bitstring with n_qubits bits."""
     return format(i, "0" + str(n_qubits) + "b")
@@ -92,8 +96,8 @@ def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
         ValueError: If the QASM string does not appear to be valid QASM 3.0 or fails to parse.
     """
     # Remove any leading marker like "Answer:"
-    if qasm_str.startswith("Answer:"):
-        qasm_str = qasm_str[len("Answer:") :].strip()
+    if qasm_str.startswith(ASSISTANT_START_STRING):
+        qasm_str = qasm_str[len(ASSISTANT_START_STRING): len(qasm_str) - len(ASSISTANS_END_STRING)].strip()
 
     # Basic check for QASM 3.0 header.
     if "OPENQASM 3.0" not in qasm_str:

@@ -1,6 +1,6 @@
 uid="$(date +%Y%m%d_%H%M%S)"
 
-path="../generation/out/quantum_circuits_output_20250310_171656.json"
+path="../generation/out/quantum_circuits_output_20250327_135748.json"
 out="./out/quantum_ciruits_validated_${uid}.json"
 summary="./out/quantum_ciruits_summary_${uid}.json"
 
