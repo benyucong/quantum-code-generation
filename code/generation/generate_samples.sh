@@ -20,15 +20,15 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 
-n_samples=200
-
-model="20250307_161011"
-
 uid="$(date +%Y%m%d_%H%M%S)"
-model_path="../training/data/checkpoints/${model}"
+
+n_samples=10
+model_path="linuzj/quantum-circuit-qubo-3B"
+dataset="linuzj/graph-data-quantum-tokenized_sft"  
 
 python3 -u generate_samples.py \
     --uid=${uid} \
     --model_path=${model_path} \
-    --n_samples=${n_samples}
+    --n_samples=${n_samples} \
+    --dataset=${dataset}
 

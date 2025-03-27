@@ -9,7 +9,8 @@ def main():
     parser = argparse.ArgumentParser(description="Generate quantum circuit outputs for dataset samples")
     parser.add_argument("--uid", type=str, required=True, help="Unique identifier for output file")
     parser.add_argument("--model_path", type=str, required=True, help="Path to the model checkpoint (or model name)")
-    parser.add_argument("--n_samples", type=int, required=False, help="Amount of samples to generate. Default 100")
+    parser.add_argument("--dataset", type=str, required=True, help="Dataset to use for generation")
+    parser.add_argument("--n_samples", type=int, required=False, help="Amount of samples to generate.")
     args = parser.parse_args()
 
     if torch.cuda.is_available():
@@ -22,7 +23,7 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
     model = AutoModelForCausalLM.from_pretrained(args.model_path).to(device)
 
-    dataset = load_dataset("linuzj/graph-data-quantum_tokenized", split="test")
+    dataset = load_dataset(args.dataset, split="test")
     results = []
 
     for idx, sample in enumerate(dataset):
@@ -49,14 +50,14 @@ def main():
         start_time = time.time()
         outputs = model.generate(
             **inputs,
-            max_length=6000,
+            max_length=10000,
             eos_token_id=tokenizer.eos_token_id,
             pad_token_id=tokenizer.eos_token_id,
         )
         generation_time = time.time() - start_time
-        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=False)
 
-        loc_ans = generated_text.rfind("Answer: ")
+        loc_ans = generated_text.rfind("<|im_start|>assistant")
         if loc_ans != -1:
             generated_circuit = generated_text[loc_ans:]
         else:
