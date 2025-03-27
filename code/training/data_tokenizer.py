@@ -196,16 +196,13 @@ def tokenize_examples(
             desc=f"Tokenizing data in {mode} mode",
         )
 
-    # Remove Unused Columns
+    # Remove Unused Columns if GRPO
     column_names = set(dataset["train"].column_names)
 
-    if mode == "sft":
-        column_names.remove("text")
-    elif mode == "grpo":
+    if mode == "grpo":
         column_names.remove("prompt")
         column_names.remove("solution")
-
-    dataset = dataset.remove_columns(list(column_names))
+        dataset = dataset.remove_columns(list(column_names))
 
     upload_data_path_with_postfix = f"{upload_data_path}_{mode}"
     dataset.push_to_hub(upload_data_path_with_postfix)
