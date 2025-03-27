@@ -16,7 +16,7 @@
 
 
 : ${PROBLEM:="hamiltonian_path"}
-: ${ANSATZ:="5"}
+: ${ANSATZ:="12"}
 : ${LAYERS:="1"}
 : ${OUTPUT_DIR:="out/"}
 

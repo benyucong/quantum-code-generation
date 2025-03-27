@@ -2,12 +2,12 @@
 #SBATCH --job-name=sft_quantum_circuit_gen_multigpu
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=5
+#SBATCH --ntasks-per-node=6
 #SBATCH --output=../../logs/sft_%A_%a.out
 #SBATCH --error=../../logs/sft_%A_%a.err
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=400GB
-#SBATCH --gpus=5
+#SBATCH --gpus=6
 #SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
@@ -29,10 +29,10 @@ uid="$(date +%Y%m%d_%H%M%S)"
 base_model_name="Qwen/Qwen2.5-7B-Instruct"
 output_dir_name="linuzj/quantum-circuit-qubo-7B"
 
-epochs=20
+epochs=15
 block_size=16384
 save_strategy='steps'
-save_steps=30000
+save_steps=10000
 
 
 # Only do one batch per GPU to reduce memory footprint. Default is 8
@@ -57,5 +57,5 @@ torchrun --nnodes=1 \
         --save_strategy=${save_strategy} \
         --save_steps=${save_steps} \
         --save_only_model=True \
-        --push_to_hub=True \ # PUSH TO HUB AND SAVE
+        --push_to_hub=True \
         --hub_strategy=checkpoint

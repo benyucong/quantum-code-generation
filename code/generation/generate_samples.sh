@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=20GB
 #SBATCH --gpus=1
-#SBATCH --partition=gpu-h200-141g-short
+#SBATCH --partition=gpu-v100-32g
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
 ##SBATCH --partition=gpu-debug

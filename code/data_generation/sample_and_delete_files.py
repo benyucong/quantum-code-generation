@@ -55,7 +55,7 @@ def sample_files(folder: str, target_problem: str, sample_size: int, target_opti
 
 def main():
     FOLDER = "out/"
-    PROBLEM = "matching"
+    PROBLEM = "edge_cover"
     SAMPLE_SIZE = 1000
     DRY_RUN = False
     
