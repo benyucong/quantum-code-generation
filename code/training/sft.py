@@ -78,10 +78,14 @@ def train():
     )
 
     # ----- Train Model -----
-    trainer.train()
-    trainer.save_model(output_dir=args.output_dir)
-    tokenizer.save_pretrained(args.output_dir)
+    trainer.train(resume_from_checkpoint = True)
     trainer.accelerator.wait_for_everyone()
+    
+    if trainer.is_fsdp_enabled:
+        trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
+
+    trainer.save_model(output_dir=args.output_dir)
+    
 
 
 if __name__ == "__main__":

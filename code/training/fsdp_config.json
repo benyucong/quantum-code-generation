@@ -1,0 +1,4 @@
+{
+    "backward_prefetch": "backward_pre",
+    "auto_wrap_policy": "TRANSFORMER_BASED_WRAP"
+}

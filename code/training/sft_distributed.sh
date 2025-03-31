@@ -26,36 +26,42 @@ pip install -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
+gpus=6
+nodes=1
+
 base_model_name="Qwen/Qwen2.5-7B-Instruct"
 output_dir_name="linuzj/quantum-circuit-qubo-7B"
 
 epochs=15
 block_size=16384
 save_strategy='steps'
-save_steps=10000
+save_steps=24000
 
 
 # Only do one batch per GPU to reduce memory footprint. Default is 8
 per_device_batch_size=1
 gradient_accumulation_steps=1
 
-torchrun --nnodes=1 \
-        --nproc_per_node=$SLURM_NTASKS_PER_NODE \
-        --master_port 12345 \
+accelerate launch \
+        --use_fsdp \
+        --config_file "fsdp_config.yaml" \
+        --mixed_precision "bf16" \
+        --num_processes ${gpus} \
+        --num_machines ${nodes} \
+        -- \
         sft.py \
-        --model_name=${base_model_name} \
-        --output_dir=${output_dir_name} \
-        --log_level="info" \
-        --block_size=${block_size} \
-        --num_train_epochs=${epochs} \
-        --per_device_train_batch_size=${per_device_batch_size} \
-        --per_device_eval_batch_size=${per_device_batch_size} \
-        --gradient_accumulation_steps=${gradient_accumulation_steps} \
-        --fsdp="full_shard auto_wrap" \
-        --fsdp_config="fsdp_config_qwen.json" \
-        --bf16=True \
-        --save_strategy=${save_strategy} \
-        --save_steps=${save_steps} \
-        --save_only_model=True \
-        --push_to_hub=True \
-        --hub_strategy=checkpoint
+                --model_name=${base_model_name} \
+                --output_dir=${output_dir_name} \
+                --log_level="info" \
+                --block_size=${block_size} \
+                --num_train_epochs=${epochs} \
+                --per_device_train_batch_size=${per_device_batch_size} \
+                --per_device_eval_batch_size=${per_device_batch_size} \
+                --gradient_accumulation_steps=${gradient_accumulation_steps} \
+                --fsdp="full_shard auto_wrap" \
+                --fsdp_config="fsdp_config.json" \
+                --bf16=True \
+                --save_strategy=${save_strategy} \
+                --save_steps=${save_steps} \
+                --push_to_hub=True \
+                --hub_strategy=all_checkpoints

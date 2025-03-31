@@ -58,8 +58,8 @@ evaluation_strategy="no"
 CUDA_LAUNCH_BLOCKING=0
 
 accelerate launch \
-    --config_file "ds_config.yaml" \
-    --mixed_precision=bf16 \
+    --config_file="ds_config.yaml" \
+    --mixed_precision="bf16" \
     -- \
     grpo.py \
         --model_name=${base_model_name} \
