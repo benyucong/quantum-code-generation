@@ -2,6 +2,7 @@ import json
 import torch
 import time
 import argparse
+import random
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
 
@@ -10,7 +11,7 @@ def main():
     parser.add_argument("--uid", type=str, required=True, help="Unique identifier for output file")
     parser.add_argument("--model_path", type=str, required=True, help="Path to the model checkpoint (or model name)")
     parser.add_argument("--dataset", type=str, required=True, help="Dataset to use for generation")
-    parser.add_argument("--n_samples", type=int, required=False, help="Amount of samples to generate.")
+    parser.add_argument("--n_samples", type=int, required=False, help="Number of random samples to generate")
     args = parser.parse_args()
 
     if torch.cuda.is_available():
@@ -24,6 +25,14 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(args.model_path).to(device)
 
     dataset = load_dataset(args.dataset, split="test")
+    dataset_size = len(dataset)
+    if args.n_samples is not None and args.n_samples < dataset_size:
+        indices = random.sample(range(dataset_size), args.n_samples)
+        dataset = dataset.select(indices)
+        print(f"Randomly selected {args.n_samples} samples from the dataset (original size: {dataset_size}).")
+    else:
+        print(f"Processing entire dataset with {dataset_size} samples.")
+
     results = []
 
     for idx, sample in enumerate(dataset):
@@ -33,9 +42,7 @@ def main():
         optimization_type = sample.get("optimization_type")
         problem_type = sample.get("problem_type")
         attrs = sample.get("problem_specific_attributes")
-
-        id = sample.get("signature")
-
+        signature = sample.get("signature")
         optimal_circuit_with_params = sample.get("circuit_with_params")
         
         prompt = (
@@ -64,7 +71,7 @@ def main():
             generated_circuit = generated_text
 
         sample_result = {
-            "signature": id,
+            "signature": signature,
             "sample_index": idx,
             "dataset_metrics": {
                 "n_qubits": n_qubits,
@@ -84,9 +91,6 @@ def main():
 
         results.append(sample_result)
         print(f"Processed sample {idx} (generation took {generation_time:.2f} seconds)")
-
-        if args.n_samples and idx >= args.n_samples:
-            break
 
     output_file_name = f"out/quantum_circuits_output_{args.uid}.json"
 

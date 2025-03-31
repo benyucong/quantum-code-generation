@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=generate_samples_quantum_circuit_gen_singlegpu
-#SBATCH --time=03:00:00
+#SBATCH --time=04:00:00
 #SBATCH --output=../../logs/run_%A_%a.out
 #SBATCH --error=../../logs/run_%A_%a.err
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=20GB
 #SBATCH --gpus=1
-#SBATCH --partition=gpu-v100-32g
+#SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=linus.jern@aalto.fi
 ##SBATCH --partition=gpu-debug
@@ -22,7 +22,7 @@ pip install -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
-n_samples=10
+n_samples=400
 model_path="linuzj/quantum-circuit-qubo-3B"
 dataset="linuzj/graph-data-quantum-tokenized_sft"  
 
