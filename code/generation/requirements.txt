@@ -1,8 +1,9 @@
-datasets==3.2.0
+datasets
 numpy==2.2.3
 pandas==2.2.3
 torch==2.6.0
-transformers==4.48.3
+transformers
 trl==0.14.0
 wandb==0.19.6
 accelerate==1.0.1
+pillow

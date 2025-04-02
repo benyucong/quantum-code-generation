@@ -36,6 +36,7 @@ def create_chat_prompt(tokenizer, sample, few_shot_learning=False):
         f"{n_qubits} qubits and {n_layers} layers with optimal parameters that solves the "
         f"{problem_type} {attrs} problem for the following graph: {graph}. "
         "Then ensure that the final answer is correct and in valid QASM 3.0 code."
+        "Only return the full QASM code, nothing else."
     )
 
     chat_template = [
@@ -44,7 +45,7 @@ def create_chat_prompt(tokenizer, sample, few_shot_learning=False):
     ]
 
     return tokenizer.apply_chat_template(
-        chat_template, tokenize=False, return_dict=True, add_generation_prompt=True
+        chat_template, tokenize=False, add_generation_prompt=True
     )
 
 
@@ -84,8 +85,16 @@ def main():
     else:
         raise Exception("HW acceleration not available, please run on a GPU.")
 
+    is_gemma = "gemma" in args.model_path
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
-    model = AutoModelForCausalLM.from_pretrained(args.model_path).to(device)
+
+    model = AutoModelForCausalLM.from_pretrained(
+        args.model_path,
+        torch_dtype=torch.bfloat16,
+        device_map="auto",
+        attn_implementation="sdpa" if is_gemma else None
+    ).to(device)
+    
 
     dataset = load_dataset(args.dataset, split="test")
     dataset_size = len(dataset)
@@ -114,8 +123,8 @@ def main():
             pad_token_id=tokenizer.eos_token_id,
         )
         generation_time = time.time() - start_time
-        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=False)
-
+        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        print(generated_text)
         assistant_indicator = "OPENQASM 3.0;"
         loc_ans = generated_text.find(assistant_indicator)
         if loc_ans != -1:
@@ -148,7 +157,9 @@ def main():
         results.append(sample_result)
         print(f"Processed sample {idx} (generation took {generation_time:.2f} seconds)")
 
-    output_file_name = f"out/quantum_circuits_output_{args.uid}_{args.model_path}.json"
+    model_name_out = args.model_path.split("/")[-1]
+    few_shot = "_few_shot" if args.few_shot_learning else ""
+    output_file_name = f"out/quantum_circuits_output_{args.uid}_{model_name_out}{few_shot}.json"
 
     with open(output_file_name, "w") as f:
         json.dump(results, f, indent=2)

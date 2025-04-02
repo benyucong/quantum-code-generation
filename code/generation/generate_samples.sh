@@ -14,21 +14,23 @@
 module purge
 module load gcc cuda cmake openmpi
 module load scicomp-python-env/2024-01
+# module load model-huggingface
 module load scicomp-llm-env
 
 source .venv/bin/activate
 
-pip install -r requirements.txt
+pip install --upgrade -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
-n_samples=400
-model_path="linuzj/quantum-circuit-qubo-3B"
+n_samples=2
+model_path="google/gemma-3-4b-it"
 dataset="linuzj/graph-data-quantum-tokenized_sft"  
 
 python3 -u generate_samples.py \
     --uid=${uid} \
     --model_path=${model_path} \
     --n_samples=${n_samples} \
-    --dataset=${dataset}
+    --dataset=${dataset} \
+    --few_shot_learning
 
