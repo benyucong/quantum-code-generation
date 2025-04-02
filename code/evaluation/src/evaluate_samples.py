@@ -17,10 +17,13 @@ from optimization import optimize_problem
 ASSISTANT_START_STRING = "<|im_start|>assistant"
 ASSISTANS_END_STRING = "<|im_end|>"
 
+RANDOM_SAMPLING_AMOUNT = 1000
+
 
 def int_to_bitstring(i: int, n_qubits: int) -> str:
     """Convert an integer i to a bitstring with n_qubits bits."""
     return format(i, "0" + str(n_qubits) + "b")
+
 
 def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulator):
     """
@@ -37,27 +40,18 @@ def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulato
     sim_circuit.save_statevector()
 
     result = simulator.run(sim_circuit).result()
-    statevector = result.get_statevector(experiment=sim_circuit)  
+    statevector = result.get_statevector(experiment=sim_circuit)
 
     probs = statevector.probabilities().tolist()
     return probs
 
+
 def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
-    """
-    Simulates a Qiskit QuantumCircuit and returns the probability distribution
-    and the most probable state (bitstring).
-
-    Args:
-        circuit (QuantumCircuit): The Qiskit quantum circuit to simulate.
-        simulator (AerSimulator): The Simulator.
-
-    Returns:
-        tuple: (probabilities, most_probable_bitstring)
-    """
     probs = get_probability_distribution(circuit, simulator)
     most_probable_state_index = np.argmax(probs)
     bitstring = int_to_bitstring(most_probable_state_index, circuit.num_qubits)
     return probs, bitstring
+
 
 def evaluate_statistics(results: List) -> None:
     total_samples = len(results)
@@ -71,33 +65,25 @@ def evaluate_statistics(results: List) -> None:
     print(f"Circuits that compiled successfully: {compiled_count}")
     print(f"Circuits with correct state: {correct_state_count}\n")
 
+
 def is_most_probable_state_correct(
     sample: Dict[str, Any], most_probable_state: str
 ) -> bool:
     """
     Check if the most probable state obtained from the simulation is correct.
     """
-    most_probable_states_bitstrings = sample["dataset_metrics"]["solution"]["bitstrings"]
+    most_probable_states_bitstrings = sample["dataset_metrics"]["solution"][
+        "bitstrings"
+    ]
     return most_probable_state in most_probable_states_bitstrings
 
+
 def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
-    """
-    Parses a QASM string into a Qiskit QuantumCircuit object.
-
-    This function also checks that the QASM code is for QASM 3.0.
-
-    Args:
-        qasm_str (str): The QASM string to parse.
-
-    Returns:
-        QuantumCircuit: The parsed quantum circuit.
-
-    Raises:
-        ValueError: If the QASM string does not appear to be valid QASM 3.0 or fails to parse.
-    """
     # Remove any leading marker like "Answer:"
     if qasm_str.startswith(ASSISTANT_START_STRING):
-        qasm_str = qasm_str[len(ASSISTANT_START_STRING): len(qasm_str) - len(ASSISTANS_END_STRING)].strip()
+        qasm_str = qasm_str[
+            len(ASSISTANT_START_STRING) : len(qasm_str) - len(ASSISTANS_END_STRING)
+        ].strip()
 
     # Basic check for QASM 3.0 header.
     if "OPENQASM 3.0" not in qasm_str:
@@ -111,6 +97,7 @@ def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
         ) from e
 
     return circuit
+
 
 def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
     """
@@ -135,35 +122,34 @@ def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
 
         # If the operation has parameters, randomize them.
         if mutable_op.params:
-            new_params = [np.random.uniform(0, 2*np.pi) for _ in mutable_op.params]
+            new_params = [np.random.uniform(0, 2 * np.pi) for _ in mutable_op.params]
             mutable_op.params = new_params
 
         new_circ.append(mutable_op, qubits, clbits)
     return new_circ
 
+
 def compare_solution(sim_probs, solution_probs, circuit, simulator):
     """
     Compares simulated probabilities with the solution probabilities.
-    Alse compares with a circuit with random parameters 
-
-    Args:
-        sim_probs (list): Probability distribution from the original circuit.
-        solution_probs (list): Probability distribution from the solution circuit.
-        circuit (QuantumCircuit): The original generated circuit.
-        simulator (AerSimulator): The simulator to use.
-
-    Returns:
-        dict: Contains the relative entropy for the original circuit and the
-              relative entropy for the randomized circuit.
+    Also compares with a circuit with random parameters
     """
     relative_entropy = compute_relative_entropy(sim_probs, solution_probs)
-    randomized_circuit = randomize_circuit(circuit)
-    randomized_probs = get_probability_distribution(randomized_circuit, simulator)
-    random_relative_entropy = compute_relative_entropy(randomized_probs, solution_probs)
+
+    cumulative_random_entropy = 0
+    for _ in range(RANDOM_SAMPLING_AMOUNT):
+        randomized_circuit = randomize_circuit(circuit)
+        randomized_probs = get_probability_distribution(randomized_circuit, simulator)
+        cumulative_random_entropy += compute_relative_entropy(
+            randomized_probs, solution_probs
+        )
+    random_relative_entropy = cumulative_random_entropy / RANDOM_SAMPLING_AMOUNT
+
     return {
         "relative_entropy": relative_entropy,
         "random_relative_entropy": random_relative_entropy,
     }
+
 
 def process_circuits(
     json_file: str, output_file=None, summary_file=None, relative_entropy_threshold=0.1
@@ -172,11 +158,6 @@ def process_circuits(
     Processes a JSON file containing multiple circuit samples. For each sample, it checks whether the
     QASM code (in the 'generated_circuit' field) is valid QASM 3.0, and if so, simulates it to obtain
     the exact state vector.
-
-    Args:
-        json_file (str): Path to the input JSON file.
-        output_file (str, optional): Path to save the updated JSON file. If not provided, the results
-                                     will be printed to the console.
     """
     with open(json_file, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -186,7 +167,9 @@ def process_circuits(
 
     for idx, sample in enumerate(data):
         # Because json.loads is not recursive parse
-        sample["dataset_metrics"]["solution"] = json.loads(sample["dataset_metrics"]["solution"])
+        sample["dataset_metrics"]["solution"] = json.loads(
+            sample["dataset_metrics"]["solution"]
+        )
 
         generated_qasm = sample.get("generated_circuit", "")
 
@@ -217,7 +200,9 @@ def process_circuits(
         try:
             probs, bitstring = evaluate_qiskit_circuit(circuit, simulator)
             sample["most_probable_state_generated"] = bitstring
-            sample["is_most_probable_state_correct"] = is_most_probable_state_correct(sample, bitstring)
+            sample["is_most_probable_state_correct"] = is_most_probable_state_correct(
+                sample, bitstring
+            )
         except Exception as err:
             print(f"[FAIL] Simulation failed for circuit: {idx}: {err}")
             sample["simulation_error"] = str(err)
@@ -226,10 +211,14 @@ def process_circuits(
 
         # --- 4) Compare with Expected Solution ---
         try:
-            solution_circuit = parse_qasm_from_str(sample.get("dataset_metrics").get("optimal_circuit"))
+            solution_circuit = parse_qasm_from_str(
+                sample.get("dataset_metrics").get("optimal_circuit")
+            )
             solution_probs = get_probability_distribution(solution_circuit, simulator)
             # Pass the generated circuit and simulator so that its parameters can be randomized
-            sample["comparison"] = compare_solution(probs, solution_probs, circuit, simulator)
+            sample["comparison"] = compare_solution(
+                probs, solution_probs, circuit, simulator
+            )
         except Exception as err:
             print(f"[FAIL] Processing solution failed for circuit: {idx}: {err}")
             sample["parse_error"] = str(err)
@@ -254,7 +243,10 @@ def process_circuits(
     rel_entropies = []
     random_rel_entropies = []
     for sample in results:
-        if sample.get("simulation_error") is None and sample.get("comparison") is not None:
+        if (
+            sample.get("simulation_error") is None
+            and sample.get("comparison") is not None
+        ):
             comp = sample.get("comparison")
             if "relative_entropy" in comp:
                 rel_entropies.append(comp["relative_entropy"])
@@ -266,7 +258,11 @@ def process_circuits(
     if rel_entropies:
         avg_rel_entropy = float(np.mean(rel_entropies))
         avg_random_rel_entropy = float(np.mean(random_rel_entropies))
-        ratio = avg_rel_entropy / avg_random_rel_entropy if avg_random_rel_entropy != 0 else None
+        ratio = (
+            avg_rel_entropy / avg_random_rel_entropy
+            if avg_random_rel_entropy != 0
+            else None
+        )
     else:
         avg_rel_entropy = None
         avg_random_rel_entropy = None
@@ -305,6 +301,7 @@ def process_circuits(
     else:
         print(json.dumps(summary_stats, indent=2))
 
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(1)
@@ -313,6 +310,7 @@ def main():
     output_file = sys.argv[2] if len(sys.argv) > 2 else None
     summary_file = sys.argv[3] if len(sys.argv) > 3 else None
     process_circuits(input_file, output_file, summary_file)
+
 
 if __name__ == "__main__":
     main()
