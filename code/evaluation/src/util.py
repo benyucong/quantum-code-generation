@@ -1,9 +1,6 @@
 import re
-import unittest
+
 from pennylane import numpy as np
-
-# np.random.seed(0)
-
 from qiskit.quantum_info import SparsePauliOp
 
 
@@ -51,8 +48,6 @@ def construct_qiskit_hamiltonian(expression):
             pauli, qubit = op_match.group(1), int(op_match.group(2))
 
             terms.append({"coefficient": coefficient, "operators": [(pauli, qubit)]})
-
-    # print(len(terms))
 
     # Reconstruct the Hamiltonian using qiskit's SparsePauliOp
     paulis = []
