@@ -12,7 +12,6 @@ from qiskit_aer import AerSimulator
 from qiskit_qasm3_import import parse
 
 from computations import compute_relative_entropy
-from optimization import optimize_problem
 
 ASSISTANT_START_STRING = "<|im_start|>assistant"
 ASSISTANS_END_STRING = "<|im_end|>"
