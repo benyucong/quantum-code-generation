@@ -287,6 +287,9 @@ def process_circuits(
     samples_below_threshold = []
     rel_entropies = []
     random_rel_entropies = []
+    expectation_values = []
+    solution_expectation_values = []
+    random_expectation_values = []
     for sample in results:
         if (
             sample.get("simulation_error") is None
@@ -298,6 +301,19 @@ def process_circuits(
                 random_rel_entropies.append(comp["random_relative_entropy"])
                 if comp["relative_entropy"] < relative_entropy_threshold:
                     samples_below_threshold.append(sample["sample_index"])
+            if "solution_expectation_value" in comp:
+                solution_expectation_values.append(comp["solution_expectation_value"])
+                expectation_values.append(comp["generated_expectation_value"])
+                random_expectation_values.append(comp["randomized_expectation_value"])
+    # Compute average expectation values if available
+    if expectation_values:
+        avg_expectation_value = float(np.mean(expectation_values))
+        avg_solution_expectation_value = float(np.mean(solution_expectation_values))
+        avg_random_expectation_value = float(np.mean(random_expectation_values))
+    else:
+        avg_expectation_value = None
+        avg_solution_expectation_value = None
+        avg_random_expectation_value = None
 
     # Compute average relative entropies if available
     if rel_entropies:
@@ -326,6 +342,9 @@ def process_circuits(
         "average_relative_entropy": avg_rel_entropy,
         "average_random_initial_relative_entropy": avg_random_rel_entropy,
         "average_relative_entropy_ratio": ratio,
+        "average_expectation_value": avg_expectation_value,
+        "average_solution_expectation_value": avg_solution_expectation_value,
+        "average_random_expectation_value": avg_random_expectation_value,
     }
 
     print("\nSummary Statistics:")
