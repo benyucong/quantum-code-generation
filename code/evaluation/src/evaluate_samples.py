@@ -12,6 +12,7 @@ from qiskit_aer import AerSimulator
 from qiskit_qasm3_import import parse
 
 from computations import compute_relative_entropy
+from util import construct_qiskit_hamiltonian
 
 ASSISTANT_START_STRING = "<|im_start|>assistant"
 ASSISTANS_END_STRING = "<|im_end|>"
@@ -24,7 +25,9 @@ def int_to_bitstring(i: int, n_qubits: int) -> str:
     return format(i, "0" + str(n_qubits) + "b")
 
 
-def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulator):
+def get_probability_distribution_and_expectation_value(
+    circuit: QuantumCircuit, simulator: AerSimulator, hamiltonian: str = None
+):
     """
     Get the probability distribution for a circuit.
 
@@ -42,14 +45,19 @@ def get_probability_distribution(circuit: QuantumCircuit, simulator: AerSimulato
     statevector = result.get_statevector(experiment=sim_circuit)
 
     probs = statevector.probabilities().tolist()
-    return probs
+    oper = construct_qiskit_hamiltonian(hamiltonian)
+
+    expectation_value = statevector.expectation_value(oper)
+    return probs, expectation_value
 
 
 def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
-    probs = get_probability_distribution(circuit, simulator)
+    probs, expectation_value = get_probability_distribution_and_expectation_value(
+        circuit, simulator
+    )
     most_probable_state_index = np.argmax(probs)
     bitstring = int_to_bitstring(most_probable_state_index, circuit.num_qubits)
-    return probs, bitstring
+    return probs, expectation_value, bitstring
 
 
 def evaluate_statistics(results: List) -> None:
@@ -128,7 +136,15 @@ def randomize_circuit(circuit: QuantumCircuit) -> QuantumCircuit:
     return new_circ
 
 
-def compare_solution(sim_probs, solution_probs, circuit, simulator):
+def compare_solution(
+    sim_probs,
+    solution_probs,
+    expectation_value,
+    solution_expectation_value,
+    hamiltonian,
+    circuit,
+    simulator,
+):
     """
     Compares simulated probabilities with the solution probabilities.
     Also compares with a circuit with random parameters
@@ -136,17 +152,29 @@ def compare_solution(sim_probs, solution_probs, circuit, simulator):
     relative_entropy = compute_relative_entropy(sim_probs, solution_probs)
 
     cumulative_random_entropy = 0
+    cumulative_expectation_value = 0
     for _ in range(RANDOM_SAMPLING_AMOUNT):
         randomized_circuit = randomize_circuit(circuit)
-        randomized_probs = get_probability_distribution(randomized_circuit, simulator)
+        randomized_probs, randomized_expectation_value = (
+            get_probability_distribution_and_expectation_value(
+                randomized_circuit, simulator, hamiltonian
+            )
+        )
         cumulative_random_entropy += compute_relative_entropy(
             randomized_probs, solution_probs
         )
+        cumulative_expectation_value += randomized_expectation_value
+    cumulative_expectation_value /= RANDOM_SAMPLING_AMOUNT
     random_relative_entropy = cumulative_random_entropy / RANDOM_SAMPLING_AMOUNT
-
+    print(
+        f"Expectation value of solution: {solution_expectation_value}, generated: {expectation_value}, randomized: {cumulative_expectation_value}"
+    )
     return {
         "relative_entropy": relative_entropy,
         "random_relative_entropy": random_relative_entropy,
+        "solution_expectation_value": solution_expectation_value,
+        "generated_expectation_value": expectation_value,
+        "randomized_expectation_value": cumulative_expectation_value,
     }
 
 
@@ -171,6 +199,10 @@ def process_circuits(
         )
 
         generated_qasm = sample.get("generated_circuit", "")
+        hamiltonian = sample["dataset_metrics"]["cost_hamiltonian"]
+        solution_expectation_value = json.loads(
+            sample["dataset_metrics"]["solution"]
+        ).get("expectation_value")
 
         # ---- Init new params ----
         sample["qasm_valid"] = False
@@ -197,7 +229,9 @@ def process_circuits(
 
         # --- 3) Simulate and Get Statevector/Probabilities ---
         try:
-            probs, bitstring = evaluate_qiskit_circuit(circuit, simulator)
+            probs, expectation_value, bitstring = evaluate_qiskit_circuit(
+                circuit, simulator
+            )
             sample["most_probable_state_generated"] = bitstring
             sample["is_most_probable_state_correct"] = is_most_probable_state_correct(
                 sample, bitstring
@@ -213,10 +247,20 @@ def process_circuits(
             solution_circuit = parse_qasm_from_str(
                 sample.get("dataset_metrics").get("optimal_circuit")
             )
-            solution_probs = get_probability_distribution(solution_circuit, simulator)
+            solution_probs, solution_expectation_value = (
+                get_probability_distribution_and_expectation_value(
+                    solution_circuit, simulator, hamiltonian
+                )
+            )
             # Pass the generated circuit and simulator so that its parameters can be randomized
             sample["comparison"] = compare_solution(
-                probs, solution_probs, circuit, simulator
+                probs,
+                solution_probs,
+                expectation_value,
+                solution_expectation_value,
+                hamiltonian,
+                circuit,
+                simulator,
             )
         except Exception as err:
             print(f"[FAIL] Processing solution failed for circuit: {idx}: {err}")
