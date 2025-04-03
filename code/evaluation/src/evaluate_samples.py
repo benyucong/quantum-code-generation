@@ -200,9 +200,7 @@ def process_circuits(
 
         generated_qasm = sample.get("generated_circuit", "")
         hamiltonian = sample["dataset_metrics"]["cost_hamiltonian"]
-        solution_expectation_value = json.loads(
-            sample["dataset_metrics"]["solution"]
-        ).get("expectation_value")
+        solution_expectation_value = sample["dataset_metrics"]["solution"]["expectation_value"]
 
         # ---- Init new params ----
         sample["qasm_valid"] = False
