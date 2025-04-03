@@ -26,7 +26,7 @@ def int_to_bitstring(i: int, n_qubits: int) -> str:
 
 
 def get_probability_distribution_and_expectation_value(
-    circuit: QuantumCircuit, simulator: AerSimulator, hamiltonian: str = None
+    circuit: QuantumCircuit, simulator: AerSimulator, hamiltonian: str
 ):
     """
     Get the probability distribution for a circuit.
@@ -51,9 +51,11 @@ def get_probability_distribution_and_expectation_value(
     return probs, expectation_value
 
 
-def evaluate_qiskit_circuit(circuit: QuantumCircuit, simulator: AerSimulator):
+def evaluate_qiskit_circuit(
+    circuit: QuantumCircuit, hamiltonian: str, simulator: AerSimulator
+):
     probs, expectation_value = get_probability_distribution_and_expectation_value(
-        circuit, simulator
+        circuit, simulator, hamiltonian
     )
     most_probable_state_index = np.argmax(probs)
     bitstring = int_to_bitstring(most_probable_state_index, circuit.num_qubits)
@@ -230,7 +232,7 @@ def process_circuits(
         # --- 3) Simulate and Get Statevector/Probabilities ---
         try:
             probs, expectation_value, bitstring = evaluate_qiskit_circuit(
-                circuit, simulator
+                circuit, hamiltonian, simulator
             )
             sample["most_probable_state_generated"] = bitstring
             sample["is_most_probable_state_correct"] = is_most_probable_state_correct(
