@@ -13,7 +13,7 @@ SYSTEM_PROMPT = (
 )
 
 
-def create_chat_prompt(tokenizer, sample, few_shot_learning=False):
+def create_chat_prompt(tokenizer, sample, is_gemma: bool, few_shot_learning=False):
     n_qubits = sample.get("number_of_qubits")
     n_layers = sample.get("number_of_layers")
     graph = sample.get("graph")
@@ -43,10 +43,15 @@ def create_chat_prompt(tokenizer, sample, few_shot_learning=False):
         "Only return the full QASM code, nothing else."
     )
 
-    chat_template = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": prompt},
-    ]
+    if is_gemma:
+        chat_template = [
+            {"role": "user", "content": SYSTEM_PROMPT + "\n" + prompt},
+        ]
+    else:
+        chat_template = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ]
 
     return tokenizer.apply_chat_template(
         chat_template, tokenize=False, add_generation_prompt=True
@@ -90,6 +95,8 @@ def main():
         raise Exception("HW acceleration not available, please run on a GPU.")
 
     is_gemma = "gemma" in args.model_path
+
+
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -115,7 +122,7 @@ def main():
 
     for idx, sample in enumerate(dataset):
         prompt = create_chat_prompt(
-            tokenizer, sample, few_shot_learning=args.few_shot_learning
+            tokenizer, sample, is_gemma, few_shot_learning=args.few_shot_learning
         )
         inputs = tokenizer(prompt, return_tensors="pt").to(device)
 

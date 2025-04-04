@@ -90,7 +90,7 @@ def is_most_probable_state_correct(
 
 def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
     qasm_str = re.sub('`', '', qasm_str)
-    
+
     if qasm_str.startswith(ASSISTANT_START_STRING):
         qasm_str = qasm_str[
             len(ASSISTANT_START_STRING) : len(qasm_str) - len(ASSISTANS_END_STRING)
@@ -177,9 +177,9 @@ def compare_solution(
     return {
         "relative_entropy": relative_entropy,
         "random_relative_entropy": random_relative_entropy,
-        "solution_expectation_value": solution_expectation_value,
-        "generated_expectation_value": expectation_value,
-        "randomized_expectation_value": cumulative_expectation_value,
+        "solution_expectation_value": float(np.real(solution_expectation_value)),
+        "generated_expectation_value": float(np.real(expectation_value)),
+        "randomized_expectation_value": float(np.real(cumulative_expectation_value)),
     }
 
 
