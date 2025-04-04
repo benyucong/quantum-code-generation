@@ -23,8 +23,8 @@ pip install --upgrade -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
-n_samples=2
-model_path="google/gemma-3-4b-it"
+n_samples=10
+model_path="Qwen/Qwen2.5-Coder-3B-Instruct"
 dataset="linuzj/graph-data-quantum-tokenized_sft"  
 
 python3 -u generate_samples.py \

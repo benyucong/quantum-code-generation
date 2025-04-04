@@ -3,6 +3,7 @@ import json
 import sys
 from typing import Any, Dict
 import numpy as np
+import re
 
 import pennylane as qml
 
@@ -88,11 +89,13 @@ def is_most_probable_state_correct(
 
 
 def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
-    # Remove any leading marker like "Answer:"
+    qasm_str = re.sub('`', '', qasm_str)
+    
     if qasm_str.startswith(ASSISTANT_START_STRING):
         qasm_str = qasm_str[
             len(ASSISTANT_START_STRING) : len(qasm_str) - len(ASSISTANS_END_STRING)
         ].strip()
+
 
     # Basic check for QASM 3.0 header.
     if "OPENQASM 3.0" not in qasm_str:
