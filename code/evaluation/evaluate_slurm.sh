@@ -3,10 +3,10 @@
 #SBATCH --time=02:00:00
 #SBATCH --output=../../logs/eval_%A_%a.out
 #SBATCH --error=../../logs/eval_%A_%a.err
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=6
 #SBATCH --nodes=1 
 #SBATCH --ntasks=1
-#SBATCH --mem=100GB
+#SBATCH --mem=50GB
 
 module purge
 module load scicomp-python-env/2024-01
@@ -18,9 +18,9 @@ pip install -r requirements.txt
 uid="$(date +%Y%m%d_%H%M%S)"
 
 
-path="../generation/out/quantum_circuits_output_20250328_173826.json"
-out="./out/quantum_ciruits_validated_${uid}_final.json"
-summary="./out/quantum_ciruits_summary_${uid}_final.json"
+path="../generation/out/quantum_circuits_output_20250404_121649_quantum-circuit-qubo-3B.json"
+model="quantum-circuit-qubo-3B"
+out_path="./out"
 
-python3 -u src/evaluate_samples.py $path $out $summary
+python3 -u src/evaluate_samples.py $path $out_path $model
 

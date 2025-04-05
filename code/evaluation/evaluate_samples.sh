@@ -1,7 +1,7 @@
 uid="$(date +%Y%m%d_%H%M%S)"
 
-path="../generation/out/quantum_circuits_output_20250404_112732_codegemma-7b-it_few_shot.json"
-out="./out/quantum_ciruits_validated_${uid}.json"
-summary="./out/quantum_ciruits_summary_${uid}.json"
+path="../generation/out/quantum_circuits_output_20250404_143833_codegemma-7b-it_few_shot.json"
+model="quantum_circuit"
+out_path="./out"
 
-python3 src/evaluate_samples.py $path $out $summary
+python3 src/evaluate_samples.py $path $out_path $model

@@ -96,6 +96,12 @@ def main():
 
     is_gemma = "gemma" in args.model_path
 
+    # Ensure consistent sampling 
+    random_seed = 112
+    random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(random_seed)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
 
@@ -106,7 +112,7 @@ def main():
         attn_implementation="sdpa" if is_gemma else None
     ).to(device)
     
-
+    print(f"Running model {args.model_path} with max context length: {tokenizer.model_max_length}. \n")
     dataset = load_dataset(args.dataset, split="test")
     dataset_size = len(dataset)
     if args.n_samples is not None and args.n_samples < dataset_size:
@@ -129,7 +135,7 @@ def main():
         start_time = time.time()
         outputs = model.generate(
             **inputs,
-            max_length=10000,
+            max_length=tokenizer.model_max_length,
             eos_token_id=tokenizer.eos_token_id,
             pad_token_id=tokenizer.eos_token_id,
         )

@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=generate_samples_quantum_circuit_gen_singlegpu
-#SBATCH --time=04:00:00
+#SBATCH --time=15:00:00
 #SBATCH --output=../../logs/run_%A_%a.out
 #SBATCH --error=../../logs/run_%A_%a.err
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=15GB
 #SBATCH --gpus=1
-#SBATCH --partition=gpu-h200-141g-short
+#SBATCH --partition=gpu-a100-80g
 #SBATCH --array=0-12
 
 module purge
@@ -19,7 +19,7 @@ pip install --upgrade -r requirements.txt
 
 
 
-n_samples=100
+n_samples=200
 
 
 uid="$(date +%Y%m%d_%H%M%S)"
@@ -32,8 +32,8 @@ declare -a model_paths=(
   "Qwen/Qwen2.5-3B-Instruct"
   "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
   "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
-  "google/codegemma-7b"
-  "google/codegemma-7b"
+  "google/codegemma-7b-it"
+  "google/codegemma-7b-it"
   "google/gemma-3-4b-it"
   "google/gemma-3-4b-it"
   "meta-llama/Llama-3.2-3B-Instruct"

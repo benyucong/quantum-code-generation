@@ -3,6 +3,7 @@ import json
 import sys
 from typing import Any, Dict
 import numpy as np
+import csv
 import re
 
 import pennylane as qml
@@ -19,6 +20,7 @@ ASSISTANT_START_STRING = "<|im_start|>assistant"
 ASSISTANS_END_STRING = "<|im_end|>"
 
 RANDOM_SAMPLING_AMOUNT = 1000
+EXPECTATION_VALUE_DIFFERENCE_THRESHOLD = 0.2
 
 
 def int_to_bitstring(i: int, n_qubits: int) -> str:
@@ -29,16 +31,6 @@ def int_to_bitstring(i: int, n_qubits: int) -> str:
 def get_probability_distribution_and_expectation_value(
     circuit: QuantumCircuit, simulator: AerSimulator, hamiltonian: str
 ):
-    """
-    Get the probability distribution for a circuit.
-
-    Args:
-        circuit (QuantumCircuit): The Qiskit quantum circuit to simulate.
-        simulator (AerSimulator): The Simulator.
-
-    Returns:
-        list: probabilities
-    """
     sim_circuit = circuit.remove_final_measurements(inplace=False)
     sim_circuit.save_statevector()
 
@@ -90,14 +82,11 @@ def is_most_probable_state_correct(
 
 def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
     qasm_str = re.sub('`', '', qasm_str)
-
     if qasm_str.startswith(ASSISTANT_START_STRING):
         qasm_str = qasm_str[
             len(ASSISTANT_START_STRING) : len(qasm_str) - len(ASSISTANS_END_STRING)
         ].strip()
 
-
-    # Basic check for QASM 3.0 header.
     if "OPENQASM 3.0" not in qasm_str:
         raise ValueError("QASM code does not appear to be QASM 3.0.")
 
@@ -150,11 +139,8 @@ def compare_solution(
     circuit,
     simulator,
 ):
-    """
-    Compares simulated probabilities with the solution probabilities.
-    Also compares with a circuit with random parameters
-    """
     relative_entropy = compute_relative_entropy(sim_probs, solution_probs)
+    expectation_value_difference = float(np.real(expectation_value - solution_expectation_value))
 
     cumulative_random_entropy = 0
     cumulative_expectation_value = 0
@@ -180,22 +166,24 @@ def compare_solution(
         "solution_expectation_value": float(np.real(solution_expectation_value)),
         "generated_expectation_value": float(np.real(expectation_value)),
         "randomized_expectation_value": float(np.real(cumulative_expectation_value)),
+        "expectation_value_difference": expectation_value_difference,
     }
 
 
 def process_circuits(
-    json_file: str, output_file=None, summary_file=None, relative_entropy_threshold=0.1
+    json_file: str, relative_entropy_threshold=0.1
 ):
-    """
-    Processes a JSON file containing multiple circuit samples. For each sample, it checks whether the
-    QASM code (in the 'generated_circuit' field) is valid QASM 3.0, and if so, simulates it to obtain
-    the exact state vector.
-    """
     with open(json_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     results = []
     simulator = AerSimulator(method="statevector")
+
+    all_rel_entropies = []
+    all_expectation_value_differences = []
+    all_expectation_values = []
+    all_solution_expectation_values = []
+    all_random_expectation_values = []
 
     for idx, sample in enumerate(data):
         # Because json.loads is not recursive parse
@@ -230,7 +218,7 @@ def process_circuits(
             results.append(sample)
             continue
 
-        # --- 3) Simulate and Get Statevector/Probabilities ---
+        # --- 2) Simulate and Get Statevector/Probabilities ---
         try:
             probs, expectation_value, bitstring = evaluate_qiskit_circuit(
                 circuit, hamiltonian, simulator
@@ -245,26 +233,35 @@ def process_circuits(
             results.append(sample)
             continue
 
-        # --- 4) Compare with Expected Solution ---
+        # --- 3) Compare with Expected Solution ---
         try:
             solution_circuit = parse_qasm_from_str(
                 sample.get("dataset_metrics").get("optimal_circuit")
             )
-            solution_probs, solution_expectation_value = (
+            solution_probs, sol_expectation_value = (
                 get_probability_distribution_and_expectation_value(
                     solution_circuit, simulator, hamiltonian
                 )
             )
-            # Pass the generated circuit and simulator so that its parameters can be randomized
-            sample["comparison"] = compare_solution(
+            comparison_data = compare_solution(
                 probs,
                 solution_probs,
                 expectation_value,
-                solution_expectation_value,
+                sol_expectation_value,
                 hamiltonian,
                 circuit,
                 simulator,
             )
+            sample["comparison"] = comparison_data
+
+            if comparison_data:
+                all_rel_entropies.append(comparison_data["relative_entropy"])
+                all_expectation_value_differences.append(comparison_data["expectation_value_difference"])
+                all_expectation_values.append(comparison_data["generated_expectation_value"])
+                all_solution_expectation_values.append(comparison_data["solution_expectation_value"])
+                all_random_expectation_values.append(comparison_data["randomized_expectation_value"])
+
+
         except Exception as err:
             print(f"[FAIL] Processing solution failed for circuit: {idx}: {err}")
             sample["parse_error"] = str(err)
@@ -273,7 +270,7 @@ def process_circuits(
 
         results.append(sample)
 
-    # ---- 5) Summary Statistics ----
+    # ---- 4) Summary Statistics ----
     total_samples = len(results)
     compiled_count = sum(1 for sample in results if sample.get("qasm_valid") is True)
     correct_state_count = sum(
@@ -291,6 +288,9 @@ def process_circuits(
     expectation_values = []
     solution_expectation_values = []
     random_expectation_values = []
+    expectation_value_differences = []
+    successful_expectation_value_count = 0
+
     for sample in results:
         if (
             sample.get("simulation_error") is None
@@ -306,19 +306,27 @@ def process_circuits(
                 solution_expectation_values.append(comp["solution_expectation_value"])
                 expectation_values.append(comp["generated_expectation_value"])
                 random_expectation_values.append(comp["randomized_expectation_value"])
-    # Compute average expectation values if available
+                expectation_value_differences.append(comp["expectation_value_difference"])
+                if abs(comp["expectation_value_difference"]) <= EXPECTATION_VALUE_DIFFERENCE_THRESHOLD:
+                    successful_expectation_value_count += 1
+
     if expectation_values:
         avg_expectation_value = float(np.mean(expectation_values))
+        median_expectation_value = float(np.median(expectation_values))
+        std_expectation_value = float(np.std(expectation_values))
         avg_solution_expectation_value = float(np.mean(solution_expectation_values))
         avg_random_expectation_value = float(np.mean(random_expectation_values))
     else:
         avg_expectation_value = None
+        median_expectation_value = None
+        std_expectation_value = None
         avg_solution_expectation_value = None
         avg_random_expectation_value = None
 
-    # Compute average relative entropies if available
     if rel_entropies:
         avg_rel_entropy = float(np.mean(rel_entropies))
+        median_rel_entropy = float(np.median(rel_entropies))
+        std_rel_entropy = float(np.std(rel_entropies))
         avg_random_rel_entropy = float(np.mean(random_rel_entropies))
         ratio = (
             avg_rel_entropy / avg_random_rel_entropy
@@ -327,8 +335,12 @@ def process_circuits(
         )
     else:
         avg_rel_entropy = None
+        median_rel_entropy = None
+        std_rel_entropy = None
         avg_random_rel_entropy = None
         ratio = None
+
+    success_rate_expectation_value = (successful_expectation_value_count / total_samples) * 100 if total_samples > 0 else None
 
     summary_stats = {
         "total_samples": total_samples,
@@ -341,30 +353,49 @@ def process_circuits(
             "sample_indexes": samples_below_threshold,
         },
         "average_relative_entropy": avg_rel_entropy,
+        "median_relative_entropy": median_rel_entropy,
+        "std_relative_entropy": std_rel_entropy,
         "average_random_initial_relative_entropy": avg_random_rel_entropy,
         "average_relative_entropy_ratio": ratio,
         "average_expectation_value": avg_expectation_value,
+        "median_expectation_value": median_expectation_value,
+        "std_expectation_value": std_expectation_value,
         "average_solution_expectation_value": avg_solution_expectation_value,
         "average_random_expectation_value": avg_random_expectation_value,
+        "success_rate_expectation_value": success_rate_expectation_value,
     }
 
     print("\nSummary Statistics:")
     for key, value in summary_stats.items():
         print(f"{key}: {value}")
 
-    if output_file:
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(results, f, indent=2)
-        print(f"Processed circuits saved to {output_file}")
-    else:
-        print(json.dumps(results, indent=2))
 
-    if summary_file:
-        with open(summary_file, "w", encoding="utf-8") as f:
-            json.dump(summary_stats, f, indent=2)
-        print(f"Summary statistics saved to {summary_file}")
-    else:
-        print(json.dumps(summary_stats, indent=2))
+    raw_data = {
+        "all_rel_entropies": all_rel_entropies,
+        "all_expectation_value_differences": all_expectation_value_differences,
+        "all_expectation_values": all_expectation_values,
+        "all_solution_expectation_values": all_solution_expectation_values,
+        "all_random_expectation_values": all_random_expectation_values,
+    }
+
+    return summary_stats, raw_data
+
+def write_raw_data_to_csv(raw_data, csv_file):
+    with open(csv_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+
+        writer.writerow(["Relative Entropy", "Expectation Value Difference", "Generated Expectation Value", "Solution Expectation Value", "Random Expectation Value"])
+
+        num_samples = len(raw_data["all_rel_entropies"])
+        for i in range(num_samples):
+            writer.writerow([
+                raw_data["all_rel_entropies"][i],
+                raw_data["all_expectation_value_differences"][i],
+                raw_data["all_expectation_values"][i],
+                raw_data["all_solution_expectation_values"][i],
+                raw_data["all_random_expectation_values"][i],
+            ])
+    print(f"Raw data saved to {csv_file}")
 
 
 def main():
@@ -372,9 +403,25 @@ def main():
         sys.exit(1)
 
     input_file = sys.argv[1]
-    output_file = sys.argv[2] if len(sys.argv) > 2 else None
-    summary_file = sys.argv[3] if len(sys.argv) > 3 else None
-    process_circuits(input_file, output_file, summary_file)
+    out_path = sys.argv[2]
+    model = sys.argv[3]
+
+    csv_output_file_raw_data = f"{out_path}/summary_{model}_raw_data.csv"
+    summary_file = f"{out_path}/summary_stats_{model}.json"
+
+    summary_data, raw_data = process_circuits(input_file)
+
+    if summary_file:
+        with open(summary_file, "w", encoding="utf-8") as f:
+            json.dump(summary_data, f, indent=2)
+        print(f"Summary statistics saved to {summary_file}")
+    else:
+        print(json.dumps(summary_data, indent=2))
+
+    if raw_data:
+        write_raw_data_to_csv(raw_data, csv_output_file_raw_data)
+    else:
+        print("No raw data generated to save to CSV.")
 
 
 if __name__ == "__main__":
