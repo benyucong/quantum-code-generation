@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=generate_samples_quantum_circuit_gen_singlegpu
-#SBATCH --time=26:00:00
+#SBATCH --time=36:00:00
 #SBATCH --output=../../logs/run_%A_%a.out
 #SBATCH --error=../../logs/run_%A_%a.err
 #SBATCH --cpus-per-task=2
@@ -19,7 +19,7 @@ pip install --upgrade -r requirements.txt
 
 
 
-n_samples=200
+n_samples=50
 
 
 uid="$(date +%Y%m%d_%H%M%S)"
@@ -28,13 +28,11 @@ dataset="linuzj/graph-data-quantum-tokenized_sft"
 declare -a model_paths=(
   "google/gemma-3-4b-it"
   "google/gemma-3-4b-it"
-  "meta-llama/Llama-3.2-3B-Instruct"
 )
 
 declare -a few_shot_flags=(
   ""
   "--few_shot_learning"
-  ""
 )
 
 model_path=${model_paths[$SLURM_ARRAY_TASK_ID]}
