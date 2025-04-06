@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=generate_samples_quantum_circuit_gen_singlegpu
-#SBATCH --time=15:00:00
+#SBATCH --time=26:00:00
 #SBATCH --output=../../logs/run_%A_%a.out
 #SBATCH --error=../../logs/run_%A_%a.err
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=15GB
 #SBATCH --gpus=1
 #SBATCH --partition=gpu-a100-80g
-#SBATCH --array=0-12
+#SBATCH --array=0-2
 
 module purge
 module load gcc cuda cmake openmpi
@@ -26,34 +26,14 @@ uid="$(date +%Y%m%d_%H%M%S)"
 dataset="linuzj/graph-data-quantum-tokenized_sft"
 
 declare -a model_paths=(
-  "Qwen/Qwen2.5-Coder-3B-Instruct"
-  "Qwen/Qwen2.5-Coder-3B-Instruct"
-  "Qwen/Qwen2.5-3B-Instruct"
-  "Qwen/Qwen2.5-3B-Instruct"
-  "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
-  "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
-  "google/codegemma-7b-it"
-  "google/codegemma-7b-it"
   "google/gemma-3-4b-it"
   "google/gemma-3-4b-it"
   "meta-llama/Llama-3.2-3B-Instruct"
-  "meta-llama/Llama-3.2-3B-Instruct"
-  "linuzj/quantum-circuit-qubo-3B"
 )
 
 declare -a few_shot_flags=(
-  "--few_shot_learning"
   ""
   "--few_shot_learning"
-  ""
-  "--few_shot_learning"
-  ""
-  "--few_shot_learning"
-  ""
-  "--few_shot_learning"
-  ""
-  "--few_shot_learning"
-  ""
   ""
 )
 

@@ -81,7 +81,16 @@ def is_most_probable_state_correct(
 
 
 def parse_qasm_from_str(qasm_str: str) -> QuantumCircuit:
+    # Check if model has generated something after the circuit. This is noted by ``` and a continuation.
+    potential_code_split = qasm_str.split("```")
+    potential_code = potential_code_split[0].strip()
+
+    if "OPENQASM 3.0" in potential_code:
+        qasm_str = potential_code
+
+
     qasm_str = re.sub('`', '', qasm_str)
+
     if qasm_str.startswith(ASSISTANT_START_STRING):
         qasm_str = qasm_str[
             len(ASSISTANT_START_STRING) : len(qasm_str) - len(ASSISTANS_END_STRING)

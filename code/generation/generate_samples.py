@@ -3,7 +3,7 @@ import torch
 import time
 import argparse
 import random
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, Gemma3ForCausalLM
 from datasets import load_dataset
 
 # Same system prompt for all models. Same as the one used in the training.
@@ -45,7 +45,14 @@ def create_chat_prompt(tokenizer, sample, is_gemma: bool, few_shot_learning=Fals
 
     if is_gemma:
         chat_template = [
-            {"role": "user", "content": SYSTEM_PROMPT + "\n" + prompt},
+            {
+                "role": "system",
+                "content": [{"type": "text", "text": SYSTEM_PROMPT}]
+            },
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": prompt}]
+            },
         ]
     else:
         chat_template = [
@@ -54,7 +61,11 @@ def create_chat_prompt(tokenizer, sample, is_gemma: bool, few_shot_learning=Fals
         ]
 
     return tokenizer.apply_chat_template(
-        chat_template, tokenize=False, add_generation_prompt=True
+        chat_template,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt"
     )
 
 
@@ -105,14 +116,22 @@ def main():
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
 
-    model = AutoModelForCausalLM.from_pretrained(
-        args.model_path,
-        torch_dtype=torch.bfloat16,
-        device_map="auto",
-        attn_implementation="sdpa" if is_gemma else None
-    ).to(device)
-    
-    print(f"Running model {args.model_path} with max context length: {tokenizer.model_max_length}. \n")
+    if is_gemma:
+        model = Gemma3ForCausalLM.from_pretrained(
+            args.model_path, 
+            torch_dtype=torch.bfloat16,
+            device_map="auto"
+        )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_path,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+        ).to(device)
+
+
+    generation_length = min(tokenizer.model_max_length, 32000)
+    print(f"Running model {args.model_path} with max context length: {generation_length}. \n")
     dataset = load_dataset(args.dataset, split="test")
     dataset_size = len(dataset)
     if args.n_samples is not None and args.n_samples < dataset_size:
@@ -127,15 +146,14 @@ def main():
     results = []
 
     for idx, sample in enumerate(dataset):
-        prompt = create_chat_prompt(
+        inputs = create_chat_prompt(
             tokenizer, sample, is_gemma, few_shot_learning=args.few_shot_learning
-        )
-        inputs = tokenizer(prompt, return_tensors="pt").to(device)
+        ).to(device)
 
         start_time = time.time()
         outputs = model.generate(
             **inputs,
-            max_length=tokenizer.model_max_length,
+            max_length=generation_length,
             eos_token_id=tokenizer.eos_token_id,
             pad_token_id=tokenizer.eos_token_id,
         )

@@ -20,7 +20,7 @@ pip install --upgrade -r requirements.txt
 uid="$(date +%Y%m%d_%H%M%S)"
 
 n_samples=2
-model_path="google/codegemma-7b-it"
+model_path="google/gemma-3-4b-it"
 dataset="linuzj/graph-data-quantum-tokenized_sft"  
 
 python3 -u generate_samples.py \
