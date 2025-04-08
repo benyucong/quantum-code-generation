@@ -18,7 +18,7 @@ pip install -r requirements.txt
 uid="$(date +%Y%m%d_%H%M%S)"
 
 
-path="../generation/out/quantum_circuits_output_20250404_121649_quantum-circuit-qubo-3B.json"
+path="../generation/out/quantum_circuits_output_20250405_012658_quantum-circuit-qubo-3B.json"
 model="quantum-circuit-qubo-3B"
 out_path="./out"
 
