@@ -1,0 +1,34 @@
+{
+  "total_samples": 200,
+  "compiled_successfully": 57,
+  "correct_state_count": 2,
+  "correct_samples": [
+    12,
+    133
+  ],
+  "relative_entropy_threshold": 0.1,
+  "samples_below_entropy_threshold": {
+    "count": 8,
+    "sample_indexes": [
+      12,
+      49,
+      106,
+      124,
+      163,
+      177,
+      191,
+      192
+    ]
+  },
+  "average_relative_entropy": NaN,
+  "median_relative_entropy": NaN,
+  "std_relative_entropy": NaN,
+  "average_random_initial_relative_entropy": NaN,
+  "average_relative_entropy_ratio": NaN,
+  "average_expectation_value": 1.1114927349654806,
+  "median_expectation_value": 4.579669976578772e-17,
+  "std_expectation_value": 7.3793388426908635,
+  "average_solution_expectation_value": -4.579459544542705,
+  "average_random_expectation_value": 0.14659214926503156,
+  "success_rate_expectation_value": 3.0
+}

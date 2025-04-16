@@ -1,0 +1,22 @@
+{
+  "total_samples": 50,
+  "compiled_successfully": 0,
+  "correct_state_count": 0,
+  "correct_samples": [],
+  "relative_entropy_threshold": 0.1,
+  "samples_below_entropy_threshold": {
+    "count": 0,
+    "sample_indexes": []
+  },
+  "average_relative_entropy": null,
+  "median_relative_entropy": null,
+  "std_relative_entropy": null,
+  "average_random_initial_relative_entropy": null,
+  "average_relative_entropy_ratio": null,
+  "average_expectation_value": null,
+  "median_expectation_value": null,
+  "std_expectation_value": null,
+  "average_solution_expectation_value": null,
+  "average_random_expectation_value": null,
+  "success_rate_expectation_value": 0.0
+}
