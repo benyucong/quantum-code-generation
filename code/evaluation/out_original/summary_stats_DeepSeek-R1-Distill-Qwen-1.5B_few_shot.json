@@ -20,15 +20,15 @@
       192
     ]
   },
-  "average_relative_entropy": 20.05906189006564,
-  "median_relative_entropy": 8.983791054073972,
-  "std_relative_entropy": 24.90786460468263,
-  "average_random_initial_relative_entropy": 19.326112612774995,
-  "average_relative_entropy_ratio": 1.0379253340791437,
-  "average_expectation_value": 1.0660381895109352,
+  "average_relative_entropy": NaN,
+  "median_relative_entropy": NaN,
+  "std_relative_entropy": NaN,
+  "average_random_initial_relative_entropy": NaN,
+  "average_relative_entropy_ratio": NaN,
+  "average_expectation_value": 1.1114927349654806,
   "median_expectation_value": 4.579669976578772e-17,
-  "std_expectation_value": 7.395267680753352,
+  "std_expectation_value": 7.3793388426908635,
   "average_solution_expectation_value": -4.579459544542705,
-  "average_random_expectation_value": 0.14983600459513913,
+  "average_random_expectation_value": 0.14659214926503156,
   "success_rate_expectation_value": 3.0
 }

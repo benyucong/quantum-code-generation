@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=generate_samples_quantum_circuit_gen_singlegpu
-#SBATCH --time=10:00:00
+#SBATCH --time=4:00:00
 #SBATCH --output=../../logs/run_%A_%a.out
 #SBATCH --error=../../logs/run_%A_%a.err
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=20GB
 #SBATCH --gpus=1
-#SBATCH --partition=gpu-a100-80g
+#SBATCH --partition=gpu-h200-141g-short
 
 module purge
 module load gcc cuda cmake openmpi
@@ -19,14 +19,14 @@ pip install --upgrade -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
-n_samples=2
-model_path="google/gemma-3-4b-it"
+n_samples=200
+
+model_path="linuzj/quantum-circuit-qubo-3B"
 dataset="linuzj/graph-data-quantum-tokenized_sft"  
 
 python3 -u generate_samples.py \
     --uid=${uid} \
     --model_path=${model_path} \
     --n_samples=${n_samples} \
-    --dataset=${dataset} \
-    --few_shot_learning
+    --dataset=${dataset}
 
