@@ -7,10 +7,10 @@
 #SBATCH --error=../../logs/sft_%A_%a.err
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=400GB
-#SBATCH --gpus=6
+#SBATCH --gpus=32
 #SBATCH --partition=gpu-h200-141g-short
 #SBATCH --mail-type=BEGIN
-#SBATCH --mail-user=linus.jern@aalto.fi
+#SBATCH --mail-user=cong.yu@aalto.fi
 ##SBATCH --partition=gpu-debug
 
 module purge
@@ -29,8 +29,8 @@ uid="$(date +%Y%m%d_%H%M%S)"
 gpus=6
 nodes=1
 
-base_model_name="Qwen/Qwen2.5-7B-Instruct"
-output_dir_name="linuzj/quantum-circuit-qubo-7B"
+base_model_name="Qwen/Qwen3-32B"
+output_dir_name="Benyucong/quantum-circuit-sft-32B"
 
 epochs=15
 block_size=16384

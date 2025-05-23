@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=20GB
 #SBATCH --gpus=1
-#SBATCH --partition=gpu-h200-141g-short
+#SBATCH --partition=gpu-h200-141g-short,gpu-h100-80g
 
 module purge
 module load gcc cuda cmake openmpi
