@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=evaluate_samples_quantum_circuit
+#SBATCH --job-name=label
 #SBATCH --time=10:00:00
 #SBATCH --output=../../logs/eval_%A_%a.out
 #SBATCH --error=../../logs/eval_%A_%a.err
@@ -8,12 +8,6 @@
 #SBATCH --ntasks=1
 #SBATCH --mem=50GB
 
-module purge
-module load scicomp-python-env/2024-01
-
-source .venv/bin/activate
-
-pip install -r requirements.txt
 
 uid="$(date +%Y%m%d_%H%M%S)"
 
@@ -28,4 +22,4 @@ model=$(echo "$base" | cut -d'_' -f3-)
 
 echo "Processing $filename with model: $model"
 
-python3 -u src/evaluate_samples.py $path $out_path $model
+python3 -u src/label.py $path $out_path $model

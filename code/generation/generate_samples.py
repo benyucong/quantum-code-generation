@@ -5,6 +5,7 @@ import argparse
 import random
 from transformers import AutoTokenizer, AutoModelForCausalLM, Gemma3ForCausalLM
 from datasets import load_dataset
+import os
 
 # Same system prompt for all models. Same as the one used in the training.
 SYSTEM_PROMPT = (
@@ -194,7 +195,7 @@ def main():
     model_name_out = args.model_path.split("/")[-1]
     few_shot = "_few_shot" if args.few_shot_learning else ""
     output_file_name = f"out/quantum_circuits_output_{args.uid}_{model_name_out}{few_shot}.json"
-
+    os.makedirs(os.path.dirname(output_file_name), exist_ok=True)
     with open(output_file_name, "w") as f:
         json.dump(results, f, indent=2)
 

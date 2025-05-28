@@ -1,7 +1,7 @@
-numpy==2.0.0
-PennyLane==0.40.0
-pennylane-qiskit==0.40.0
-qiskit==1.2.4
-qiskit_aer==0.16.1
-qiskit_algorithms==0.3.1
-qiskit_qasm3_import==0.5.1
+numpy
+PennyLane
+pennylane-qiskit
+qiskit
+qiskit_aer
+qiskit_algorithms
+qiskit_qasm3_import
