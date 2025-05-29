@@ -9,7 +9,7 @@ from transformers import (
 import pandas as pd
 
 # 1. Load or create dataset
-df = pd.read_json("../evaluation/out/quantum-circuit-qubo-3B_label_data.csv")  # or CSV, etc.
+df = pd.read_csv("../evaluation/out/quantum-circuit-qubo-3B_label_data.csv")
 
 # 2. Format the dataset to include "text" and "reward"
 def format_example(row):

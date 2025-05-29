@@ -16,15 +16,4 @@ source .venv/bin/activate
 
 export WANDB_API_KEY=$(cat .wandb_api_key)
 
-uid="$(date +%Y%m%d_%H%M%S)"
-epochs=10
-block_size=260
-save_steps=2000
-
-python prm_sft.py \
-    --output_dir="data/checkpoints/${uid}" \
-    --num_train_epochs=${epochs} \
-    --bf16=True \
-    --block_size=${block_size} \
-    --save_steps=${save_steps} \
-    --save_only_model=True
+python prm_sft.py 
