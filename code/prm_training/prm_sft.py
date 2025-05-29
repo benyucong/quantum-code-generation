@@ -5,7 +5,7 @@ from dataclasses import asdict, dataclass, field
 from typing import List, Optional
 
 import transformers
-from datasets import DatasetDict, concatenate_datasets, load_dataset
+from datasets import DatasetDict, concatenate_datasets, load_dataset, load_from_disk
 from trl import DataCollatorForCompletionOnlyLM, ModelConfig, SFTConfig, SFTTrainer
 
 # ----- Config Logging and Warnings -----
@@ -44,7 +44,7 @@ def train():
         torch_dtype="bfloat16",
         # attn_implementation="flash_attention_2",
     )
-    dataset = load_dataset(config.train_file_path)
+    dataset = load_from_disk(config.train_file_path)
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         config.model_name, use_fast=True
     )
