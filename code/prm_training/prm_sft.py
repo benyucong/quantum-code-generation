@@ -1,82 +1,92 @@
-import os
 import logging
-from dataclasses import dataclass, field
-from typing import Dict, Optional
-from transformers import HfArgumentParser, AutoTokenizer
-from datasets import load_dataset
-from trl import AutoModelForReward, RewardTrainer, RewardConfig
+import os
+import warnings
+from dataclasses import asdict, dataclass, field
+from typing import List, Optional
 
-# Enable logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import transformers
+from datasets import DatasetDict, concatenate_datasets, load_dataset
+from trl import DataCollatorForCompletionOnlyLM, ModelConfig, SFTConfig, SFTTrainer
+
+# ----- Config Logging and Warnings -----
+warnings.filterwarnings("ignore", category=FutureWarning)
+transformers.logging.set_verbosity_info()
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 @dataclass
-class ScriptArguments(RewardConfig):
-    model_name_or_path: str = field(default="Qwen/Qwen3-0.6B")
-    dataset_path: str = field(default="../evaluation/qasm_reward_dataset")
-    output_dir: str = field(default="./checkpoints/reward_model_qasm")
-    per_device_train_batch_size: int = field(default=2)
-    learning_rate: float = field(default=1e-5)
-    num_train_epochs: int = field(default=3)
-    reporting_to: Optional[str] = field(default="wandb")  # 👈 Important!
-    wandb_project: Optional[str] = field(default="qasm-reward-model")
-    max_length: int = field(default=1024)
+class TrainingConfig:
+    model_name: str = field(default="Qwen/Qwen3-0.6B")
+    block_size: int = field(default=10000)
+    wandb_project: Optional[str] = field(default="labs-prm-sft")
+    train_file_path: Optional[str] = field(
+        default="../evaluation/qasm_reward_dataset"
+    )
+    dagger: bool = field(default=False)
+
     def __post_init__(self):
-        if self.wandb_project is not None:
-            os.environ["WANDB_PROJECT"] = self.wandb_project
+        os.environ["WANDB_PROJECT"] = self.wandb_project
 
-def tokenize_function(example, tokenizer, max_length):
-    return tokenizer(
-        example["text"],
-        padding="max_length",
-        truncation=True,
-        max_length=max_length,
+
+def train():
+    parser = transformers.HfArgumentParser((TrainingConfig, SFTConfig))
+    config, args = parser.parse_args_into_dataclasses()
+    args.report_to = ["wandb"]
+
+    log_config = {**asdict(config), **asdict(args)}
+    logging.info("Training config: %s", log_config)
+
+    # ----- Load Model, Data and Tokenizer -----
+    model_config = ModelConfig(
+        model_name_or_path=config.model_name,
+        torch_dtype="bfloat16",
+        # attn_implementation="flash_attention_2",
+    )
+    dataset = load_dataset(config.train_file_path)
+    tokenizer = transformers.AutoTokenizer.from_pretrained(
+        config.model_name, use_fast=True
     )
 
-def main():
-    parser = HfArgumentParser(ScriptArguments)
-    args = parser.parse_args_into_dataclasses()[0]
+    # ----- Setup Instruction Templates -----
+    instruction_template = "<|im_start|>user"
+    response_template = "<|im_start|>assistant"
+    special_tokens_dict = {"pad_token": "<|fim_pad_token|>"}
+    tokenizer.add_special_tokens(special_tokens_dict)
 
-    logger.info("Arguments: %s", args)
-
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
-    tokenizer.pad_token = tokenizer.eos_token  # Required by some models
-
-    # Load reward model
-    model = AutoModelForReward.from_pretrained(args.model_name_or_path)
-
-    # Load dataset from JSON files in dataset_path
-    data_files: Dict[str, str] = {
-        "train": os.path.join(args.dataset_path, "train.json"),
-        "test": os.path.join(args.dataset_path, "test.json"),
-    }
-
-    dataset = load_dataset("json", data_files=data_files)
-    logger.info("Dataset loaded: %s", dataset)
-
-    # Tokenize the dataset
-    tokenized_dataset = dataset.map(
-        lambda x: tokenize_function(x, tokenizer, args.max_length),
-        batched=True,
-        remove_columns=dataset["train"].column_names,
-    )
-
-    # Create RewardTrainer
-    trainer = RewardTrainer(
-        model=model,
-        args=args,
-        train_dataset=tokenized_dataset["train"],
-        eval_dataset=dataset["test"] if "test" in dataset else dataset["train"],
+    # Only compute loss over assistant responses
+    # Verified that it precisely starts where the thinking tokens start and ends with the first pad token
+    # via labels being set to -100
+    collator = DataCollatorForCompletionOnlyLM(
+        instruction_template=instruction_template,
+        response_template=response_template,
         tokenizer=tokenizer,
+        mlm=False,
     )
 
-    # Start training
-    trainer.train()
+    args.dataset_text_field = "text"
+    args.max_seq_length = config.block_size
 
-    # Save final model
-    trainer.save_model(args.output_dir)
-    logger.info("Model saved to %s", args.output_dir)
+    # ----- Setup Trainer -----
+    trainer = SFTTrainer(
+        model=model_config.model_name_or_path,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"] if "test" in dataset else dataset["train"],
+        args=args,
+        data_collator=collator,
+    )
+
+    # ----- Train Model -----
+    trainer.train(resume_from_checkpoint = True)
+    trainer.accelerator.wait_for_everyone()
+    
+    if trainer.is_fsdp_enabled:
+        trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
+
+    trainer.save_model(output_dir=args.output_dir)
+    
+
 
 if __name__ == "__main__":
-    main()
+    train()

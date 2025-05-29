@@ -18,11 +18,13 @@ export WANDB_API_KEY=$(cat .wandb_api_key)
 
 uid="$(date +%Y%m%d_%H%M%S)"
 epochs=10
+block_size=260
+save_steps=2000
 
 python prm_sft.py \
- --model_name_or_path Qwen/Qwen3-0.6B \
- --dataset_path ../evaluation/qasm_reward_dataset \
- --output_dir ./checkpoints/reward_model_qasm/${uid} \
- --per_device_train_batch_size 2 \
- --learning_rate 2e-5 \
- --num_train_epochs ${epochs}
+    --output_dir="data/checkpoints/${uid}" \
+    --num_train_epochs=${epochs} \
+    --bf16=True \
+    --block_size=${block_size} \
+    --save_steps=${save_steps} \
+    --save_only_model=True
