@@ -1,92 +1,71 @@
-import logging
-import os
-import warnings
-from dataclasses import asdict, dataclass, field
-from typing import List, Optional
+from datasets import load_dataset, Dataset
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    Trainer,
+    TrainingArguments,
+    DataCollatorWithPadding,
+)
+import pandas as pd
 
-import transformers
-from datasets import DatasetDict, concatenate_datasets, load_dataset, load_from_disk
-from trl import DataCollatorForCompletionOnlyLM, ModelConfig, SFTConfig, SFTTrainer
+# 1. Load or create dataset
+df = pd.read_json("../evaluation/out/quantum-circuit-qubo-3B_label_data.csv")  # or CSV, etc.
 
-# ----- Config Logging and Warnings -----
-warnings.filterwarnings("ignore", category=FutureWarning)
-transformers.logging.set_verbosity_info()
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+# 2. Format the dataset to include "text" and "reward"
+def format_example(row):
+    prompt = "Generate a valid quantum circuit."
+    response = row["generated_circuit"]
+    return {
+        "text": f"<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n{response}<|im_end|>",
+        "reward": float(row["qasm_valid"])  # should be -1.0 or 1.0
+    }
+
+formatted = [format_example(row) for _, row in df.iterrows()]
+dataset = Dataset.from_list(formatted)
+
+# 3. Load tokenizer
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-0.6B", trust_remote_code=True)
+
+# 4. Preprocess the data (tokenization + reward as label)
+def preprocess(example):
+    tokenized = tokenizer(example["text"], truncation=True, padding="max_length", max_length=512)
+    tokenized["labels"] = [example["reward"]]  # for regression
+    return tokenized
+
+tokenized_dataset = dataset.map(preprocess)
+
+# 5. Load model
+model = AutoModelForSequenceClassification.from_pretrained(
+    "Qwen/Qwen3-0.6B",
+    num_labels=1,  # regression = 1 label
+    trust_remote_code=True
+)
+model.config.problem_type = "regression"
+
+# 6. Training setup
+training_args = TrainingArguments(
+    output_dir="checkpoints/reward_model",
+    per_device_train_batch_size=8,
+    learning_rate=2e-5,
+    num_train_epochs=3,
+    evaluation_strategy="no",
+    save_strategy="steps",
+    save_steps=1000,
+    logging_steps=100,
+    bf16=True,  # or fp16=True if on older GPUs
+    report_to=["wandb"],  # or ["None"]
 )
 
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-@dataclass
-class TrainingConfig:
-    model_name: str = field(default="Qwen/Qwen3-0.6B")
-    block_size: int = field(default=10000)
-    wandb_project: Optional[str] = field(default="labs-prm-sft")
-    train_file_path: Optional[str] = field(
-        default="../evaluation/qasm_reward_dataset"
-    )
-    dagger: bool = field(default=False)
+# 7. Initialize Trainer
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=tokenized_dataset,
+    tokenizer=tokenizer,
+    data_collator=data_collator,
+)
 
-    def __post_init__(self):
-        os.environ["WANDB_PROJECT"] = self.wandb_project
-
-
-def train():
-    parser = transformers.HfArgumentParser((TrainingConfig, SFTConfig))
-    config, args = parser.parse_args_into_dataclasses()
-    args.report_to = ["wandb"]
-
-    log_config = {**asdict(config), **asdict(args)}
-    logging.info("Training config: %s", log_config)
-
-    # ----- Load Model, Data and Tokenizer -----
-    model_config = ModelConfig(
-        model_name_or_path=config.model_name,
-        torch_dtype="bfloat16",
-        # attn_implementation="flash_attention_2",
-    )
-    dataset = load_from_disk(config.train_file_path)
-    tokenizer = transformers.AutoTokenizer.from_pretrained(
-        config.model_name, use_fast=True
-    )
-
-    # ----- Setup Instruction Templates -----
-    instruction_template = "<|im_start|>user"
-    response_template = "<|im_start|>assistant"
-    special_tokens_dict = {"pad_token": "<|fim_pad_token|>"}
-    tokenizer.add_special_tokens(special_tokens_dict)
-
-    # Only compute loss over assistant responses
-    # Verified that it precisely starts where the thinking tokens start and ends with the first pad token
-    # via labels being set to -100
-    collator = DataCollatorForCompletionOnlyLM(
-        instruction_template=instruction_template,
-        response_template=response_template,
-        tokenizer=tokenizer,
-        mlm=False,
-    )
-
-    args.dataset_text_field = "text"
-    args.max_seq_length = config.block_size
-
-    # ----- Setup Trainer -----
-    trainer = SFTTrainer(
-        model=model_config.model_name_or_path,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["test"] if "test" in dataset else dataset["train"],
-        args=args,
-        data_collator=collator,
-    )
-
-    # ----- Train Model -----
-    trainer.train(resume_from_checkpoint = True)
-    trainer.accelerator.wait_for_everyone()
-    
-    if trainer.is_fsdp_enabled:
-        trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
-
-    trainer.save_model(output_dir=args.output_dir)
-    
-
-
-if __name__ == "__main__":
-    train()
+# 8. Train!
+trainer.train()
