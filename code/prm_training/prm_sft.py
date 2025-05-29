@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class ScriptArguments(RewardConfig):
     model_name_or_path: str = field(default="Qwen/Qwen3-0.6B")
     dataset_path: str = field(default="../evaluation/qasm_reward_dataset")
-    output_dir: str = field(default="./out/reward_model_qasm")
+    output_dir: str = field(default="./checkpoints/reward_model_qasm")
     per_device_train_batch_size: int = field(default=2)
     learning_rate: float = field(default=1e-5)
     num_train_epochs: int = field(default=3)
